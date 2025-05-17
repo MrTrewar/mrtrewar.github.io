@@ -136,6 +136,8 @@ body {
     background-repeat: repeat-x;
     background-size: auto 100%;
     border: none;
+    background-position-y: -3px;
+    /* border: 2px solid yellow !important; */
 }
 
 .rail {

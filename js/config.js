@@ -15,6 +15,8 @@ const gameSettings = {
     ollieScore: 10,
     grindScorePerFrame: 1,
     grindAdjustSpeed: 1.5,
+    groundLevelY: GAME_AREA_HEIGHT - 30,
+    visualPlayerYOffset: 10,
 
     // Objektgenerierung - diese Werte sind jetzt noch wichtiger anzupassen!
     minGapBetweenObjects: 80,

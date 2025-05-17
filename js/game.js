@@ -141,13 +141,23 @@ function resolvePlayerCollisionsAndUpdatePosition() {
 }
 
 
-function render() { /* ... (wie vorher) ... */
+// Zeichnet den Spieler neu an seiner logischen Position PLUS dem visuellen Offset
+function render() {
     if (playerState.isGameOver) return;
-    if (playerElement) {
+
+    if (playerElement) { // playerElement ist global aus player.js
+        // Die logische Y-Position der Kollisionsbox
+        const logicalY = playerState.y;
+
+        // Die visuelle Y-Position, um die es für die Darstellung geht
+        const visualY = logicalY + gameSettings.visualPlayerYOffset;
+
         playerElement.style.left = playerState.x + 'px';
-        playerElement.style.top = playerState.y + 'px';
+        playerElement.style.top = visualY + 'px'; // Verwende die visuell angepasste Y-Position
     }
 }
+
+
 function handleGameOver() { /* ... (wie vorher) ... */
     playerState.isGameOver = true;
     showGameOverMessage();

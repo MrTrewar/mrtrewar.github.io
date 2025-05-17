@@ -176,10 +176,16 @@ function gameLoop() { /* ... (wie vorher, mit Hintergrund-Scroll) ... */
     }
     requestAnimationFrame(gameLoop);
 }
-function startGame() { /* ... (wie vorher) ... */
+function startGame() {
     if (!document.getElementById('game-area') || !document.getElementById('player')) {
         console.error("startGame: Wichtige DOM-Elemente nicht gefunden."); return;
     }
+
+    // Initialisiere Effekte, falls die Funktion existiert
+    if (typeof initializeEffects === 'function') {
+        initializeEffects();
+    }
+
     initLevel();
     resetPlayer();
 }

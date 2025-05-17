@@ -148,6 +148,19 @@ body {
     border: none;
 }
 
+.spark {
+    position: absolute;
+    width: 3px;  /* Kleine Funken */
+    height: 3px;
+    background-color: #FFD700; /* Goldgelb für Funken */
+    /* background-color: #FFA500; // Oder Orange */
+    /* background-color: #FFFFFF; // Oder Weiß */
+    border-radius: 50%; /* Runde Funken */
+    pointer-events: none; /* Funken sollen nicht klickbar sein oder Events blockieren */
+    z-index: 11; /* Über dem Spieler, aber unter UI-Popups vielleicht */
+    box-shadow: 0 0 2px 1px rgba(255, 223, 0, 0.7); /* Leichter Glow-Effekt */
+}
+
 /* --- UI ELEMENTE --- */
 .score-popup {
     position: absolute;

@@ -1,0 +1,178 @@
+/* css/style.css */
+
+body {
+    margin: 0;
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    font-family: 'Press Start 2P', 'Courier New', Courier, monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+#game-info {
+    display: flex;
+    justify-content: space-between;
+    width: 600px;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+#score-display { color: #f1c40f; }
+
+#game-instructions {
+    font-size: 10px;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+#game-area {
+    width: 600px;
+    height: 400px;
+    border: 3px solid #ecf0f1;
+    position: relative;
+    overflow: hidden;
+    background-image: url('../assets/images/vietnam_wald.jpg');
+    background-repeat: repeat-x;
+    background-position: 0 0;
+    background-size: auto 100%;
+}
+
+.game-object {
+    position: absolute;
+    box-sizing: border-box;
+    /* border: 1px solid #000; */ /* Optional */
+}
+
+/* --- SPIELER STYLING (Größer, ohne Kopf, Körper berührt Board) --- */
+#player {
+    width: 50px;  /* Breite der Kollisionsbox (z.B. Skateboard-Breite) */
+    height: 75px; /* Gesamthöhe = Körperhöhe (60) + Boardhöhe (15) */
+    z-index: 10;
+    /* Debugging-Rand für die Kollisionsbox: */
+    /* border: 1px dashed hotpink; */
+}
+
+/* Kopf-Styling wurde entfernt */
+
+#player-body {
+    width: 40px;  /* ANPASSEN: Breite deines zugeschnittenen Körper-Bildes */
+    height: 60px; /* ANPASSEN: Höhe deines zugeschnittenen Körper-Bildes */
+    background-image: url('../assets/images/player_body_idle.png');
+    background-size: 100% 100%; /* Streckt Bild auf die Box-Größe */
+    background-repeat: no-repeat;
+    position: absolute;
+    top: 0px;     /* Körper beginnt ganz oben im #player Container */
+    left: 5px;    /* (PlayerContainerBreite 50px - KörperBreite 40px) / 2 = 5px für Zentrierung */
+    z-index: 1;   /* Über dem Board */
+    transition: transform 0.1s ease-out, background-image 0.01s step-end;
+    /* Debugging-Rand: */
+    /* border: 1px solid green; */
+}
+
+#player-board {
+    width: 50px;  /* ANPASSEN: Breite deines zugeschnittenen Skateboard-Bildes */
+    height: 15px; /* ANPASSEN: Höhe deines zugeschnittenen Skateboard-Bildes */
+    background-image: url('../assets/images/skateboard.png');
+    background-size: 100% 100%; /* Streckt Bild auf die Box-Größe */
+    background-repeat: no-repeat;
+    position: absolute;
+    /* Board beginnt direkt unter dem Körper. Körper ist 60px hoch und startet bei top: 0px. */
+    top: 55px;    /* Körperhöhe */
+    left: 0px;    /* Nimmt volle Breite des #player-Containers ein */
+    z-index: 0; /* Unter dem Körper */
+    transition: transform 0.1s ease-out;
+    /* Debugging-Rand: */
+    /* border: 1px solid orange; */
+}
+
+/* --- Animationsklassen für den Spieler (transform-Werte sind BEISPIELE!) --- */
+
+#player.jumping #player-body {
+    background-image: url('../assets/images/player_body_jumping.png');
+    transform: scaleY(0.92) translateY(-4px); /* Füße "anziehen" */
+}
+#player.jumping #player-board {
+    transform: rotate(-18deg) translateY(-8px) scaleX(0.95); /* Stärkere Board-Bewegung */
+}
+
+#player.landing #player-body {
+    background-image: url('../assets/images/player_body_idle.png');
+    transform: scaleY(0.88) translateY(6px); /* Stärker gestaucht */
+}
+#player.landing #player-board {
+    transform: scaleY(0.93) translateY(2px) rotate(-5deg); /* Board "federt" */
+}
+
+#player.pushing-right #player-body {
+    background-image: url('../assets/images/player_body_pushing.png');
+    transform: rotate(10deg) translateX(4px) skewX(-8deg);
+}
+#player.pushing-right #player-board {
+    transform: translateX(3px) rotate(4deg);
+}
+
+#player.pushing-left #player-body {
+    background-image: url('../assets/images/player_body_pushing.png');
+    transform: scaleX(-1) rotate(10deg) translateX(4px) skewX(-8deg); /* translateX muss ggf. negativ sein bei scaleX(-1) */
+}
+#player.pushing-left #player-board {
+    transform: translateX(-3px) rotate(-4deg) scaleX(-1);
+}
+
+#player.grinding #player-body {
+    background-image: url('../assets/images/player_body_grinding.png');
+    transform: skewX(-15deg) rotate(-6deg) translateY(1px); /* Leicht nach unten/angepasst für Grind */
+}
+#player.grinding #player-board {
+    transform: rotate(-21deg) translateY(-1.2px) translateX(-2px); /* Stärker geneigt */
+}
+
+/* --- WELT OBJEKTE STYLING --- */
+.platform {
+    background-image: url('../assets/images/platform_ground.png');
+    background-repeat: repeat-x;
+    background-size: auto 100%;
+    border: none;
+}
+
+.rail {
+    height: 8px;
+    background-image: url('../assets/images/rail_segment.png');
+    background-repeat: repeat-x;
+    background-size: auto 100%;
+    border: none;
+}
+
+/* --- UI ELEMENTE --- */
+.score-popup {
+    position: absolute;
+    font-size: 14px;
+    font-weight: bold;
+    color: #2ecc71;
+    pointer-events: none;
+    text-shadow: 1px 1px #000;
+    z-index: 20;
+}
+
+#game-over-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #e74c3c;
+    font-size: 2em;
+    font-weight: bold;
+    text-shadow: 2px 2px #000;
+    display: none;
+    z-index: 100;
+    background-color: rgba(44, 62, 80, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}

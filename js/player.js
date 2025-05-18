@@ -56,7 +56,11 @@ function resetPlayer() {
 
     // CSS-Klassen für visuelles Feedback zurücksetzen
     if (playerElement) {
-        playerElement.classList.remove('grinding', 'jumping', 'landing', 'pushing-left', 'pushing-right');
+    playerElement.classList.remove(
+        'grinding', 'jumping', 'landing',
+        'pushing-left', 'pushing-right',
+        'mario-death'
+    );
     } else {
         console.warn("resetPlayer: playerElement nicht gefunden, Klassen konnten nicht zurückgesetzt werden.");
     }
@@ -110,15 +114,33 @@ function updatePlayerIntentAndPhysics() {
 
         // Spieler auf dem Rail halten (innerhalb der Rail-Grenzen) und Y-Position anpassen
         if (playerState.currentRail) {
+            // exakt auf der Rail-Oberkante bleiben
             playerState.y = playerState.currentRail.y - gameSettings.playerHeight;
-            playerState.x = Math.max(
-                playerState.currentRail.x, // Linke Kante des Rails
-                Math.min(playerState.x, playerState.currentRail.x + playerState.currentRail.width - gameSettings.playerWidth) // Rechte Kante des Rails
-            );
 
-            // FUNKEN ERZEUGEN durch Aufruf der Funktion aus effects.js
+            /* ─────────  NEU: Rail-Ende-Handling  ───────── */
+
+            // Nur noch die linke Rail-Kante als Minimum zulassen
+            playerState.x = Math.max(playerState.x, playerState.currentRail.x);
+
+            // Position der rechten Rail-Kante (mit eigener Breite verrechnet)
+            const railRightEdge =
+                playerState.currentRail.x +
+                playerState.currentRail.width -
+                gameSettings.playerWidth;
+
+            // Sind wir darüber hinaus? → Grind beenden und runterfallen
+            if (playerState.x >= railRightEdge) {
+                playerState.isGrinding = false;
+                playerState.currentRail = null;
+
+                playerElement.classList.remove('grinding');
+                  // kurze Fall-Animation
+                // dy bleibt 0 – ab dem nächsten Frame sorgt die Gravitation fürs Fallen
+            }
+
+            /* ─────────  Funken & Punkte  ───────── */
             if (typeof tryEmitGrindSparks === 'function') {
-                tryEmitGrindSparks(playerState, grindSparkState, grindAdjust);
+                tryEmitGrindSparks(playerState, grindSparkState, 0);
             }
         }
         playerElement.classList.remove('pushing-left', 'pushing-right'); // Keine Pushing-Anim beim Grinden
@@ -137,12 +159,12 @@ function updatePlayerIntentAndPhysics() {
         playerElement.classList.remove('landing', 'pushing-left', 'pushing-right'); // Pushing beim Absprung beenden
 
         if (playerState.isGrinding) {
-            if (typeof addScore === 'function') addScore(gameSettings.ollieScore, "Ollie off Grind"); // ui.js
+            if (typeof addScore === 'function') addScore(gameSettings.ollieScore, "Kickflip off Grind"); // ui.js
             playerState.isGrinding = false;
             playerState.currentRail = null;
             playerElement.classList.remove('grinding');
         } else {
-            if (window.currentTrickDisplayElement) currentTrickDisplayElement.textContent = "Trick: Ollie";
+            if (window.currentTrickDisplayElement) currentTrickDisplayElement.textContent = "Trick: Kickflip";
             // playerState.dx (aktuelle horizontale Geschwindigkeit vom Pushen) wird beibehalten
         }
         playerElement.classList.add('jumping'); // Sprung-Animation starten

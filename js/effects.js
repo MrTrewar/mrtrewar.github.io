@@ -160,3 +160,16 @@ function tryEmitGrindSparks(player, sparkState, grindAdjust) { // player ist pla
         sparkState.cooldown--;
     }
 }
+
+function createExplosion(x, y) {
+    if (!sparksContainer) initializeEffects();          // falls nötig
+    const boom = document.createElement('div');
+    boom.className = 'explosion';
+    boom.style.left = (x - 64) + 'px';  // -½ Breite → zentrieren
+    boom.style.top  = (y - 64) + 'px';  // -½ Höhe  → zentrieren
+    sparksContainer.appendChild(boom);
+
+    boom.addEventListener('animationend', () => {
+        boom.parentNode?.removeChild(boom);
+    });
+}

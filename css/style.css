@@ -95,7 +95,22 @@ body {
     transform: scaleY(0.92) translateY(-4px); /* Füße "anziehen" */
 }
 #player.jumping #player-board {
-    transform: rotate(-18deg) translateY(-8px) scaleX(0.95); /* Stärkere Board-Bewegung */
+    /* Kickflip! */
+    animation: kickflip 0.4s ease-out forwards;
+    transform-origin: 50% 50%;
+}
+
+/* ---- Neues Keyframe für den Kickflip ---- */
+@keyframes kickflip {
+    0% {
+        transform: rotate(-18deg) translateY(-8px) scaleX(0.95);
+    }
+    50% {
+        transform: rotate(162deg) translateY(-8px) scaleX(0.95);
+    }
+    100% {
+        transform: rotate(342deg) translateY(-8px) scaleX(0.95);
+    }
 }
 
 #player.landing #player-body {
@@ -190,4 +205,43 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+}
+
+/* --- EXPLOSION --- */
+.explosion {
+    position: absolute;
+    width: 128px;           /* = Framebreite */
+    height: 128px;          /* = Framehöhe  */
+    pointer-events: none;
+    background-image: url('../assets/images/explosion_sprite.png');
+    background-size: auto 100%;
+    animation: explode 600ms steps(10) forwards;
+    z-index: 99;            /* über dem Spieler, unter Game-Over-Text */
+}
+
+@keyframes explode {
+    from { background-position:   0    0; }
+    to   { background-position: -1280px 0; } /* -Framebreite × (Frames-1) */
+}
+
+/*Mario-Death*/
+#player.mario-death {
+    animation: marioDeathJump 1.2s ease-in forwards;
+    z-index: 101; /* Über Explosion */
+}
+
+@keyframes marioDeathJump {
+    0% {
+        transform: translateY(0) rotate(0deg);
+    }
+    20% {
+        transform: translateY(-60px) rotate(0deg); /* kurzer Sprung */
+    }
+    40% {
+        transform: translateY(0px) rotate(180deg); /* kopfüber drehen */
+    }
+    100% {
+        transform: translateY(500px) rotate(180deg); /* aus dem Bild fallen */
+        opacity: 0;
+    }
 }

@@ -79,7 +79,7 @@ function resolvePlayerCollisionsAndUpdatePosition() {
 
                     // Animationsklassen für Landung
                     if (playerElement && playerElement.classList.contains('jumping')) {
-                        addScore(gameSettings.ollieScore, "Ollie"); // ui.js
+                        addScore(gameSettings.ollieScore, "Kickflip"); // ui.js
                         playerElement.classList.remove('jumping');
                         playerElement.classList.add('landing');
                         setTimeout(() => { if (playerElement) playerElement.classList.remove('landing'); }, 100);
@@ -174,7 +174,6 @@ function resolvePlayerCollisionsAndUpdatePosition() {
     }
 }
 
-
 // Zeichnet den Spieler neu an seiner logischen Position PLUS dem visuellen Offset
 function render() {
     if (playerState.isGameOver) return;
@@ -194,6 +193,18 @@ function render() {
 
 function handleGameOver() { /* ... (wie vorher) ... */
     playerState.isGameOver = true;
+    const logicalY  = playerState.y;
+    const visualY   = logicalY + gameSettings.visualPlayerYOffset;
+    const centerX   = playerState.x + gameSettings.playerWidth / 2;
+    const centerY   = visualY + gameSettings.playerHeight / 2;
+    if (typeof createExplosion === 'function') {
+        createExplosion(centerX, centerY);
+}
+    if (playerElement) {
+    playerElement.classList.remove('jumping', 'landing', 'grinding');
+    playerElement.classList.add('mario-death');
+}
+
     showGameOverMessage();
     anime.running.forEach(anim => anim.pause());
 }

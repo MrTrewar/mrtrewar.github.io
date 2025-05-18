@@ -125,20 +125,34 @@ function updateWorldObjects() {
     for (let i = worldObjects.length - 1; i >= 0; i--) {
         const obj = worldObjects[i];
 
-        if (obj.isStatic) {
-            continue; // Statische Objekte nicht scrollen
+        if (obj.isStatic) { // Statische Objekte (wie die Haupt-Killzone) werden nicht gescrollt
+            continue;
         }
 
-        obj.x -= gameSettings.worldScrollSpeed;
+        obj.x -= gameSettings.worldScrollSpeed; // Scrolle das Objekt nach links
 
-        if (obj.element) {
+        if (obj.element) { // Stelle sicher, dass das DOM-Element existiert
             obj.element.style.left = obj.x + 'px';
         }
 
-        if (obj.x + obj.width < -200) { // Puffer für Entfernung
-            obj.element?.remove();
-            worldObjects.splice(i, 1);
+        // Entferne Objekte, die weit links außerhalb des Bildschirms sind
+        if (obj.x + obj.width < -200) { // -200 als Puffer, damit es sicher weg ist
+            // WICHTIG: Prüfen, ob das zu entfernende Objekt das currentRail des Spielers ist
+            if (playerState.isGrinding && playerState.currentRail === obj) {
+                playerState.isGrinding = false;
+                playerState.currentRail = null;
+                if (playerElement) { // playerElement ist global aus player.js
+                    playerElement.classList.remove('grinding');
+                    playerElement.classList.add('jumping'); // Spieler "fällt" jetzt (nutzt Sprung-Animation für den Fall)
+                }
+                console.log("Player stopped grinding: Rail scrolled out of view.");
+            }
+
+            obj.element?.remove();       // Entferne das DOM-Element (?. für Sicherheit)
+            worldObjects.splice(i, 1);   // Entferne das Objekt aus dem Array
         }
     }
+
+    // Wichtig: Aktualisiere lastObjectRightX basierend auf der Scrollgeschwindigkeit
     lastObjectRightX -= gameSettings.worldScrollSpeed;
 }

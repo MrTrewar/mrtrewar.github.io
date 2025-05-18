@@ -13,126 +13,160 @@ function checkCollision(rect1, rect2) { /* ... (wie vorher) ... */
 function resolvePlayerCollisionsAndUpdatePosition() {
     if (playerState.isGameOver) return;
 
-    // Player's X-Position wird direkt durch playerState.dx (aus player.js) beeinflusst
-    // playerState.x += playerState.dx; // Diese Zeile ist jetzt in player.js VOR der Kollisionslogik
+    // Die X-Position des Spielers (playerState.x) wurde bereits in js/player.js
+    // durch playerState.dx oder Grind-Anpassungen aktualisiert, BEVOR diese Funktion aufgerufen wird.
 
     // Vertikale Position basierend auf playerState.dy
     let nextY = playerState.y + playerState.dy;
 
-    // Reset ground/grind state
+    // Reset ground/grind state für diesen Frame; wird durch Kollision ggf. wieder true
     playerState.isOnGround = false;
-    let wasGrinding = playerState.isGrinding;
+    let wasGrinding = playerState.isGrinding; // Speichere, ob der Spieler zu Beginn dieses Frames gegrindet hat
 
-    // Grind-Ende-Check
+     // Grind-Ende-Check
     if (playerState.isGrinding && playerState.currentRail) {
         const rail = playerState.currentRail;
-        // Player X (schon aktualisiert in player.js) vs. Rail X (scrollt mit Welt)
-        if (playerState.x + gameSettings.playerWidth < rail.x || playerState.x > rail.x + rail.width) {
+
+        // Prüfung 1: Ist der Spieler horizontal nicht mehr über dem Rail?
+        const isHorizontallyOffRail = playerState.x + gameSettings.playerWidth < rail.x || playerState.x > rail.x + rail.width;
+
+        // Prüfung 2 (OPTIONAL, aber gut als zusätzliche Sicherheit): Ist das Rail selbst schon zu weit links?
+        // Dies ist nützlich, falls das Rail aus irgendeinem Grund noch in worldObjects ist,
+        // obwohl es schon fast komplett aus dem Bildschirm ist.
+        const isRailVisuallyGone = rail.x + rail.width < 0; // Rechte Kante des Rails ist links vom Bildschirmrand
+
+        if (isHorizontallyOffRail || isRailVisuallyGone) {
             playerState.isGrinding = false;
             playerState.currentRail = null;
-            playerElement.classList.remove('grinding');
-            playerElement.classList.add('jumping'); // Fall-Animation
+            if (playerElement) {
+                playerElement.classList.remove('grinding');
+                playerElement.classList.add('jumping'); // Fall-Animation
+            }
+            // console.log("Player stopped grinding: Fell off rail or rail disappeared.");
         }
     }
 
-    // Player-Rechteck für Kollision an der *aktuellen* X und *nächsten* Y
+    // Erstelle Rechtecke für Kollisionsprüfungen
+    // playerRect: die potenzielle neue Position des Spielers in diesem Frame
     const playerRect = { x: playerState.x, y: nextY, width: gameSettings.playerWidth, height: gameSettings.playerHeight };
-    // Vorheriges Rechteck basierend auf Y VOR dy-Anwendung
+    // prevPlayerRect: die Position des Spielers zu Beginn des letzten Physik-Updates (vor Anwendung von dx/dy)
     const prevPlayerRect = { x: playerState.x - playerState.dx, y: playerState.y, width: gameSettings.playerWidth, height: gameSettings.playerHeight };
 
 
-    for (const obj of worldObjects) {
-        if (obj.type === 'killzone') { /* ... (wie vorher) ... */
-            const killzoneRect = { x: 0, y: GAME_AREA_HEIGHT, width: GAME_AREA_WIDTH, height: 20};
-            const playerScreenRect = { x: playerState.x, y: nextY, width: gameSettings.playerWidth, height: gameSettings.playerHeight};
-            if (checkCollision(playerScreenRect, killzoneRect)) {
-                handleGameOver(); return;
+    for (const obj of worldObjects) { // Iteriere durch alle Plattformen, Rails etc.
+        if (obj.type === 'killzone') {
+            // Spezielle Behandlung für die Killzone (statisch am unteren Bildschirmrand)
+            const killzoneRect = { x: 0, y: GAME_AREA_HEIGHT, width: GAME_AREA_WIDTH, height: 20}; // Höhe 20 als Puffer
+            const playerScreenRectForKill = { x: playerState.x, y: nextY, width: gameSettings.playerWidth, height: gameSettings.playerHeight};
+            if (checkCollision(playerScreenRectForKill, killzoneRect)) {
+                handleGameOver(); // Funktion aus game.js
+                return; // Beende die Funktion frühzeitig
             }
-            continue;
+            continue; // Nächstes Objekt in der Schleife prüfen
         }
 
+        // Kollisionsrechteck für das aktuelle Weltobjekt
         const objRect = { x: obj.x, y: obj.y, width: obj.width, height: obj.height };
 
-        if (checkCollision(playerRect, objRect)) {
-            // Vertikale Kollision
-            if (playerState.dy >= 0 && !playerState.isGrinding) { // Moving down
-                if (prevPlayerRect.y + prevPlayerRect.height <= obj.y + 1) {
-                    nextY = obj.y - gameSettings.playerHeight;
-                    playerState.dy = 0;
-                    playerState.isOnGround = true;
+        if (checkCollision(playerRect, objRect)) { // Wenn Spieler und Objekt kollidieren
+            // --- Vertikale Kollision ---
+            if (playerState.dy >= 0 && !playerState.isGrinding) { // Spieler bewegt sich nach unten (oder steht) UND grindet nicht
+                // Prüfe, ob der Spieler im vorherigen Frame ÜBER dem Objekt war
+                if (prevPlayerRect.y + prevPlayerRect.height <= obj.y + 1) { // +1 als kleiner Toleranzwert
+                    nextY = obj.y - gameSettings.playerHeight; // Spieler auf die Oberkante des Objekts setzen
+                    playerState.dy = 0; // Vertikale Geschwindigkeit stoppen
+                    playerState.isOnGround = true; // Spieler ist jetzt auf dem Boden/Objekt
 
-                    if (playerElement.classList.contains('jumping')) {
-                        addScore(gameSettings.ollieScore, "Ollie");
+                    // Animationsklassen für Landung
+                    if (playerElement && playerElement.classList.contains('jumping')) {
+                        addScore(gameSettings.ollieScore, "Ollie"); // ui.js
                         playerElement.classList.remove('jumping');
                         playerElement.classList.add('landing');
-                        setTimeout(() => { playerElement.classList.remove('landing'); }, 100);
+                        setTimeout(() => { if (playerElement) playerElement.classList.remove('landing'); }, 100);
                     }
-                    if (wasGrinding && !playerState.isGrinding) {
-                         playerElement.classList.remove('grinding');
+                    // Falls Spieler vom Grinden gefallen ist und auf einer Plattform landet
+                    if (wasGrinding && !playerState.isGrinding && playerElement) {
+                         playerElement.classList.remove('grinding'); // Sicherstellen
                          playerElement.classList.add('landing');
-                        setTimeout(() => { playerElement.classList.remove('landing'); }, 100);
+                        setTimeout(() => { if (playerElement) playerElement.classList.remove('landing'); }, 100);
                     }
 
-                    if (obj.type === 'rail' && !wasGrinding) { // Grind-Initiierung
-                        // Bedingung für Grind-Start etwas gelockert, da Spieler mit dx ankommen kann
-                        if (Math.abs((playerRect.y + playerRect.height) - obj.y) < 8 && playerState.dy < 5 ) { // dy < 5 um zu schnelles Fallen zu verhindern
+                    // Grind-Initiierung, wenn auf einem Rail gelandet wird und vorher nicht gegrindet wurde
+                    if (obj.type === 'rail' && !wasGrinding) {
+                        // Bedingungen für Grind-Start: nahe genug an der Rail-Oberkante und nicht zu schnell fallend
+                        if (Math.abs((playerRect.y + playerRect.height) - obj.y) < 8 && playerState.dy < 5 ) {
                             playerState.isGrinding = true;
                             playerState.currentRail = obj;
-                            playerElement.classList.add('grinding');
-                            playerElement.classList.remove('jumping', 'landing');
-                            nextY = obj.y - gameSettings.playerHeight;
-                            playerState.dy = 0;
-                            playerState.dx = 0; // Optional: Horizontale Geschwindigkeit beim Start des Grinds nullen oder reduzieren
+                            if (playerElement) {
+                                playerElement.classList.add('grinding');
+                                playerElement.classList.remove('jumping', 'landing'); // Keine Sprung/Lande-Anim beim Grinden
+                            }
+                            nextY = obj.y - gameSettings.playerHeight; // Exakt auf Rail positionieren
+                            playerState.dy = 0; // Vertikale Geschwindigkeit stoppen
+                            // playerState.dx = 0; // Optional: Horizontale Geschwindigkeit beim Grind-Start beeinflussen
                         }
                     }
                 }
-            } else if (playerState.dy < 0 && !playerState.isGrinding) { // Moving up (hit head)
-                if (prevPlayerRect.y >= obj.y + obj.height - 1) {
-                    nextY = obj.y + obj.height;
-                    playerState.dy = 0.1;
-                    playerElement.classList.remove('jumping');
-                    playerElement.classList.add('landing');
-                     setTimeout(() => { playerElement.classList.remove('landing'); }, 100);
+            } else if (playerState.dy < 0 && !playerState.isGrinding) { // Spieler bewegt sich nach oben UND grindet nicht (Kopf gestoßen)
+                // Prüfe, ob der Spieler im vorherigen Frame UNTER dem Objekt war
+                if (prevPlayerRect.y >= obj.y + obj.height - 1) { // -1 als Toleranzwert
+                    nextY = obj.y + obj.height; // Spieler unter das Objekt setzen
+                    playerState.dy = 0.1; // Leichte Abwärtsbewegung, um Steckenbleiben zu verhindern
+                    if (playerElement) {
+                        playerElement.classList.remove('jumping'); // Sprunganimation beenden
+                        playerElement.classList.add('landing'); // Kurze "Benommenheits"-Animation
+                        setTimeout(() => { if (playerElement) playerElement.classList.remove('landing'); }, 100);
+                    }
                 }
             }
 
-            // Horizontale Kollision (wird jetzt relevanter, da Spieler dx im Sprung hat)
+            // --- Horizontale Kollision ---
+            // Erstelle ein temporäres Rechteck mit der bereits korrigierten Y-Position für die horizontale Prüfung
             const tempPlayerRectForHorizCheck = { x: playerState.x, y: nextY, width: gameSettings.playerWidth, height: gameSettings.playerHeight };
-            if (checkCollision(tempPlayerRectForHorizCheck, objRect) && !playerState.isGrinding) {
+            if (checkCollision(tempPlayerRectForHorizCheck, objRect) && !playerState.isGrinding) { // Kollidiert immer noch & grindet nicht
                 if (playerState.dx > 0) { // Spieler bewegt sich nach rechts
-                     if (prevPlayerRect.x + prevPlayerRect.width <= obj.x + gameSettings.worldScrollSpeed + 1) { // Berücksichtige Welt-Scroll für prev. Pos.
-                        playerState.x = obj.x - gameSettings.playerWidth;
-                        playerState.dx = 0; // Harter Stopp bei Kollision
+                    // Prüfe, ob Spieler im vorherigen Frame LINKS vom Objekt war (unter Berücksichtigung der Weltbewegung)
+                     if (prevPlayerRect.x + prevPlayerRect.width <= obj.x + gameSettings.worldScrollSpeed + 1) {
+                        playerState.x = obj.x - gameSettings.playerWidth; // Spieler links vom Objekt positionieren
+                        playerState.dx = 0; // Horizontale Geschwindigkeit stoppen
                      }
                 } else if (playerState.dx < 0) { // Spieler bewegt sich nach links
-                     if (prevPlayerRect.x >= obj.x + obj.width - gameSettings.worldScrollSpeed -1) {
-                        playerState.x = obj.x + obj.width;
-                        playerState.dx = 0; // Harter Stopp
+                    // Prüfe, ob Spieler im vorherigen Frame RECHTS vom Objekt war (unter Berücksichtigung der Weltbewegung)
+                     if (prevPlayerRect.x >= obj.x + obj.width - gameSettings.worldScrollSpeed - 1) {
+                        playerState.x = obj.x + obj.width; // Spieler rechts vom Objekt positionieren
+                        playerState.dx = 0; // Horizontale Geschwindigkeit stoppen
                      }
                 }
             }
-        }
-    }
-    playerState.y = nextY; // Finale Y-Position
+        } // Ende if (checkCollision(playerRect, objRect))
+    } // Ende for (const obj of worldObjects)
 
-    // Spieler X-Position wird nun vor der Kollision in player.js aktualisiert.
-    // Horizontale Grenzen werden immer noch hier in game.js geprüft, NACH der Kollisionsauflösung.
-    const minPlayerScreenX = GAME_AREA_WIDTH * 0.1;
-    const maxPlayerScreenX = GAME_AREA_WIDTH * 0.7;
+    playerState.y = nextY; // Finale Y-Position für diesen Frame setzen
+
+    // Spieler innerhalb der horizontalen Bildschirmgrenzen halten
+    const minPlayerScreenX = 0; // Spieler kann bis ganz nach links
+
+    // KORREKTUR FÜR RECHTE GRENZE: Spieler kann bis ganz nach rechts
+    const maxPlayerScreenX = GAME_AREA_WIDTH;
+    // const maxPlayerScreenX = GAME_AREA_WIDTH - 5; // Alternativ: Kleiner Puffer zum rechten Rand
+
     if (playerState.x < minPlayerScreenX) {
          playerState.x = minPlayerScreenX;
-         playerState.dx = Math.max(0, playerState.dx);
+         playerState.dx = Math.max(0, playerState.dx); // Verhindere weiteres Drücken nach links
     }
     if (playerState.x + gameSettings.playerWidth > maxPlayerScreenX) {
-        playerState.x = maxPlayerScreenX - gameSettings.playerWidth;
-        playerState.dx = Math.min(0, playerState.dx);
+        playerState.x = maxPlayerScreenX - gameSettings.playerWidth; // Positioniert rechte Kante des Spielers an maxPlayerScreenX
+        playerState.dx = Math.min(0, playerState.dx); // Verhindere weiteres Drücken nach rechts
     }
 
-    // Trick-Anzeige (wie vorher)
+    // Trick-Anzeige zurücksetzen, wenn Spieler ruhig am Boden steht
     if (playerState.isOnGround && !playerState.isGrinding && Math.abs(playerState.dx) < 0.1 && Math.abs(playerState.dy) < 0.1) {
-         if (!playerElement.classList.contains('jumping') && !playerElement.classList.contains('landing')) {
+         if (playerElement && !playerElement.classList.contains('jumping') && !playerElement.classList.contains('landing')) {
              setTimeout(() => {
-                 if(playerState.isOnGround && !playerState.isGrinding && !playerElement.classList.contains('jumping') && !playerElement.classList.contains('landing') && currentTrickDisplayElement) {
+                 // Erneute Prüfung, da sich Zustand in 500ms ändern kann
+                 if(playerState.isOnGround && !playerState.isGrinding &&
+                    playerElement && !playerElement.classList.contains('jumping') && !playerElement.classList.contains('landing') &&
+                    window.currentTrickDisplayElement) { // Sicherstellen, dass currentTrickDisplayElement existiert
                     currentTrickDisplayElement.textContent = "Trick: ---";
                  }
              }, 500);

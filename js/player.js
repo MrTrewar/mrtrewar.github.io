@@ -45,6 +45,9 @@ function resetPlayer() {
     playerState.currentRail = null;
     playerState.isGameOver = false;
     playerState.score = 0;
+    // Geschwindigkeit und Zeit zurücksetzen
+    timeSinceStart = 0;
+    gameSettings.worldScrollSpeed = scrollSpeedBase;
 
     // Cooldown für Effekte zurücksetzen
     grindSparkState.cooldown = 0;

@@ -2,6 +2,11 @@
 const gameArea = document.getElementById('game-area');
 let backgroundScrollX = 0;
 const BACKGROUND_SCROLL_SPEED_FACTOR = 0.3;
+let timeSinceStart = 0;
+let speedIncreaseInterval = 50; // alle 300 Frames ≈ 5 Sekunden
+let scrollSpeedBase = gameSettings.worldScrollSpeed;
+let scrollSpeedMax = 100; // Max-Speed
+let scrollSpeedIncrement = 0.3;
 
 function checkCollision(rect1, rect2) { /* ... (wie vorher) ... */
      return rect1.x < rect2.x + rect2.width &&
@@ -208,7 +213,7 @@ function handleGameOver() { /* ... (wie vorher) ... */
     showGameOverMessage();
     anime.running.forEach(anim => anim.pause());
 }
-function gameLoop() { /* ... (wie vorher, mit Hintergrund-Scroll) ... */
+function gameLoop() {
     if (!playerState.isGameOver) {
         generateNewObjects();
         updateWorldObjects();
@@ -218,7 +223,18 @@ function gameLoop() { /* ... (wie vorher, mit Hintergrund-Scroll) ... */
 
         backgroundScrollX -= gameSettings.worldScrollSpeed * BACKGROUND_SCROLL_SPEED_FACTOR;
         if (gameArea) gameArea.style.backgroundPositionX = backgroundScrollX + 'px';
+
+        // Geschwindigkeit erhöhen
+        timeSinceStart++;
+        if (timeSinceStart % speedIncreaseInterval === 0) {
+            if (gameSettings.worldScrollSpeed < scrollSpeedMax) {
+                gameSettings.worldScrollSpeed += scrollSpeedIncrement;
+                console.log("Speed increased to", gameSettings.worldScrollSpeed.toFixed(5));
+            }
+        }
     }
+
+    // Dieser Aufruf muss außerhalb des if-Blocks bleiben
     requestAnimationFrame(gameLoop);
 }
 function startGame() {

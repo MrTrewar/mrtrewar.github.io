@@ -283,18 +283,28 @@ function handleJoystick(e) {
 document.body.addEventListener('touchstart', (e) => {
     if (playerState.isGameOver) return;
 
-    const touch = e.touches[0];
-    const jz = joystickZone.getBoundingClientRect();
+    const touches = Array.from(e.touches);
 
-    // Prüfe, ob der Touch außerhalb der Joystick-Zone ist
-    const isOutsideJoystick =
-        touch.clientX > jz.right || touch.clientY < jz.top || touch.clientY > jz.bottom;
+    for (const touch of touches) {
+        const jz = joystickZone.getBoundingClientRect();
 
-    if (isOutsideJoystick) {
-        keys.Space = true;
-        setTimeout(() => keys.Space = false, 100);
+        const isOutsideJoystick =
+            touch.clientX < jz.left || touch.clientX > jz.right ||
+            touch.clientY < jz.top  || touch.clientY > jz.bottom;
+
+        if (isOutsideJoystick) {
+            keys.Space = true;
+            setTimeout(() => keys.Space = false, 100);
+            break; // Nur einmal springen pro Berührung außerhalb
+        }
     }
 }, { passive: true });
+
+@media (hover: none) and (pointer: coarse) {
+    #joystick-zone {
+        display: block;
+    }
+}
 
 // 📱 Tap auf dem Bildschirm nach Game Over startet neu
 window.addEventListener('touchstart', () => {

@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <!-- Wichtig: id="dynamic-viewport" hinzufügen! -->
+  <!-- Wichtig: id="dynamic-viewport" behalten für Zoom-Out bei Drehung -->
   <meta
     id="dynamic-viewport"
     name="viewport"
@@ -14,83 +14,67 @@
 </head>
 <body>
 
-    <!-- UI oben -->
-    <div id="game-info">
-        <span id="score-display">Score: 0</span>
-        <span id="current-trick">Trick: ---</span>
-    </div>
-    <div id="game-instructions">
-        A/D: Move | Space: Ollie (Jump) | R: Restart
-    </div>
+  <!-- UI oben -->
+  <div id="game-info">
+    <span id="score-display">Score: 0</span>
+    <span id="current-trick">Trick: ---</span>
+  </div>
+  <div id="game-instructions">
+    A/D: Move | Space: Ollie (Jump) | R: Restart
+  </div>
 
-    <!-- Spielfeld -->
-    <div id="game-area">
-        <div id="player" class="game-object">
-            <div id="player-body"></div>
-            <div id="player-board"></div>
-        </div>
-        <div id="game-over-message">GAME OVER<br><small>Press R to Restart</small></div>
+  <!-- Spielfeld -->
+  <div id="game-area">
+    <div id="player" class="game-object">
+      <div id="player-body"></div>
+      <div id="player-board"></div>
     </div>
+    <div id="game-over-message">GAME OVER<br><small>Press R to Restart</small></div>
+  </div>
 
-    <!-- Touch-Steuerung -->
-    <div id="joystick-zone">
-        <div id="joystick-thumb"></div>
-    </div>
+  <!-- Touch-Steuerung -->
+  <div id="joystick-zone">
+    <div id="joystick-thumb"></div>
+  </div>
 
-    <!-- Hochformat-Warnung -->
-    <div id="rotate-warning">
-        <p>Bitte drehe dein Gerät ins Querformat</p>
-    </div>
-
-    <!-- Spiel-Logik -->
-    <script src="js/config.js"></script>
-    <script src="js/audio.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/effects.js"></script>
-    <script src="js/player.js"></script>
-    <script src="js/world.js"></script>
-    <script src="js/game.js"></script>
+  <!-- Spiel-Logik -->
+  <script src="js/config.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/game.js"></script>
 
   <!-- Zoom-Out / Viewport-Reset bei Drehung -->
   <script>
-  (function(){
-    const meta = document.getElementById('dynamic-viewport');
-    function resetViewport(){
-      if(window.matchMedia("(orientation: landscape)").matches){
-        meta.setAttribute(
-          'content',
-          'width=device-height, height=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
-        );
-      } else {
-        meta.setAttribute(
-          'content',
-          'width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
-        );
+    (function(){
+      const meta = document.getElementById('dynamic-viewport');
+      function resetViewport(){
+        if(window.matchMedia("(orientation: landscape)").matches){
+          meta.setAttribute(
+            'content',
+            'width=device-height, height=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
+          );
+        } else {
+          meta.setAttribute(
+            'content',
+            'width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
+          );
+        }
+        setTimeout(()=>window.scrollTo(0,0),50);
       }
-      setTimeout(()=>window.scrollTo(0,0),50);
-    }
-    window.addEventListener('load', resetViewport);
-    window.addEventListener('orientationchange', resetViewport);
-  })();
+      window.addEventListener('load', resetViewport);
+      window.addEventListener('orientationchange', resetViewport);
+    })();
   </script>
 
-  <!-- Landscape Lock & Portrait-Warnung -->
+  <!-- Querformat-Lock -->
   <script>
-    // Versuche Querformat zu erzwingen
     if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(()=>{/* still okay */});
+      screen.orientation.lock('landscape').catch(()=>{/* Ignorieren */});
     }
-
-    const warning = document.getElementById('rotate-warning');
-    function checkOrientation(){
-      if (window.matchMedia('(orientation: portrait)').matches) {
-        warning.style.display = 'flex';
-      } else {
-        warning.style.display = 'none';
-      }
-    }
-    window.addEventListener('orientationchange', checkOrientation);
-    window.addEventListener('load', checkOrientation);
   </script>
+
 </body>
 </html>

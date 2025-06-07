@@ -213,6 +213,10 @@ function startGame() {
     resetPlayer();
     gameSettings.worldScrollSpeed = scrollSpeedBase;
     timeSinceStart = 0;
+    
+    const gameArea = document.getElementById('game-area');
+    gameArea.style.width = GAME_AREA_WIDTH + 'px';
+    gameArea.style.height = GAME_AREA_HEIGHT + 'px';
 }
 
 window.addEventListener('keydown', (e) => {

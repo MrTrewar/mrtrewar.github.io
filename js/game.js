@@ -202,10 +202,17 @@ function gameLoop() {
 }
 
 function startGame() {
+    const gameArea = document.getElementById('game-area');
+    if (gameArea) {
+        gameArea.style.width = GAME_AREA_WIDTH + 'px';
+        gameArea.style.height = GAME_AREA_HEIGHT + 'px';
+    }
+
     if (!document.getElementById('game-area') || !document.getElementById('player')) {
         console.error("startGame: Wichtige DOM-Elemente nicht gefunden.");
         return;
     }
+
     if (typeof initializeEffects === 'function') {
         initializeEffects();
     }
@@ -213,10 +220,6 @@ function startGame() {
     resetPlayer();
     gameSettings.worldScrollSpeed = scrollSpeedBase;
     timeSinceStart = 0;
-    
-    const gameArea = document.getElementById('game-area');
-    gameArea.style.width = GAME_AREA_WIDTH + 'px';
-    gameArea.style.height = GAME_AREA_HEIGHT + 'px';
 }
 
 window.addEventListener('keydown', (e) => {

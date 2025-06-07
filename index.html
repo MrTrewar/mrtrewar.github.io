@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
+
   <!-- UI oben -->
   <div id="game-info">
     <span id="score-display">Score: 0</span>
@@ -32,12 +33,12 @@
     <div id="game-over-message">GAME OVER<br><small>Press R to Restart</small></div>
   </div>
 
-  <!-- Touch-Steuerung (falls noch drin) -->
+  <!-- Touch-Steuerung -->
   <div id="joystick-zone">
     <div id="joystick-thumb"></div>
   </div>
 
-  <!-- Deine Skripte -->
+  <!-- Spiel-Logik -->
   <script src="js/config.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/ui.js"></script>
@@ -45,5 +46,44 @@
   <script src="js/player.js"></script>
   <script src="js/world.js"></script>
   <script src="js/game.js"></script>
+
+  <!-- Fullscreen & Tap-to-Start -->
+  <script>
+    window.addEventListener("load", () => {
+      const tapOverlay = document.getElementById("tap-to-start");
+      const gameArea = document.getElementById("game-area");
+
+      const enterFullscreen = () => {
+        if (gameArea.requestFullscreen) {
+          gameArea.requestFullscreen();
+        } else if (gameArea.webkitRequestFullscreen) {
+          gameArea.webkitRequestFullscreen();
+        } else if (gameArea.msRequestFullscreen) {
+          gameArea.msRequestFullscreen();
+        }
+      };
+
+      const startAfterTap = () => {
+        if (tapOverlay) tapOverlay.style.display = "none";
+        enterFullscreen();
+        if (typeof startGame === "function") {
+          startGame();
+        }
+      };
+
+      if (window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
+        if (tapOverlay) tapOverlay.addEventListener("touchend", startAfterTap, { once: true });
+      } else {
+        if (typeof startGame === "function") {
+          startGame();
+        }
+      }
+    });
+
+    window.addEventListener("orientationchange", () => {
+      window.location.reload();
+    });
+  </script>
+
 </body>
 </html>

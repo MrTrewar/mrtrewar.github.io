@@ -303,45 +303,89 @@ html, body {
 }
 
 @media screen and (orientation: portrait) and (max-width: 1024px) {
-    #rotate-warning {
-        display: flex;
-    }
+  #rotate-warning {
+    display: flex;
+  }
 
-    #game-area,
-    #game-info,
-    #game-instructions,
-    #joystick-zone {
-        display: none !important;
-    }
+  #game-area,
+  #game-info,
+  #game-instructions,
+  #joystick-zone {
+    display: none !important;
+  }
 }
 
 @media screen and (orientation: landscape) and (hover: none) and (pointer: coarse) {
-    #game-info {
-        font-size: 3vw;
-    }
+  #game-info {
+    font-size: 3vw;
+  }
 
-    #game-instructions {
-        font-size: 2.5vw;
-    }
+  #game-instructions {
+    font-size: 2.5vw;
+  }
 
-    .score-popup {
-        font-size: 3vw;
-    }
+  .score-popup {
+    font-size: 3vw;
+  }
 }
-
-
 
 @media (hover: none) and (pointer: coarse) {
-    #tap-to-start {
-        display: flex;
-    }
+  #tap-to-start {
+    display: flex;
+  }
+
+  /* Verstecke evtl. unnötige Instruktionen */
+  #game-instructions {
+    display: none;
+  }
+
+  /* Score/Trick-Panel oben rechts absolut positionieren */
+  #game-info {
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 3.5vw;       /* relativ zur Breite */
+    line-height: 1.2;
+    z-index: 100;
+  }
+
+  #game-info span {
+    display: block;
+    margin: 0;
+    line-height: 1.2;
+  }
 }
 
+/* Mobile-Popups, dynamisch irgendwo auf der Fläche */
+@media (hover: none) and (pointer: coarse) {
+  .mobile-popup {
+    position: absolute;
+    pointer-events: none;
+    font-size: 4vw;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 150;
+  }
+}
+
+/* Fullscreen-Spieler Overlay */
 #game-player-overlay {
   display: none;
   position: fixed;
   z-index: 9999;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.85);
   justify-content: center;
   align-items: center;
@@ -381,58 +425,4 @@ html, body {
   font-size: 2rem;
   cursor: pointer;
   z-index: 10;
-}
-
-@media (hover: none) and (pointer: coarse) {
-  /* Verstecke evtl. unnötige Instruktionen */
-  #game-instructions {
-    display: none;
-  }
-
-  /* Score/Trick-Panel oben rechts absolut positionieren */
-  #game-info {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: auto;
-    flex-direction: column;    /* Score über Trick */
-    align-items: flex-end;     /* Rechtsbündig */
-    background: rgba(0,0,0,0.4);/* leichter Hintergrund, optional */
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 4vw;            /* dynamisch an Breite */
-    z-index: 100;
-  }
-  #game-info span {
-    display: block;            /* Score und Trick untereinander */
-    line-height: 1.2;
-  }
-}
-
-
-/* -------------------------------------------------- */
-/* Mobile: Score & Trick als kleines Overlay oben rechts */
-@media screen and (hover: none) and (pointer: coarse) {
-  #game-info {
-    position: fixed;
-    top: 8px;
-    right: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    background: rgba(0, 0, 0, 0.4);
-    padding: 4px 6px;
-    border-radius: 4px;
-    font-size: 3.5vw;       /* relativ zur Breite */
-    line-height: 1.2;
-    z-index: 100;
-  }
-  #game-info span {
-    display: block;
-    margin: 0;
-  }
-  /* Anleitungen ausblenden */
-  #game-instructions {
-    display: none;
-  }
 }

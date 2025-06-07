@@ -2,7 +2,8 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
+    <!-- Standard-Viewport -->
+    <meta id="dynamic-viewport" name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Pixel Skate Runner</title>
 
@@ -52,47 +53,31 @@
     <script src="js/world.js"></script>
     <script src="js/game.js"></script>
 
-    <!-- Fullscreen & Tap-to-Start -->
+    <!-- Zoom-Out / Viewport-Reset bei Drehung -->
     <script>
-        window.addEventListener("load", () => {
-            const tapOverlay = document.getElementById("tap-to-start");
-            const gameArea = document.getElementById("game-area");
-
-            const enterFullscreen = () => {
-                if (gameArea.requestFullscreen) {
-                    gameArea.requestFullscreen();
-                } else if (gameArea.webkitRequestFullscreen) {
-                    gameArea.webkitRequestFullscreen();
-                } else if (gameArea.msRequestFullscreen) {
-                    gameArea.msRequestFullscreen();
-                }
-            };
-
-            const startAfterTap = () => {
-                tapOverlay.style.display = "none";
-                enterFullscreen();
-                if (typeof startGame === "function") {
-                    startGame(); // Optional: Spielstart
-                }
-            };
-
-            if (window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
-                tapOverlay.addEventListener("touchend", startAfterTap, { once: true });
-            } else {
-                // PC: Kein Overlay, direkt starten
-                if (typeof startGame === "function") {
-                    startGame();
-                }
-            }
-        });
-
-        window.addEventListener("orientationchange", () => {
-            window.location.reload();
-        });
-
-        
+      (function(){
+        const meta = document.getElementById('dynamic-viewport');
+        function resetViewport(){
+          if(window.matchMedia("(orientation: landscape)").matches){
+            // Querformat: Zoom heraus
+            meta.setAttribute(
+              'content',
+              'width=device-height, height=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
+            );
+          } else {
+            // Hochformat: Standard
+            meta.setAttribute(
+              'content',
+              'width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
+            );
+          }
+          // Stelle sicher, dass wir am Anfang oben sind
+          setTimeout(()=>window.scrollTo(0,0),50);
+        }
+        window.addEventListener('load', resetViewport);
+        window.addEventListener('orientationchange', resetViewport);
+      })();
     </script>
-   
 
 </body>
 </html>

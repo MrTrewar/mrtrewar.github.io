@@ -408,3 +408,19 @@ html, body {
     line-height: 1.2;
   }
 }
+
+/* Mobile-Popups, dynamisch irgendwo auf der Fläche */
+@media (hover: none) and (pointer: coarse) {
+  .mobile-popup {
+    position: absolute;
+    pointer-events: none;
+    font-size: 4vw;
+    color: #fff;
+    background: rgba(0,0,0,0.5);
+    padding: 4px 8px;
+    border-radius: 4px;
+    opacity: 0;
+    z-index: 200;
+    white-space: nowrap;
+  }
+}

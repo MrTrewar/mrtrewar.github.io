@@ -382,3 +382,29 @@ html, body {
   cursor: pointer;
   z-index: 10;
 }
+
+@media (hover: none) and (pointer: coarse) {
+  /* Verstecke evtl. unnötige Instruktionen */
+  #game-instructions {
+    display: none;
+  }
+
+  /* Score/Trick-Panel oben rechts absolut positionieren */
+  #game-info {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: auto;
+    flex-direction: column;    /* Score über Trick */
+    align-items: flex-end;     /* Rechtsbündig */
+    background: rgba(0,0,0,0.4);/* leichter Hintergrund, optional */
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 4vw;            /* dynamisch an Breite */
+    z-index: 100;
+  }
+  #game-info span {
+    display: block;            /* Score und Trick untereinander */
+    line-height: 1.2;
+  }
+}

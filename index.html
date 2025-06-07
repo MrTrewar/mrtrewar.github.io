@@ -2,18 +2,18 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <!-- Wichtig: id="dynamic-viewport" behalten für Zoom-Out bei Drehung -->
-  <meta
-    id="dynamic-viewport"
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  >
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Pixel Skate Runner</title>
+
+  <!-- Bibliotheken & Schriftarten -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
-
   <!-- UI oben -->
   <div id="game-info">
     <span id="score-display">Score: 0</span>
@@ -32,12 +32,12 @@
     <div id="game-over-message">GAME OVER<br><small>Press R to Restart</small></div>
   </div>
 
-  <!-- Touch-Steuerung -->
+  <!-- Touch-Steuerung (falls noch drin) -->
   <div id="joystick-zone">
     <div id="joystick-thumb"></div>
   </div>
 
-  <!-- Spiel-Logik -->
+  <!-- Deine Skripte -->
   <script src="js/config.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/ui.js"></script>
@@ -45,36 +45,5 @@
   <script src="js/player.js"></script>
   <script src="js/world.js"></script>
   <script src="js/game.js"></script>
-
-  <!-- Zoom-Out / Viewport-Reset bei Drehung -->
-  <script>
-    (function(){
-      const meta = document.getElementById('dynamic-viewport');
-      function resetViewport(){
-        if(window.matchMedia("(orientation: landscape)").matches){
-          meta.setAttribute(
-            'content',
-            'width=device-height, height=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
-          );
-        } else {
-          meta.setAttribute(
-            'content',
-            'width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
-          );
-        }
-        setTimeout(()=>window.scrollTo(0,0),50);
-      }
-      window.addEventListener('load', resetViewport);
-      window.addEventListener('orientationchange', resetViewport);
-    })();
-  </script>
-
-  <!-- Querformat-Lock -->
-  <script>
-    if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(()=>{/* Ignorieren */});
-    }
-  </script>
-
 </body>
 </html>

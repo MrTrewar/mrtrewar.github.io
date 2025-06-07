@@ -43,6 +43,11 @@
         <p>Bitte drehe dein Gerät ins Querformat</p>
     </div>
 
+    <!-- Tap-to-start Overlay -->
+    <div id="tap-to-start">
+        <p>Tippe zum Starten</p>
+    </div>
+
     <!-- Spiel-Logik -->
     <script src="js/config.js"></script>
     <script src="js/audio.js"></script>
@@ -52,12 +57,10 @@
     <script src="js/world.js"></script>
     <script src="js/game.js"></script>
 
-    <!-- Rotation + Fullscreen bei Tap nach Drehung -->
+    <!-- Fullscreen & Tap-to-Start -->
     <script>
-        window.addEventListener("orientationchange", () => {
-            // Seite neu laden für Layout
-            window.location.reload();
-
+        window.addEventListener("load", () => {
+            const tapOverlay = document.getElementById("tap-to-start");
             const gameArea = document.getElementById("game-area");
 
             const enterFullscreen = () => {
@@ -70,13 +73,26 @@
                 }
             };
 
-            const askForFullscreen = () => {
-                document.body.addEventListener("touchend", () => {
-                    enterFullscreen();
-                }, { once: true });
+            const startAfterTap = () => {
+                tapOverlay.style.display = "none";
+                enterFullscreen();
+                if (typeof startGame === "function") {
+                    startGame(); // Optional: Spielstart
+                }
             };
 
-            askForFullscreen();
+            if (window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
+                tapOverlay.addEventListener("touchend", startAfterTap, { once: true });
+            } else {
+                // PC: Kein Overlay, direkt starten
+                if (typeof startGame === "function") {
+                    startGame();
+                }
+            }
+        });
+
+        window.addEventListener("orientationchange", () => {
+            window.location.reload();
         });
     </script>
 

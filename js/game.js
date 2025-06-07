@@ -3,9 +3,9 @@ const gameArea = document.getElementById('game-area');
 let backgroundScrollX = 0;
 const BACKGROUND_SCROLL_SPEED_FACTOR = 0.3;
 let timeSinceStart = 0;
-let speedIncreaseInterval = 50; // alle 300 Frames ≈ 5 Sekunden
+let speedIncreaseInterval = 50;
 let scrollSpeedBase = gameSettings.worldScrollSpeed;
-let scrollSpeedMax = 100; // Max-Speed
+let scrollSpeedMax = 100;
 let scrollSpeedIncrement = 0.3;
 
 function checkCollision(rect1, rect2) {
@@ -17,7 +17,6 @@ function checkCollision(rect1, rect2) {
 
 function resolvePlayerCollisionsAndUpdatePosition() {
     if (playerState.isGameOver) return;
-
     let nextY = playerState.y + playerState.dy;
     playerState.isOnGround = false;
     let wasGrinding = playerState.isGrinding;
@@ -233,82 +232,61 @@ window.addEventListener('keyup', (e) => {
     if (e.code === 'Space') keys.Space = false;
 });
 
-const joystickZone = document.getElementById('joystick-zone');
-const joystickThumb = document.getElementById('joystick-thumb');
+let activeTouches = {};
 
-let joystickActive = false;
-
-joystickZone.addEventListener('touchstart', (e) => {
-    joystickActive = true;
-    handleJoystick(e);
-});
-
-joystickZone.addEventListener('touchmove', handleJoystick);
-
-joystickZone.addEventListener('touchend', () => {
-    joystickActive = false;
-    keys.KeyA = false;
-    keys.KeyD = false;
-    joystickThumb.style.left = '30px';
-    joystickThumb.style.top = '30px';
-});
-
-// Bewegungslogik innerhalb der Joystick-Zone
-function handleJoystick(e) {
-    const touch = e.touches[0];
-    const zoneRect = joystickZone.getBoundingClientRect();
-    const centerX = zoneRect.left + zoneRect.width / 2;
-    const centerY = zoneRect.top + zoneRect.height / 2;
-
-    const dx = touch.clientX - centerX;
-    const dy = touch.clientY - centerY;
-
-    // Bewegung Daumen visualisieren
-    joystickThumb.style.left = `${30 + dx * 0.3}px`;
-    joystickThumb.style.top = `${30 + dy * 0.3}px`;
-
-    // Steuerung (nur horizontal)
-    if (dx < -10) {
-        keys.KeyA = true;
-        keys.KeyD = false;
-    } else if (dx > 10) {
-        keys.KeyD = true;
-        keys.KeyA = false;
-    } else {
-        keys.KeyA = false;
-        keys.KeyD = false;
-    }
-}
+// Neue Touchsteuerung für mobile Geräte
 
 document.body.addEventListener('touchstart', (e) => {
-    if (playerState.isGameOver) return;
+    for (const touch of e.changedTouches) {
+        const isLeft = touch.clientX < window.innerWidth / 2;
+        activeTouches[touch.identifier] = {
+            startX: touch.clientX,
+            side: isLeft ? 'left' : 'right'
+        };
 
-    const touches = Array.from(e.touches);
-
-    for (const touch of touches) {
-        const jz = joystickZone.getBoundingClientRect();
-
-        const isOutsideJoystick =
-            touch.clientX < jz.left || touch.clientX > jz.right ||
-            touch.clientY < jz.top  || touch.clientY > jz.bottom;
-
-        if (isOutsideJoystick) {
+        if (!playerState.isGameOver && activeTouches[touch.identifier].side === 'right') {
             keys.Space = true;
             setTimeout(() => keys.Space = false, 100);
-            break; // Nur einmal springen pro Berührung außerhalb
+        }
+
+        if (playerState.isGameOver) {
+            startGame();
         }
     }
 }, { passive: true });
 
+document.body.addEventListener('touchmove', (e) => {
+    for (const touch of e.changedTouches) {
+        const info = activeTouches[touch.identifier];
+        if (info && info.side === 'left') {
+            const dx = touch.clientX - info.startX;
 
-
-// 📱 Tap auf dem Bildschirm nach Game Over startet neu
-window.addEventListener('touchstart', () => {
-    if (playerState.isGameOver) {
-        startGame();
+            if (dx < -10) {
+                keys.KeyA = true;
+                keys.KeyD = false;
+            } else if (dx > 10) {
+                keys.KeyD = true;
+                keys.KeyA = false;
+            } else {
+                keys.KeyA = false;
+                keys.KeyD = false;
+            }
+        }
     }
-});
+}, { passive: true });
 
+document.body.addEventListener('touchend', (e) => {
+    for (const touch of e.changedTouches) {
+        const info = activeTouches[touch.identifier];
+        if (info) {
+            if (info.side === 'left') {
+                keys.KeyA = false;
+                keys.KeyD = false;
+            }
+            delete activeTouches[touch.identifier];
+        }
+    }
+}, { passive: true });
 
 startGame();
 gameLoop();

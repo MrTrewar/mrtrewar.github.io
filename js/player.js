@@ -171,6 +171,7 @@ function updatePlayerIntentAndPhysics() {
             // playerState.dx (aktuelle horizontale Geschwindigkeit vom Pushen) wird beibehalten
         }
         playerElement.classList.add('jumping'); // Sprung-Animation starten
+        playSound(soundKickflip);
     }
 
     // Gravitation anwenden, wenn nicht gegrindet wird

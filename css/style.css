@@ -245,3 +245,26 @@ body {
         opacity: 0;
     }
 }
+#joystick-zone {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 100px;
+    height: 100px;
+    background-color: rgba(236, 240, 241, 0.05);
+    border: 2px solid #ecf0f1;
+    border-radius: 50%;
+    touch-action: none;
+    z-index: 99;
+}
+
+#joystick-thumb {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: #f1c40f;
+    border-radius: 50%;
+    left: 30px;
+    top: 30px;
+    transition: left 0.1s, top 0.1s;
+}

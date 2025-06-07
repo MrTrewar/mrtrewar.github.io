@@ -33,3 +33,7 @@ const gameSettings = {
     minObjectY: GAME_AREA_HEIGHT - (GAME_AREA_HEIGHT * 0.45),
     maxObjectY: GAME_AREA_HEIGHT - (GAME_AREA_HEIGHT * 0.22),
 };
+
+window.addEventListener('resize', () => {
+    location.reload(); // oder smarter: nur GAME_AREA_WIDTH & gameSettings neu setzen
+});

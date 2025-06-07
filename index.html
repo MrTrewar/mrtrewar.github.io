@@ -18,28 +18,39 @@
     <div id="game-instructions">
         A/D: Move | Space: Ollie (Jump) | R: Restart
     </div>
+
     <div id="game-area">
         <div id="player" class="game-object">
-            <!-- Kopf wurde entfernt -->
             <div id="player-body"></div>
             <div id="player-board"></div>
         </div>
         <div id="game-over-message">GAME OVER<br><small>Press R to Restart</small></div>
     </div>
+
+    <!-- Joystick für Mobilgeräte -->
     <div id="joystick-zone">
         <div id="joystick-thumb"></div>
+    </div>
 
+    <!-- Hinweis bei Hochformat -->
     <div id="rotate-warning">
-         <p>Bitte drehe dein Gerät ins Querformat</p>
-    </div>
+        <p>Bitte drehe dein Gerät ins Querformat</p>
     </div>
 
+    <!-- Scripts -->
     <script src="js/config.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/ui.js"></script>
-    <script src="js/effects.js"></script> <!-- NEUE DATEI HINZUFÜGEN -->
+    <script src="js/effects.js"></script>
     <script src="js/player.js"></script>
     <script src="js/world.js"></script>
     <script src="js/game.js"></script>
+
+    <!-- Neu laden bei Drehung -->
+    <script>
+        window.addEventListener("orientationchange", () => {
+            window.location.reload();
+        });
+    </script>
 </body>
 </html>

@@ -279,28 +279,36 @@ html, body {
   }
 }
 
+
+
+
 #rotate-warning {
-  display: none;
-  position: fixed;
-  z-index: 200;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: #2c3e50;
-  color: #ecf0f1;
-  font-size: 20px;
-  text-align: center;
-  padding-top: 40vh;
-  box-sizing: border-box;
+    display: none;
+    position: fixed;
+    z-index: 999;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #2c3e50;
+    color: white;
+    font-size: 18px;
+    font-family: 'Press Start 2P', monospace;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
 }
 
-@media screen and (orientation: portrait) and (hover: none) and (pointer: coarse) {
-  #rotate-warning {
-    display: block;
-  }
+@media screen and (orientation: portrait) and (max-width: 1024px) {
+    #rotate-warning {
+        display: flex;
+    }
 
-  #game-area, #game-info, #joystick-zone {
-    display: none !important;
-  }
+    #game-area,
+    #game-info,
+    #game-instructions,
+    #joystick-zone {
+        display: none !important;
+    }
 }

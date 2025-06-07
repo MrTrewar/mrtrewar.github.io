@@ -409,18 +409,30 @@ html, body {
   }
 }
 
-/* Mobile-Popups, dynamisch irgendwo auf der Fläche */
-@media (hover: none) and (pointer: coarse) {
-  .mobile-popup {
-    position: absolute;
-    pointer-events: none;
-    font-size: 4vw;
-    color: #fff;
-    background: rgba(0,0,0,0.5);
-    padding: 4px 8px;
+
+/* -------------------------------------------------- */
+/* Mobile: Score & Trick als kleines Overlay oben rechts */
+@media screen and (hover: none) and (pointer: coarse) {
+  #game-info {
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 4px 6px;
     border-radius: 4px;
-    opacity: 0;
-    z-index: 200;
-    white-space: nowrap;
+    font-size: 3.5vw;       /* relativ zur Breite */
+    line-height: 1.2;
+    z-index: 100;
+  }
+  #game-info span {
+    display: block;
+    margin: 0;
+  }
+  /* Anleitungen ausblenden */
+  #game-instructions {
+    display: none;
   }
 }

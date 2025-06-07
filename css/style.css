@@ -10,7 +10,8 @@ body {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    overflow: hidden;
+    overflow-y: auto; /* Nur vertikales Scrollen erlauben */
+    -webkit-overflow-scrolling: touch; /* Sanftes Scrollen auf iOS */
 }
 
 #game-info {
@@ -250,7 +251,8 @@ body {
 
 html, body {
     touch-action: manipulation; /* Verhindert Zoom durch Doppeltipp */
-    overscroll-behavior: none;  /* Verhindert Scroll-Effekte beim Ziehen */
+    overscroll-behavior: auto;
+    touch-action: auto;
 }
 
 @media (hover: hover) and (pointer: fine) {

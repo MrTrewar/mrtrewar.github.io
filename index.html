@@ -14,6 +14,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Spielfeld-Player -->
+    <div id="game-player-overlay">
+    <div id="game-player">
+        <div id="close-button">×</div>
+        <!-- Hier kommt dein eigentliches Game rein -->
+        <iframe src="spiel.html" id="game-iframe" frameborder="0" allowfullscreen></iframe>
+    </div>
+    </div>
+
+<!-- Optionaler Start-Button -->
+<button id="open-player">🎮 Spiel starten</button>
 
     <!-- UI oben -->
     <div id="game-info">
@@ -93,6 +104,22 @@
 
         window.addEventListener("orientationchange", () => {
             window.location.reload();
+        });
+
+        
+    </script>
+    <script>
+        const openBtn = document.getElementById("open-player");
+        const overlay = document.getElementById("game-player-overlay");
+        const closeBtn = document.getElementById("close-button");
+
+        openBtn.addEventListener("click", () => {
+            overlay.style.display = "flex";
+        });
+
+        closeBtn.addEventListener("click", () => {
+            overlay.style.display = "none";
+            document.getElementById("game-iframe").src += ""; // Reset Spiel
         });
     </script>
 

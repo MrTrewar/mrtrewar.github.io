@@ -2,8 +2,11 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Pixel Skate Runner</title>
+
+    <!-- Bibliotheken & Schriftarten -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <link rel="stylesheet" href="css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,6 +14,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
+
+    <!-- UI oben -->
     <div id="game-info">
         <span id="score-display">Score: 0</span>
         <span id="current-trick">Trick: ---</span>
@@ -19,6 +24,7 @@
         A/D: Move | Space: Ollie (Jump) | R: Restart
     </div>
 
+    <!-- Spielfeld -->
     <div id="game-area">
         <div id="player" class="game-object">
             <div id="player-body"></div>
@@ -27,17 +33,17 @@
         <div id="game-over-message">GAME OVER<br><small>Press R to Restart</small></div>
     </div>
 
-    <!-- Joystick für Mobilgeräte -->
+    <!-- Touch-Steuerung -->
     <div id="joystick-zone">
         <div id="joystick-thumb"></div>
     </div>
 
-    <!-- Hinweis bei Hochformat -->
+    <!-- Hochformat-Warnung -->
     <div id="rotate-warning">
         <p>Bitte drehe dein Gerät ins Querformat</p>
     </div>
 
-    <!-- Scripts -->
+    <!-- Spiel-Logik -->
     <script src="js/config.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/ui.js"></script>
@@ -46,11 +52,33 @@
     <script src="js/world.js"></script>
     <script src="js/game.js"></script>
 
-    <!-- Neu laden bei Drehung -->
+    <!-- Rotation + Fullscreen bei Tap nach Drehung -->
     <script>
         window.addEventListener("orientationchange", () => {
+            // Seite neu laden für Layout
             window.location.reload();
+
+            const gameArea = document.getElementById("game-area");
+
+            const enterFullscreen = () => {
+                if (gameArea.requestFullscreen) {
+                    gameArea.requestFullscreen();
+                } else if (gameArea.webkitRequestFullscreen) {
+                    gameArea.webkitRequestFullscreen();
+                } else if (gameArea.msRequestFullscreen) {
+                    gameArea.msRequestFullscreen();
+                }
+            };
+
+            const askForFullscreen = () => {
+                document.body.addEventListener("touchend", () => {
+                    enterFullscreen();
+                }, { once: true });
+            };
+
+            askForFullscreen();
         });
     </script>
+
 </body>
 </html>

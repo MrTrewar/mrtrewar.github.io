@@ -300,11 +300,7 @@ document.body.addEventListener('touchstart', (e) => {
     }
 }, { passive: true });
 
-@media (hover: none) and (pointer: coarse) {
-    #joystick-zone {
-        display: block;
-    }
-}
+
 
 // 📱 Tap auf dem Bildschirm nach Game Over startet neu
 window.addEventListener('touchstart', () => {

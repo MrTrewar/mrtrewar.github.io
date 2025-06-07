@@ -246,16 +246,8 @@ body {
     }
 }
 #joystick-zone {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    width: 100px;
-    height: 100px;
-    background-color: rgba(236, 240, 241, 0.05);
-    border: 2px solid #ecf0f1;
-    border-radius: 50%;
-    touch-action: none;
-    z-index: 99;
+  display: none;
+  /* weitere Styles z. B. Position, Größe, Farbe */
 }
 
 #joystick-thumb {
@@ -267,4 +259,15 @@ body {
     left: 30px;
     top: 30px;
     transition: left 0.1s, top 0.1s;
+}
+
+html, body {
+    touch-action: manipulation; /* Verhindert Zoom durch Doppeltipp */
+    overscroll-behavior: none;  /* Verhindert Scroll-Effekte beim Ziehen */
+}
+
+@media (hover: none) and (pointer: coarse) {
+  #joystick-zone {
+    display: block;
+  }
 }

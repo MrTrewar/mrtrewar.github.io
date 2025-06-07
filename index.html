@@ -2,13 +2,18 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <!-- Wichtig: id="dynamic-viewport" hinzufügen! -->
+  <meta
+    id="dynamic-viewport"
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
   <title>Pixel Skate Runner</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    
+
     <!-- UI oben -->
     <div id="game-info">
         <span id="score-display">Score: 0</span>
@@ -46,52 +51,46 @@
     <script src="js/world.js"></script>
     <script src="js/game.js"></script>
 
-    <!-- Zoom-Out / Viewport-Reset bei Drehung -->
-    <script>
-      (function(){
-        const meta = document.getElementById('dynamic-viewport');
-        function resetViewport(){
-          if(window.matchMedia("(orientation: landscape)").matches){
-            // Querformat: Zoom heraus
-            meta.setAttribute(
-              'content',
-              'width=device-height, height=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
-            );
-          } else {
-            // Hochformat: Standard
-            meta.setAttribute(
-              'content',
-              'width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
-            );
-          }
-          // Stelle sicher, dass wir am Anfang oben sind
-          setTimeout(()=>window.scrollTo(0,0),50);
-        }
-        window.addEventListener('load', resetViewport);
-        window.addEventListener('orientationchange', resetViewport);
-      })();
-    </script>
-  <!-- Ganz unten im body, direkt vor </body> … -->
+  <!-- Zoom-Out / Viewport-Reset bei Drehung -->
   <script>
-    // Versuche, das Display auf Landscape zu fixieren
-    if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(err => {
-        console.warn('Orientation lock fehlgeschlagen:', err);
-      });
+  (function(){
+    const meta = document.getElementById('dynamic-viewport');
+    function resetViewport(){
+      if(window.matchMedia("(orientation: landscape)").matches){
+        meta.setAttribute(
+          'content',
+          'width=device-height, height=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
+        );
+      } else {
+        meta.setAttribute(
+          'content',
+          'width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
+        );
+      }
+      setTimeout(()=>window.scrollTo(0,0),50);
     }
-    // Fallback: falls sich das Gerät doch dreht, zeige Warnung
-    window.addEventListener('orientationchange', () => {
-      const warning = document.getElementById('rotate-warning');
+    window.addEventListener('load', resetViewport);
+    window.addEventListener('orientationchange', resetViewport);
+  })();
+  </script>
+
+  <!-- Landscape Lock & Portrait-Warnung -->
+  <script>
+    // Versuche Querformat zu erzwingen
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(()=>{/* still okay */});
+    }
+
+    const warning = document.getElementById('rotate-warning');
+    function checkOrientation(){
       if (window.matchMedia('(orientation: portrait)').matches) {
         warning.style.display = 'flex';
       } else {
         warning.style.display = 'none';
       }
-    });
-    // beim ersten Laden direkt checken
-    if (window.matchMedia('(orientation: portrait)').matches) {
-      document.getElementById('rotate-warning').style.display = 'flex';
     }
+    window.addEventListener('orientationchange', checkOrientation);
+    window.addEventListener('load', checkOrientation);
   </script>
 </body>
 </html>

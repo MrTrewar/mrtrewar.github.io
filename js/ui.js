@@ -7,6 +7,7 @@ const gameAreaForUIPopups = document.getElementById('game-area');
 const LEADERBOARD_KEY = 'wtj_leaderboard_v1';
 const LEADERBOARD_LIMIT = 5;
 let didSaveScoreThisRound = false;
+let showLeaderboardEntryForm = false;
 
 function addScore(points, trickName = "", options = {}) {
     const useCombo = options.useCombo !== false;
@@ -122,21 +123,37 @@ function showGameOverMessage() {
         gameOverMessageElement.innerHTML = `
             <div>GAME OVER</div>
             <small>Score: ${playerState.score}</small>
-            ${canSubmit ? `
+            ${canSubmit && !showLeaderboardEntryForm ? `
+            <button type="button" class="leaderboard-open">Ins Leaderboard eintragen</button>
+            ` : ''}
+            ${canSubmit && showLeaderboardEntryForm ? `
             <form class="leaderboard-entry">
                 <label for="player-name-input">Name</label>
                 <input id="player-name-input" name="player-name" maxlength="16" placeholder="Player" autocomplete="nickname" />
-                <button type="submit" class="leaderboard-submit">Score speichern</button>
+                <div class="leaderboard-entry-score">Score: ${playerState.score}</div>
+                <button type="submit" class="leaderboard-submit">Eintragen</button>
             </form>
             ` : ''}
             <div class="leaderboard">
                 <div class="leaderboard-title">Leaderboard</div>
                 ${renderLeaderboardHtml()}
             </div>
-            <small>${canSubmit ? 'Speichern, dann R / Enter / Tap zum Neustart' : 'Press R / Enter / Tap to Restart'}</small>
+            <small>${canSubmit ? 'Eintragen, dann R / Enter / Tap zum Neustart' : 'Press R / Enter / Tap to Restart'}</small>
         `;
 
-        if (canSubmit) {
+        if (canSubmit && !showLeaderboardEntryForm) {
+            const openButton = gameOverMessageElement.querySelector('.leaderboard-open');
+            if (openButton) {
+                openButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showLeaderboardEntryForm = true;
+                    showGameOverMessage();
+                });
+            }
+        }
+
+        if (canSubmit && showLeaderboardEntryForm) {
             const form = gameOverMessageElement.querySelector('.leaderboard-entry');
             const input = gameOverMessageElement.querySelector('#player-name-input');
             if (form && input) {
@@ -146,6 +163,7 @@ function showGameOverMessage() {
                     e.stopPropagation();
                     addHighscoreEntry(input.value, playerState.score);
                     didSaveScoreThisRound = true;
+                    showLeaderboardEntryForm = false;
                     showGameOverMessage();
                 });
             }
@@ -156,5 +174,6 @@ function showGameOverMessage() {
 
 function hideGameOverMessage() {
     didSaveScoreThisRound = false;
+    showLeaderboardEntryForm = false;
     gameOverMessageElement.style.display = 'none';
 }

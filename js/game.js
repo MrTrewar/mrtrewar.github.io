@@ -306,12 +306,20 @@ document.body.addEventListener('touchmove', (e) => {
 if (typeof gameOverMessageElement !== 'undefined' && gameOverMessageElement) {
     gameOverMessageElement.addEventListener('click', (e) => {
         if (!playerState.isGameOver) return;
-        if (e.target.closest('.leaderboard-entry') || e.target.closest('.leaderboard-submit')) return;
+        if (
+            e.target.closest('.leaderboard-entry') ||
+            e.target.closest('.leaderboard-submit') ||
+            e.target.closest('.leaderboard-open')
+        ) return;
         restartGame();
     });
     gameOverMessageElement.addEventListener('touchend', (e) => {
         if (!playerState.isGameOver) return;
-        if (e.target.closest('.leaderboard-entry') || e.target.closest('.leaderboard-submit')) return;
+        if (
+            e.target.closest('.leaderboard-entry') ||
+            e.target.closest('.leaderboard-submit') ||
+            e.target.closest('.leaderboard-open')
+        ) return;
         restartGame();
     }, { passive: true });
 }

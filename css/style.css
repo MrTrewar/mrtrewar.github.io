@@ -255,6 +255,7 @@ body {
 #game-over-message .leaderboard-entry {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 6px;
     width: min(320px, 80vw);
     font-size: 0.4em;
@@ -285,6 +286,24 @@ body {
     font-family: 'Press Start 2P', monospace;
     font-size: 0.85em;
     cursor: pointer;
+}
+
+#game-over-message .leaderboard-open {
+    border: 1px solid rgba(46, 204, 113, 0.85);
+    background: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.35em;
+    cursor: pointer;
+}
+
+#game-over-message .leaderboard-entry-score {
+    width: 100%;
+    font-size: 0.9em;
+    color: #f1c40f;
+    opacity: 0.9;
 }
 
 /* --- EXPLOSION --- */

@@ -246,11 +246,11 @@ window.addEventListener('keydown', (e) => {
         gameOverMessageElement.querySelector('.leaderboard-entry')
     );
 
-    if (playerState.isGameOver && isLeaderboardEntryActive && (e.key.toLowerCase() === 'r' || e.key === 'Enter')) {
+    if (playerState.isGameOver && isLeaderboardEntryActive && e.key === 'Enter') {
         return;
     }
 
-    if (playerState.isGameOver && (e.key.toLowerCase() === 'r' || e.key === 'Enter')) {
+    if (playerState.isGameOver && e.key === 'Enter') {
         restartGame();
         return;
     }

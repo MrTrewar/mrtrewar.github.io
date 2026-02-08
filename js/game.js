@@ -240,6 +240,16 @@ function startGame() {
 }
 
 window.addEventListener('keydown', (e) => {
+    const isLeaderboardEntryActive = Boolean(
+        typeof gameOverMessageElement !== 'undefined' &&
+        gameOverMessageElement &&
+        gameOverMessageElement.querySelector('.leaderboard-entry')
+    );
+
+    if (playerState.isGameOver && isLeaderboardEntryActive && (e.key.toLowerCase() === 'r' || e.key === 'Enter')) {
+        return;
+    }
+
     if (playerState.isGameOver && (e.key.toLowerCase() === 'r' || e.key === 'Enter')) {
         restartGame();
         return;

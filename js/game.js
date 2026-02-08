@@ -62,8 +62,10 @@ function resolvePlayerCollisionsAndUpdatePosition() {
                     nextY = obj.y - gameSettings.playerHeight;
                     playerState.dy = 0;
                     playerState.isOnGround = true;
+                    playerState.coyoteTimer = gameSettings.coyoteTimeFrames;
 
                     if (playerElement && playerElement.classList.contains('jumping')) {
+                        if (typeof registerComboAction === 'function') registerComboAction();
                         addScore(gameSettings.ollieScore, "Kickflip");
                         playerElement.classList.remove('jumping');
                         playerElement.classList.add('landing');
@@ -79,11 +81,13 @@ function resolvePlayerCollisionsAndUpdatePosition() {
                         if (Math.abs((playerRect.y + playerRect.height) - obj.y) < 8 && playerState.dy < 5) {
                             playerState.isGrinding = true;
                             playerState.currentRail = obj;
+                            if (typeof registerComboAction === 'function') registerComboAction();
                             playSound(soundGrind);
                             if (playerElement) {
                                 playerElement.classList.add('grinding');
                                 playerElement.classList.remove('jumping', 'landing');
                             }
+                            addScore(5, "Rail Lock");
                             nextY = obj.y - gameSettings.playerHeight;
                             playerState.dy = 0;
                         }
@@ -119,6 +123,11 @@ function resolvePlayerCollisionsAndUpdatePosition() {
     }
 
     playerState.y = nextY;
+    if (playerState.isOnGround || playerState.isGrinding) {
+        playerState.coyoteTimer = gameSettings.coyoteTimeFrames;
+    } else if (playerState.coyoteTimer > 0) {
+        playerState.coyoteTimer--;
+    }
 
     const minPlayerScreenX = 0;
     const maxPlayerScreenX = GAME_AREA_WIDTH;
@@ -185,6 +194,7 @@ function gameLoop() {
         updateWorldObjects();
         updatePlayerIntentAndPhysics();
         resolvePlayerCollisionsAndUpdatePosition();
+        if (typeof updateComboState === 'function') updateComboState();
         render();
 
         backgroundScrollX -= gameSettings.worldScrollSpeed * BACKGROUND_SCROLL_SPEED_FACTOR;
@@ -199,6 +209,13 @@ function gameLoop() {
         }
     }
     requestAnimationFrame(gameLoop);
+}
+
+function restartGame() {
+    keys.KeyA = false;
+    keys.KeyD = false;
+    keys.Space = false;
+    startGame();
 }
 
 function startGame() {
@@ -223,14 +240,17 @@ function startGame() {
 }
 
 window.addEventListener('keydown', (e) => {
-    if (playerState.isGameOver && e.key.toLowerCase() === 'r') {
-        startGame();
+    if (playerState.isGameOver && (e.key.toLowerCase() === 'r' || e.key === 'Enter')) {
+        restartGame();
         return;
     }
     if (playerState.isGameOver) return;
     if (e.code === 'KeyA') keys.KeyA = true;
     if (e.code === 'KeyD') keys.KeyD = true;
-    if (e.code === 'Space') keys.Space = true;
+    if (e.code === 'Space') {
+        keys.Space = true;
+        if (typeof queueJumpInput === 'function') queueJumpInput();
+    }
 });
 
 window.addEventListener('keyup', (e) => {
@@ -253,11 +273,12 @@ document.body.addEventListener('touchstart', (e) => {
 
         if (!playerState.isGameOver && activeTouches[touch.identifier].side === 'right') {
             keys.Space = true;
+            if (typeof queueJumpInput === 'function') queueJumpInput();
             setTimeout(() => keys.Space = false, 100);
         }
 
         if (playerState.isGameOver) {
-            startGame();
+            restartGame();
         }
     }
 }, { passive: true });
@@ -281,6 +302,15 @@ document.body.addEventListener('touchmove', (e) => {
         }
     }
 }, { passive: true });
+
+if (typeof gameOverMessageElement !== 'undefined' && gameOverMessageElement) {
+    gameOverMessageElement.addEventListener('click', () => {
+        if (playerState.isGameOver) restartGame();
+    });
+    gameOverMessageElement.addEventListener('touchend', () => {
+        if (playerState.isGameOver) restartGame();
+    }, { passive: true });
+}
 
 document.body.addEventListener('touchend', (e) => {
     for (const touch of e.changedTouches) {

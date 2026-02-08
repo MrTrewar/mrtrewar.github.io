@@ -17,7 +17,11 @@ var playerState = {
     isGrinding: false,
     currentRail: null,      // Das Rail-Objekt, auf dem gerade gegrindet wird
     isGameOver: false,      // Wird von game.js gesetzt
-    score: 0                // Der Punktestand
+    score: 0,               // Der Punktestand
+    coyoteTimer: 0,
+    jumpBufferTimer: 0,
+    comboMultiplier: 1,
+    comboTimer: 0
 };
 
 // Globaler Zustand der gedrückten Tasten
@@ -33,6 +37,26 @@ var grindSparkState = {
     cooldownMax: 3 // Kann auch aus gameSettings kommen oder hier individuell sein (SPARK_DEFAULT_COOLDOWN_MAX aus effects.js wird verwendet, falls nicht gesetzt)
 };
 
+function queueJumpInput() {
+    playerState.jumpBufferTimer = gameSettings.jumpBufferFrames;
+}
+
+function registerComboAction() {
+    playerState.comboMultiplier = Math.min(playerState.comboMultiplier + 1, gameSettings.maxComboMultiplier);
+    playerState.comboTimer = gameSettings.comboWindowFrames;
+    if (typeof updateComboDisplay === 'function') updateComboDisplay();
+}
+
+function updateComboState() {
+    if (playerState.comboTimer > 0) {
+        playerState.comboTimer--;
+        if (playerState.comboTimer === 0 && playerState.comboMultiplier !== 1) {
+            playerState.comboMultiplier = 1;
+            if (typeof updateComboDisplay === 'function') updateComboDisplay();
+        }
+    }
+}
+
 function resetPlayer() {
     // Sicherstellen, dass gameSettings und playerHeight hier bekannt sind (aus config.js)
     playerState.y = gameSettings.groundLevelY - gameSettings.playerHeight;
@@ -45,6 +69,10 @@ function resetPlayer() {
     playerState.currentRail = null;
     playerState.isGameOver = false;
     playerState.score = 0;
+    playerState.coyoteTimer = gameSettings.coyoteTimeFrames;
+    playerState.jumpBufferTimer = 0;
+    playerState.comboMultiplier = 1;
+    playerState.comboTimer = 0;
     // Geschwindigkeit und Zeit zurücksetzen
     timeSinceStart = 0;
     gameSettings.worldScrollSpeed = scrollSpeedBase;
@@ -54,6 +82,7 @@ function resetPlayer() {
 
     // UI Aktualisierungen (Funktionen aus ui.js)
     if (typeof updateScoreDisplay === 'function') updateScoreDisplay();
+    if (typeof updateComboDisplay === 'function') updateComboDisplay();
     if (window.currentTrickDisplayElement) currentTrickDisplayElement.textContent = "Trick: ---"; // ui.js Variable, ggf. anpassen
     if (typeof hideGameOverMessage === 'function') hideGameOverMessage();
 
@@ -102,7 +131,7 @@ function updatePlayerIntentAndPhysics() {
 
     } else { // Logik während des Grindens
         playerState.dy = 0; // Keine vertikale Bewegung beim Grinden
-        if (typeof addScore === 'function') addScore(gameSettings.grindScorePerFrame); // ui.js
+        if (typeof addScore === 'function') addScore(gameSettings.grindScorePerFrame, "", { useCombo: false, showPopup: false }); // ui.js
         if (window.currentTrickDisplayElement) currentTrickDisplayElement.textContent = "Trick: Grind";
 
         // Horizontale Anpassung auf dem Rail
@@ -154,14 +183,21 @@ function updatePlayerIntentAndPhysics() {
         playerState.x += playerState.dx;
     }
 
+    if (playerState.jumpBufferTimer > 0) {
+        playerState.jumpBufferTimer--;
+    }
 
-    // Ollie (Springen) - mit Space
-    if (keys.Space && (playerState.isOnGround || playerState.isGrinding)) {
+    // Ollie (Springen) mit Coyote Time + Jump Buffer
+    const canJump = playerState.isOnGround || playerState.isGrinding || playerState.coyoteTimer > 0;
+    if (playerState.jumpBufferTimer > 0 && canJump) {
         playerState.dy = -gameSettings.jumpForce;
+        playerState.jumpBufferTimer = 0;
+        playerState.coyoteTimer = 0;
         playerState.isOnGround = false; // Wird durch Kollision ggf. wieder true
         playerElement.classList.remove('landing', 'pushing-left', 'pushing-right'); // Pushing beim Absprung beenden
 
         if (playerState.isGrinding) {
+            registerComboAction();
             if (typeof addScore === 'function') addScore(gameSettings.ollieScore, "Kickflip off Grind"); // ui.js
             playerState.isGrinding = false;
             playerState.currentRail = null;

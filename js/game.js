@@ -240,6 +240,10 @@ function startGame() {
 }
 
 window.addEventListener('keydown', (e) => {
+    if (playerState.isGameOver && e.key.toLowerCase() === 'r') {
+        return;
+    }
+
     const isLeaderboardEntryActive = Boolean(
         typeof gameOverMessageElement !== 'undefined' &&
         gameOverMessageElement &&

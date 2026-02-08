@@ -138,7 +138,7 @@ function showGameOverMessage() {
                 <div class="leaderboard-title">Leaderboard</div>
                 ${renderLeaderboardHtml()}
             </div>
-            <small>${canSubmit ? 'Eintragen, dann R / Enter / Tap zum Neustart' : 'Press R / Enter / Tap to Restart'}</small>
+            <small>${canSubmit ? 'Eintragen, dann Enter / Tap zum Neustart' : 'Press Enter / Tap to Restart'}</small>
         `;
 
         if (canSubmit && !showLeaderboardEntryForm) {

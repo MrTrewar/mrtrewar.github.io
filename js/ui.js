@@ -6,6 +6,7 @@ const gameOverMessageElement = document.getElementById('game-over-message');
 const gameAreaForUIPopups = document.getElementById('game-area');
 const LEADERBOARD_KEY = 'wtj_leaderboard_v1';
 const LEADERBOARD_LIMIT = 5;
+let didSaveScoreThisRound = false;
 
 function addScore(points, trickName = "", options = {}) {
     const useCombo = options.useCombo !== false;
@@ -88,18 +89,16 @@ function saveLeaderboard(entries) {
     }
 }
 
-function maybeAddHighscore(score) {
-    if (!Number.isFinite(score) || score <= 0) return;
-
+function doesScoreQualify(score) {
     const entries = loadLeaderboard();
-    const qualifies = entries.length < LEADERBOARD_LIMIT || score > entries[entries.length - 1].score;
-    if (!qualifies) return;
+    if (entries.length < LEADERBOARD_LIMIT) return score > 0;
+    return score > entries[entries.length - 1].score;
+}
 
-    const input = window.prompt('Neuer Highscore! Name eingeben:', 'Player');
-    if (input === null) return;
-
-    const name = input.trim().slice(0, 16) || 'Player';
-    const updated = [...entries, { name, score }]
+function addHighscoreEntry(name, score) {
+    const safeName = (name || '').trim().slice(0, 16) || 'Player';
+    const entries = loadLeaderboard();
+    const updated = [...entries, { name: safeName, score }]
         .sort((a, b) => b.score - a.score)
         .slice(0, LEADERBOARD_LIMIT);
     saveLeaderboard(updated);
@@ -119,20 +118,43 @@ function renderLeaderboardHtml() {
 
 function showGameOverMessage() {
     if (window.playerState) {
-        maybeAddHighscore(playerState.score);
+        const canSubmit = !didSaveScoreThisRound && doesScoreQualify(playerState.score);
         gameOverMessageElement.innerHTML = `
             <div>GAME OVER</div>
             <small>Score: ${playerState.score}</small>
+            ${canSubmit ? `
+            <form class="leaderboard-entry">
+                <label for="player-name-input">Name</label>
+                <input id="player-name-input" name="player-name" maxlength="16" placeholder="Player" autocomplete="nickname" />
+                <button type="submit" class="leaderboard-submit">Score speichern</button>
+            </form>
+            ` : ''}
             <div class="leaderboard">
                 <div class="leaderboard-title">Leaderboard</div>
                 ${renderLeaderboardHtml()}
             </div>
-            <small>Press R / Enter / Tap to Restart</small>
+            <small>${canSubmit ? 'Speichern, dann R / Enter / Tap zum Neustart' : 'Press R / Enter / Tap to Restart'}</small>
         `;
+
+        if (canSubmit) {
+            const form = gameOverMessageElement.querySelector('.leaderboard-entry');
+            const input = gameOverMessageElement.querySelector('#player-name-input');
+            if (form && input) {
+                input.focus();
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    addHighscoreEntry(input.value, playerState.score);
+                    didSaveScoreThisRound = true;
+                    showGameOverMessage();
+                });
+            }
+        }
     }
     gameOverMessageElement.style.display = 'flex';
 }
 
 function hideGameOverMessage() {
+    didSaveScoreThisRound = false;
     gameOverMessageElement.style.display = 'none';
 }

@@ -252,6 +252,41 @@ body {
     opacity: 0.8;
 }
 
+#game-over-message .leaderboard-entry {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: min(320px, 80vw);
+    font-size: 0.4em;
+}
+
+#game-over-message .leaderboard-entry label {
+    color: #ecf0f1;
+}
+
+#game-over-message .leaderboard-entry input {
+    flex: 1;
+    min-width: 90px;
+    border: 1px solid rgba(236, 240, 241, 0.45);
+    background: rgba(0, 0, 0, 0.35);
+    color: #ecf0f1;
+    border-radius: 6px;
+    padding: 4px 6px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.95em;
+}
+
+#game-over-message .leaderboard-submit {
+    border: 1px solid rgba(241, 196, 15, 0.8);
+    background: rgba(241, 196, 15, 0.2);
+    color: #f1c40f;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.85em;
+    cursor: pointer;
+}
+
 /* --- EXPLOSION --- */
 .explosion {
     position: absolute;

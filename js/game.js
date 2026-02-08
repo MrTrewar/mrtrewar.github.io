@@ -304,11 +304,15 @@ document.body.addEventListener('touchmove', (e) => {
 }, { passive: true });
 
 if (typeof gameOverMessageElement !== 'undefined' && gameOverMessageElement) {
-    gameOverMessageElement.addEventListener('click', () => {
-        if (playerState.isGameOver) restartGame();
+    gameOverMessageElement.addEventListener('click', (e) => {
+        if (!playerState.isGameOver) return;
+        if (e.target.closest('.leaderboard-entry') || e.target.closest('.leaderboard-submit')) return;
+        restartGame();
     });
-    gameOverMessageElement.addEventListener('touchend', () => {
-        if (playerState.isGameOver) restartGame();
+    gameOverMessageElement.addEventListener('touchend', (e) => {
+        if (!playerState.isGameOver) return;
+        if (e.target.closest('.leaderboard-entry') || e.target.closest('.leaderboard-submit')) return;
+        restartGame();
     }, { passive: true });
 }
 

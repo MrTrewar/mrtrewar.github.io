@@ -15,16 +15,25 @@ body {
 }
 
 #game-info {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  align-items: center;
+  gap: 8px;
   width: 90vw;
   max-width: 600px;
   margin-bottom: 10px;
   font-size: 3vw;
+  min-height: 1.4em;
 }
 
 #score-display { color: #f1c40f; }
 #combo-display { color: #2ecc71; }
+
+#game-info span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 #game-instructions {
   font-size: 2.5vw;
@@ -343,9 +352,9 @@ html, body {
     position: fixed;
     top: 8px;
     right: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: end;
     background: rgba(0, 0, 0, 0.4);
     padding: 4px 6px;
     border-radius: 4px;

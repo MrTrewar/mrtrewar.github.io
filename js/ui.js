@@ -4,6 +4,8 @@ const currentTrickDisplayElement = document.getElementById('current-trick');
 const comboDisplayElement = document.getElementById('combo-display');
 const gameOverMessageElement = document.getElementById('game-over-message');
 const gameAreaForUIPopups = document.getElementById('game-area');
+const LEADERBOARD_KEY = 'wtj_leaderboard_v1';
+const LEADERBOARD_LIMIT = 5;
 
 function addScore(points, trickName = "", options = {}) {
     const useCombo = options.useCombo !== false;
@@ -54,9 +56,79 @@ function updateComboDisplay() {
     comboDisplayElement.textContent = `Combo: x${comboValue}`;
 }
 
+function escapeHtml(text) {
+    return String(text)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
+function loadLeaderboard() {
+    try {
+        const raw = localStorage.getItem(LEADERBOARD_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(parsed)) return [];
+        return parsed
+            .filter(entry => entry && typeof entry.name === 'string' && Number.isFinite(entry.score))
+            .sort((a, b) => b.score - a.score)
+            .slice(0, LEADERBOARD_LIMIT);
+    } catch (err) {
+        console.warn('Leaderboard konnte nicht geladen werden:', err);
+        return [];
+    }
+}
+
+function saveLeaderboard(entries) {
+    try {
+        localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(entries.slice(0, LEADERBOARD_LIMIT)));
+    } catch (err) {
+        console.warn('Leaderboard konnte nicht gespeichert werden:', err);
+    }
+}
+
+function maybeAddHighscore(score) {
+    if (!Number.isFinite(score) || score <= 0) return;
+
+    const entries = loadLeaderboard();
+    const qualifies = entries.length < LEADERBOARD_LIMIT || score > entries[entries.length - 1].score;
+    if (!qualifies) return;
+
+    const input = window.prompt('Neuer Highscore! Name eingeben:', 'Player');
+    if (input === null) return;
+
+    const name = input.trim().slice(0, 16) || 'Player';
+    const updated = [...entries, { name, score }]
+        .sort((a, b) => b.score - a.score)
+        .slice(0, LEADERBOARD_LIMIT);
+    saveLeaderboard(updated);
+}
+
+function renderLeaderboardHtml() {
+    const entries = loadLeaderboard();
+    if (entries.length === 0) {
+        return '<div class="leaderboard-empty">Noch keine Einträge.</div>';
+    }
+
+    const rows = entries
+        .map((entry, index) => `<li><span>#${index + 1} ${escapeHtml(entry.name)}</span><strong>${entry.score}</strong></li>`)
+        .join('');
+    return `<ol>${rows}</ol>`;
+}
+
 function showGameOverMessage() {
     if (window.playerState) {
-        gameOverMessageElement.innerHTML = `GAME OVER<br><small>Score: ${playerState.score}</small><br><small>Press R / Enter / Tap to Restart</small>`;
+        maybeAddHighscore(playerState.score);
+        gameOverMessageElement.innerHTML = `
+            <div>GAME OVER</div>
+            <small>Score: ${playerState.score}</small>
+            <div class="leaderboard">
+                <div class="leaderboard-title">Leaderboard</div>
+                ${renderLeaderboardHtml()}
+            </div>
+            <small>Press R / Enter / Tap to Restart</small>
+        `;
     }
     gameOverMessageElement.style.display = 'flex';
 }

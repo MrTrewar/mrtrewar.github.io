@@ -219,6 +219,37 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 8px;
+}
+
+#game-over-message .leaderboard {
+    width: min(320px, 80vw);
+    text-align: left;
+    font-size: 0.5em;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+#game-over-message .leaderboard-title {
+    color: #f1c40f;
+    margin-bottom: 6px;
+}
+
+#game-over-message .leaderboard ol {
+    margin: 0;
+    padding-left: 20px;
+}
+
+#game-over-message .leaderboard li {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 2px 0;
+}
+
+#game-over-message .leaderboard-empty {
+    opacity: 0.8;
 }
 
 /* --- EXPLOSION --- */

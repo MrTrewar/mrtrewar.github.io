@@ -35,11 +35,13 @@
     <div id="game-over-message">GAME OVER<br><small>Press Enter / Tap to Restart</small></div>
     <div id="pause-overlay">PAUSE</div>
     <div id="level-overlay"></div>
-  </div>
-
-  <!-- Touch-Steuerung -->
-  <div id="joystick-zone">
-    <div id="joystick-thumb"></div>
+    <div id="mobile-controls">
+      <div id="dpad">
+        <span id="arrow-left" class="dpad-arrow">◀</span>
+        <span id="arrow-right" class="dpad-arrow">▶</span>
+      </div>
+      <div id="jump-btn">▲</div>
+    </div>
   </div>
 
   <!-- Spiel-Logik -->
@@ -51,38 +53,15 @@
   <script src="js/world.js"></script>
   <script src="js/game.js"></script>
 
-  <!-- Fullscreen & Tap-to-Start -->
+  <!-- Fullscreen auf Mobile beim ersten Touch -->
   <script>
-    window.addEventListener("load", () => {
-      const tapOverlay = document.getElementById("tap-to-start");
-      const gameArea = document.getElementById("game-area");
-
-      const enterFullscreen = () => {
-        if (gameArea.requestFullscreen) {
-          gameArea.requestFullscreen();
-        } else if (gameArea.webkitRequestFullscreen) {
-          gameArea.webkitRequestFullscreen();
-        } else if (gameArea.msRequestFullscreen) {
-          gameArea.msRequestFullscreen();
-        }
-      };
-
-      const startAfterTap = () => {
-        if (tapOverlay) tapOverlay.style.display = "none";
-        enterFullscreen();
-        if (typeof startGame === "function") {
-          startGame();
-        }
-      };
-
-      if (window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
-        if (tapOverlay) tapOverlay.addEventListener("touchend", startAfterTap, { once: true });
-      } else {
-        if (typeof startGame === "function") {
-          startGame();
-        }
-      }
-    });
+    if (window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
+      document.getElementById("game-area").addEventListener("touchstart", () => {
+        const ga = document.getElementById("game-area");
+        if (ga.requestFullscreen) ga.requestFullscreen();
+        else if (ga.webkitRequestFullscreen) ga.webkitRequestFullscreen();
+      }, { once: true });
+    }
 
     window.addEventListener("orientationchange", () => {
       window.location.reload();

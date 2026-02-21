@@ -298,10 +298,16 @@ function startGame() {
     const levelOverlay = document.getElementById('level-overlay');
     if (levelOverlay) levelOverlay.style.display = 'none';
 
+    // Remove any lingering score popups from previous round
+    if (gameArea) {
+        gameArea.querySelectorAll('.score-popup').forEach(el => el.remove());
+    }
+
     initLevel();
     resetPlayer();
     gameSettings.worldScrollSpeed = scrollSpeedBase;
     timeSinceStart = 0;
+
 }
 
 window.addEventListener('keydown', (e) => {
@@ -348,47 +354,89 @@ window.addEventListener('keyup', (e) => {
 
 let activeTouches = {};
 
-// Neue Touchsteuerung für mobile Geräte
+// --- Touch-Steuerung: D-Pad links (Slide) + Tap rechts = Sprung ---
 
-document.body.addEventListener('touchstart', (e) => {
+const TOUCH_DEADZONE = 15; // px Mindest-Slide bevor Bewegung startet
+
+function triggerJump() {
+    if (playerState.isGameOver) return;
+    keys.Space = true;
+    if (typeof queueJumpInput === 'function') queueJumpInput();
+    if (navigator.vibrate) navigator.vibrate(15);
+    setTimeout(() => { keys.Space = false; }, 100);
+}
+
+const gameAreaEl = document.getElementById('game-area');
+const arrowLeftEl = document.getElementById('arrow-left');
+const arrowRightEl = document.getElementById('arrow-right');
+const jumpBtnEl = document.getElementById('jump-btn');
+
+function updateDpadVisual() {
+    if (arrowLeftEl) arrowLeftEl.classList.toggle('active', keys.KeyA);
+    if (arrowRightEl) arrowRightEl.classList.toggle('active', keys.KeyD);
+    if (jumpBtnEl) jumpBtnEl.classList.toggle('active', keys.Space);
+}
+
+gameAreaEl.addEventListener('touchstart', (e) => {
+    e.preventDefault();
     for (const touch of e.changedTouches) {
-        const isLeft = touch.clientX < window.innerWidth / 2;
-        activeTouches[touch.identifier] = {
-            startX: touch.clientX,
-            side: isLeft ? 'left' : 'right'
-        };
+        if (playerState.isGameOver) { restartGame(); return; }
+        const rect = gameAreaEl.getBoundingClientRect();
+        const relX = (touch.clientX - rect.left) / rect.width; // 0..1
 
-        if (!playerState.isGameOver && activeTouches[touch.identifier].side === 'right') {
-            keys.Space = true;
-            if (typeof queueJumpInput === 'function') queueJumpInput();
-            setTimeout(() => keys.Space = false, 100);
-        }
-
-        if (playerState.isGameOver) {
-            restartGame();
+        if (relX < 0.45) {
+            // Linke Seite: D-Pad — Startposition merken, noch keine Bewegung (Deadzone)
+            activeTouches[touch.identifier] = {
+                startX: touch.clientX, side: 'dpad'
+            };
+        } else {
+            // Rechte Seite: Sprung
+            activeTouches[touch.identifier] = { side: 'jump' };
+            triggerJump();
+            updateDpadVisual();
         }
     }
-}, { passive: true });
+}, { passive: false });
 
-document.body.addEventListener('touchmove', (e) => {
+gameAreaEl.addEventListener('touchmove', (e) => {
+    e.preventDefault();
     for (const touch of e.changedTouches) {
         const info = activeTouches[touch.identifier];
-        if (info && info.side === 'left') {
-            const dx = touch.clientX - info.startX;
+        if (!info || info.side !== 'dpad') continue;
 
-            if (dx < -10) {
-                keys.KeyA = true;
-                keys.KeyD = false;
-            } else if (dx > 10) {
-                keys.KeyD = true;
-                keys.KeyA = false;
-            } else {
-                keys.KeyA = false;
-                keys.KeyD = false;
-            }
+        const dx = touch.clientX - info.startX;
+        if (dx < -TOUCH_DEADZONE) {
+            keys.KeyA = true; keys.KeyD = false;
+        } else if (dx > TOUCH_DEADZONE) {
+            keys.KeyD = true; keys.KeyA = false;
+        } else {
+            keys.KeyA = false; keys.KeyD = false;
         }
+        updateDpadVisual();
     }
-}, { passive: true });
+}, { passive: false });
+
+function releaseTouch(touch) {
+    const info = activeTouches[touch.identifier];
+    if (!info) return;
+    if (info.side === 'dpad') {
+        // Nur loslassen wenn kein anderer D-Pad-Finger aktiv
+        const otherDpad = Object.entries(activeTouches)
+            .some(([id, t]) => Number(id) !== touch.identifier && t.side === 'dpad');
+        if (!otherDpad) { keys.KeyA = false; keys.KeyD = false; }
+    }
+    delete activeTouches[touch.identifier];
+    updateDpadVisual();
+}
+
+gameAreaEl.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    for (const touch of e.changedTouches) releaseTouch(touch);
+}, { passive: false });
+
+gameAreaEl.addEventListener('touchcancel', (e) => {
+    for (const touch of e.changedTouches) releaseTouch(touch);
+});
 
 if (typeof gameOverMessageElement !== 'undefined' && gameOverMessageElement) {
     gameOverMessageElement.addEventListener('click', (e) => {
@@ -411,18 +459,5 @@ if (typeof gameOverMessageElement !== 'undefined' && gameOverMessageElement) {
     }, { passive: true });
 }
 
-document.body.addEventListener('touchend', (e) => {
-    for (const touch of e.changedTouches) {
-        const info = activeTouches[touch.identifier];
-        if (info) {
-            if (info.side === 'left') {
-                keys.KeyA = false;
-                keys.KeyD = false;
-            }
-            delete activeTouches[touch.identifier];
-        }
-    }
-}, { passive: true });
-
 startGame();
-gameLoop();
+requestAnimationFrame(gameLoop);

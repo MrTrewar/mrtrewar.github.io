@@ -4,11 +4,11 @@ const GAME_AREA_WIDTH = isMobile ? window.innerWidth : 600;
 const GAME_AREA_HEIGHT = isMobile ? window.innerHeight : 400;
 
 const gameSettings = {
-    gravity: 0.7,
-    pushForce: 0.5,
-    maxPlayerDX: 3,
+    gravity: 0.48,
+    pushForce: 0.68,
+    maxPlayerDX: 4.5,
     worldScrollSpeed: 2.5,
-    jumpForce: 14.5,
+    jumpForce: 13,
     coyoteTimeFrames: 7,
     jumpBufferFrames: 8,
     comboWindowFrames: 180,
@@ -44,5 +44,5 @@ const LEVELS = [
 ];
 
 // Supabase configuration — fill in your values from the Supabase dashboard
-const SUPABASE_URL = '';
-const SUPABASE_ANON_KEY = '';
+const SUPABASE_URL = 'https://mhelaaozlexvxkojrljp.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_F1S_lB8kCYj22c-ssxrL4A_3hTHta1h';

@@ -4,9 +4,17 @@ let backgroundScrollX = 0;
 const BACKGROUND_SCROLL_SPEED_FACTOR = 0.3;
 let timeSinceStart = 0;
 let speedIncreaseInterval = 50;
-let scrollSpeedBase = gameSettings.worldScrollSpeed;
+let scrollSpeedBase = LEVELS[0].scrollSpeedBase;
 let scrollSpeedMax = 100;
 let scrollSpeedIncrement = 0.3;
+
+// Delta time & loop state
+let lastTime = 0;
+let isPaused = false;
+
+// Level system
+let currentLevel = 0;
+let lastSpeedIncrease = 0;
 
 function checkCollision(rect1, rect2) {
     return rect1.x < rect2.x + rect2.width &&
@@ -15,9 +23,9 @@ function checkCollision(rect1, rect2) {
            rect1.y + rect1.height > rect2.y;
 }
 
-function resolvePlayerCollisionsAndUpdatePosition() {
+function resolvePlayerCollisionsAndUpdatePosition(deltaTime) {
     if (playerState.isGameOver) return;
-    let nextY = playerState.y + playerState.dy;
+    let nextY = playerState.y + playerState.dy * deltaTime;
     playerState.isOnGround = false;
     let wasGrinding = playerState.isGrinding;
 
@@ -41,7 +49,7 @@ function resolvePlayerCollisionsAndUpdatePosition() {
     }
 
     const playerRect = { x: playerState.x, y: nextY, width: gameSettings.playerWidth, height: gameSettings.playerHeight };
-    const prevPlayerRect = { x: playerState.x - playerState.dx, y: playerState.y, width: gameSettings.playerWidth, height: gameSettings.playerHeight };
+    const prevPlayerRect = { x: playerState.x - playerState.dx * deltaTime, y: playerState.y, width: gameSettings.playerWidth, height: gameSettings.playerHeight };
 
     for (const obj of worldObjects) {
         if (obj.type === 'killzone') {
@@ -126,7 +134,7 @@ function resolvePlayerCollisionsAndUpdatePosition() {
     if (playerState.isOnGround || playerState.isGrinding) {
         playerState.coyoteTimer = gameSettings.coyoteTimeFrames;
     } else if (playerState.coyoteTimer > 0) {
-        playerState.coyoteTimer--;
+        playerState.coyoteTimer -= deltaTime;
     }
 
     const minPlayerScreenX = 0;
@@ -162,6 +170,7 @@ function render() {
         playerElement.style.left = playerState.x + 'px';
         playerElement.style.top = visualY + 'px';
     }
+    if (typeof updatePlayerBodyImage === 'function') updatePlayerBodyImage();
 }
 
 function handleGameOver() {
@@ -188,24 +197,58 @@ function handleGameOver() {
     anime.running.forEach(anim => anim.pause());
 }
 
-function gameLoop() {
-    if (!playerState.isGameOver) {
+function transitionToLevel(levelIndex) {
+    currentLevel = levelIndex;
+    const level = LEVELS[levelIndex];
+
+    const ga = document.getElementById('game-area');
+    if (ga) {
+        ga.style.backgroundImage = `url('${level.bg}')`;
+        ga.className = ga.className.replace(/\blevel-\d\b/g, '').trim();
+        ga.classList.add(`level-${level.id}`);
+    }
+
+    scrollSpeedBase = level.scrollSpeedBase;
+    if (gameSettings.worldScrollSpeed < scrollSpeedBase) {
+        gameSettings.worldScrollSpeed = scrollSpeedBase;
+    }
+
+    const overlay = document.getElementById('level-overlay');
+    if (overlay) {
+        overlay.textContent = `LEVEL ${level.id} - ${level.name}`;
+        overlay.style.display = 'flex';
+        setTimeout(() => { overlay.style.display = 'none'; }, 2000);
+    }
+}
+
+function gameLoop(timestamp) {
+    if (lastTime === 0) lastTime = timestamp;
+    const rawDelta = (timestamp - lastTime) / (1000 / 60);
+    const deltaTime = Math.min(rawDelta, 3); // cap at 3× to avoid huge steps after tab switches
+    lastTime = timestamp;
+
+    if (!isPaused && !playerState.isGameOver) {
         generateNewObjects();
-        updateWorldObjects();
-        updatePlayerIntentAndPhysics();
-        resolvePlayerCollisionsAndUpdatePosition();
+        updateWorldObjects(deltaTime);
+        updatePlayerIntentAndPhysics(deltaTime);
+        resolvePlayerCollisionsAndUpdatePosition(deltaTime);
         if (typeof updateComboState === 'function') updateComboState();
         render();
 
-        backgroundScrollX -= gameSettings.worldScrollSpeed * BACKGROUND_SCROLL_SPEED_FACTOR;
+        backgroundScrollX -= gameSettings.worldScrollSpeed * BACKGROUND_SCROLL_SPEED_FACTOR * deltaTime;
         if (gameArea) gameArea.style.backgroundPositionX = backgroundScrollX + 'px';
 
-        timeSinceStart++;
-        if (timeSinceStart % speedIncreaseInterval === 0) {
+        timeSinceStart += deltaTime;
+        if (timeSinceStart - lastSpeedIncrease >= speedIncreaseInterval) {
+            lastSpeedIncrease = timeSinceStart;
             if (gameSettings.worldScrollSpeed < scrollSpeedMax) {
                 gameSettings.worldScrollSpeed += scrollSpeedIncrement;
-                console.log("Speed increased to", gameSettings.worldScrollSpeed.toFixed(5));
             }
+        }
+
+        // Level-up check
+        if (currentLevel < LEVELS.length - 1 && playerState.score >= LEVELS[currentLevel + 1].scoreThreshold) {
+            transitionToLevel(currentLevel + 1);
         }
     }
     requestAnimationFrame(gameLoop);
@@ -233,6 +276,28 @@ function startGame() {
     if (typeof initializeEffects === 'function') {
         initializeEffects();
     }
+
+    // Reset level & timing state
+    isPaused = false;
+    currentLevel = 0;
+    lastSpeedIncrease = 0;
+    lastTime = 0;
+    scrollSpeedBase = LEVELS[0].scrollSpeedBase;
+    backgroundScrollX = 0;
+
+    // Set background & level class for level 1
+    if (gameArea) {
+        gameArea.style.backgroundImage = `url('${LEVELS[0].bg}')`;
+        gameArea.className = gameArea.className.replace(/\blevel-\d\b/g, '').trim();
+        gameArea.classList.add('level-1');
+    }
+
+    // Hide overlays
+    const pauseOverlay = document.getElementById('pause-overlay');
+    if (pauseOverlay) pauseOverlay.style.display = 'none';
+    const levelOverlay = document.getElementById('level-overlay');
+    if (levelOverlay) levelOverlay.style.display = 'none';
+
     initLevel();
     resetPlayer();
     gameSettings.worldScrollSpeed = scrollSpeedBase;
@@ -258,6 +323,14 @@ window.addEventListener('keydown', (e) => {
         restartGame();
         return;
     }
+    if (e.code === 'KeyP' && !playerState.isGameOver) {
+        isPaused = !isPaused;
+        lastTime = 0; // reset so deltaTime doesn't spike on unpause
+        const pauseOverlay = document.getElementById('pause-overlay');
+        if (pauseOverlay) pauseOverlay.style.display = isPaused ? 'flex' : 'none';
+        return;
+    }
+
     if (playerState.isGameOver) return;
     if (e.code === 'KeyA') keys.KeyA = true;
     if (e.code === 'KeyD') keys.KeyD = true;

@@ -21,7 +21,8 @@ var playerState = {
     coyoteTimer: 0,
     jumpBufferTimer: 0,
     comboMultiplier: 1,
-    comboTimer: 0
+    comboTimer: 0,
+    animFrame: 1
 };
 
 // Globaler Zustand der gedrückten Tasten
@@ -73,6 +74,7 @@ function resetPlayer() {
     playerState.jumpBufferTimer = 0;
     playerState.comboMultiplier = 1;
     playerState.comboTimer = 0;
+    playerState.animFrame = 1;
     // Geschwindigkeit und Zeit zurücksetzen
     timeSinceStart = 0;
     gameSettings.worldScrollSpeed = scrollSpeedBase;
@@ -100,7 +102,7 @@ function resetPlayer() {
 }
 
 // Verarbeitet Spielereingaben und grundlegende Physik (Gravitation, Sprung)
-function updatePlayerIntentAndPhysics() {
+function updatePlayerIntentAndPhysics(deltaTime) {
     if (playerState.isGameOver || !playerElement) return;
 
     let targetDX = 0; // Ziel-DX für die Bewegung auf dem Boden/in der Luft (nicht beim Grinden)
@@ -111,8 +113,8 @@ function updatePlayerIntentAndPhysics() {
         } else if (keys.KeyD) {
             targetDX = gameSettings.maxPlayerDX;
         }
-        // Sanfte Beschleunigung/Verzögerung zur Zield_X-Geschwindigkeit
-        playerState.dx += (targetDX - playerState.dx) * gameSettings.pushForce;
+        // Sanfte Beschleunigung/Verzögerung zur Zield_X-Geschwindigkeit (skaliert mit deltaTime)
+        playerState.dx += (targetDX - playerState.dx) * gameSettings.pushForce * deltaTime;
 
         // Pushing-Animationen (nur wenn am Boden und nicht bereits im Sprung/Landung)
         if (playerState.isOnGround && !playerElement.classList.contains('jumping') && !playerElement.classList.contains('landing')) {
@@ -134,12 +136,12 @@ function updatePlayerIntentAndPhysics() {
         if (typeof addScore === 'function') addScore(gameSettings.grindScorePerFrame, "", { useCombo: false, showPopup: false }); // ui.js
         if (window.currentTrickDisplayElement) currentTrickDisplayElement.textContent = "Trick: Grind";
 
-        // Horizontale Anpassung auf dem Rail
+        // Horizontale Anpassung auf dem Rail (skaliert mit deltaTime)
         let grindAdjust = 0;
         if (keys.KeyA) {
-            grindAdjust = -gameSettings.grindAdjustSpeed;
+            grindAdjust = -gameSettings.grindAdjustSpeed * deltaTime;
         } else if (keys.KeyD) {
-            grindAdjust = gameSettings.grindAdjustSpeed;
+            grindAdjust = gameSettings.grindAdjustSpeed * deltaTime;
         }
         // Direkte X-Anpassung für Grind-Steuerung
         playerState.x += grindAdjust;
@@ -180,11 +182,11 @@ function updatePlayerIntentAndPhysics() {
 
     // Spieler X-Position basierend auf dx aktualisieren, WENN NICHT GEGRINDET WIRD
     if (!playerState.isGrinding) {
-        playerState.x += playerState.dx;
+        playerState.x += playerState.dx * deltaTime;
     }
 
     if (playerState.jumpBufferTimer > 0) {
-        playerState.jumpBufferTimer--;
+        playerState.jumpBufferTimer -= deltaTime;
     }
 
     // Ollie (Springen) mit Coyote Time + Jump Buffer
@@ -210,8 +212,41 @@ function updatePlayerIntentAndPhysics() {
         playSound(soundKickflip);
     }
 
-    // Gravitation anwenden, wenn nicht gegrindet wird
+    // Gravitation anwenden, wenn nicht gegrindet wird (skaliert mit deltaTime)
     if (!playerState.isGrinding) {
-        playerState.dy += gameSettings.gravity;
+        playerState.dy += gameSettings.gravity * deltaTime;
     }
+}
+
+// Cache: true = Bild vorhanden, false = fehlt, null = wird gerade geprüft
+const _frame2Cache = {};
+
+function _preloadFrame2(state) {
+    if (_frame2Cache[state] !== undefined) return;
+    _frame2Cache[state] = null; // pending
+    const img = new Image();
+    img.onload  = () => { _frame2Cache[state] = true; };
+    img.onerror = () => { _frame2Cache[state] = false; };
+    img.src = `assets/images/player_body_${state}_2.png`;
+}
+
+// Animationsframe des Spieler-Körpers aktualisieren (cycling zwischen Frame 1 und 2)
+function updatePlayerBodyImage() {
+    const playerBody = document.getElementById('player-body');
+    if (!playerBody || !playerElement) return;
+
+    // Aktuellen Animations-Zustand aus CSS-Klassen ermitteln
+    let state = 'idle';
+    if (playerElement.classList.contains('grinding')) state = 'grinding';
+    else if (playerElement.classList.contains('jumping')) state = 'jumping';
+    else if (playerElement.classList.contains('pushing-right') || playerElement.classList.contains('pushing-left')) state = 'pushing';
+
+    // Frame-2-Bild im Hintergrund prüfen (nur einmal pro State)
+    _preloadFrame2(state);
+    const hasFrame2 = _frame2Cache[state] === true;
+
+    // Nur zwischen Frames wechseln wenn Frame-2-Bild auch wirklich existiert
+    const useFrame2 = hasFrame2 && (Math.floor(timeSinceStart) % 16 < 8 ? false : true);
+    const frameSuffix = useFrame2 ? '_2' : '';
+    playerBody.style.backgroundImage = `url('assets/images/player_body_${state}${frameSuffix}.png')`;
 }

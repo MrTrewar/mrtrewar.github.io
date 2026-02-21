@@ -9,6 +9,50 @@ const LEADERBOARD_LIMIT = 5;
 let didSaveScoreThisRound = false;
 let showLeaderboardEntryForm = false;
 
+// Supabase
+let supabaseClient = null;
+let onlineLeaderboard = null; // null = not yet fetched; [] = fetched but empty
+
+function initSupabase() {
+    if (typeof supabase === 'undefined') return;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return;
+    try {
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch (e) {
+        console.warn('Supabase init failed:', e);
+    }
+}
+
+async function submitScoreOnline(name, score) {
+    if (!supabaseClient) return false;
+    try {
+        const { error } = await supabaseClient.from('scores').insert({ name, score });
+        if (error) throw error;
+        return true;
+    } catch (e) {
+        console.warn('Online score submission failed:', e);
+        return false;
+    }
+}
+
+async function fetchOnlineLeaderboard() {
+    if (!supabaseClient) return null;
+    try {
+        const { data, error } = await supabaseClient
+            .from('scores')
+            .select('name, score')
+            .order('score', { ascending: false })
+            .limit(10);
+        if (error) throw error;
+        return data || [];
+    } catch (e) {
+        console.warn('Online leaderboard fetch failed:', e);
+        return null;
+    }
+}
+
+initSupabase();
+
 function addScore(points, trickName = "", options = {}) {
     const useCombo = options.useCombo !== false;
     const showPopup = options.showPopup !== false;
@@ -91,7 +135,10 @@ function saveLeaderboard(entries) {
 }
 
 function doesScoreQualify(score) {
-    const entries = loadLeaderboard();
+    // Use online leaderboard if available, otherwise fall back to local
+    const entries = (onlineLeaderboard !== null && onlineLeaderboard.length > 0)
+        ? onlineLeaderboard.slice(0, LEADERBOARD_LIMIT)
+        : loadLeaderboard();
     if (entries.length < LEADERBOARD_LIMIT) return score > 0;
     return score > entries[entries.length - 1].score;
 }
@@ -105,8 +152,8 @@ function addHighscoreEntry(name, score) {
     saveLeaderboard(updated);
 }
 
-function renderLeaderboardHtml() {
-    const entries = loadLeaderboard();
+function renderLeaderboardHtml(entries) {
+    if (!entries) entries = onlineLeaderboard || loadLeaderboard();
     if (entries.length === 0) {
         return '<div class="leaderboard-empty">Noch keine Einträge.</div>';
     }
@@ -120,6 +167,7 @@ function renderLeaderboardHtml() {
 function showGameOverMessage() {
     if (window.playerState) {
         const canSubmit = !didSaveScoreThisRound && doesScoreQualify(playerState.score);
+        const isOnline = onlineLeaderboard !== null;
         gameOverMessageElement.innerHTML = `
             <div>GAME OVER</div>
             <small>Score: ${playerState.score}</small>
@@ -135,7 +183,7 @@ function showGameOverMessage() {
             </form>
             ` : ''}
             <div class="leaderboard">
-                <div class="leaderboard-title">Leaderboard</div>
+                <div class="leaderboard-title">Leaderboard${isOnline ? ' 🌐' : ''}</div>
                 ${renderLeaderboardHtml()}
             </div>
             <small>${canSubmit ? 'Eintragen, dann Enter / Tap zum Neustart' : 'Press Enter / Tap to Restart'}</small>
@@ -161,19 +209,40 @@ function showGameOverMessage() {
                 form.addEventListener('submit', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    addHighscoreEntry(input.value, playerState.score);
-                    didSaveScoreThisRound = true;
-                    showLeaderboardEntryForm = false;
-                    showGameOverMessage();
+                    handleScoreSubmit(input.value, playerState.score);
                 });
             }
+        }
+
+        // Fetch online leaderboard if not yet loaded
+        if (onlineLeaderboard === null && supabaseClient) {
+            fetchOnlineLeaderboard().then(data => {
+                if (data !== null) {
+                    onlineLeaderboard = data;
+                    if (playerState.isGameOver) showGameOverMessage(); // re-render with online data
+                }
+            });
         }
     }
     gameOverMessageElement.style.display = 'flex';
 }
 
+async function handleScoreSubmit(name, score) {
+    const safeName = (name || '').trim().slice(0, 16) || 'Player';
+    addHighscoreEntry(safeName, score);
+    submitScoreOnline(safeName, score); // fire-and-forget
+    onlineLeaderboard = null;
+    didSaveScoreThisRound = true;
+    showLeaderboardEntryForm = false;
+    // Fetch fresh online data then re-render
+    const freshData = await fetchOnlineLeaderboard();
+    if (freshData !== null) onlineLeaderboard = freshData;
+    showGameOverMessage();
+}
+
 function hideGameOverMessage() {
     didSaveScoreThisRound = false;
     showLeaderboardEntryForm = false;
+    onlineLeaderboard = null; // reset for next round
     gameOverMessageElement.style.display = 'none';
 }

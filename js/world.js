@@ -121,7 +121,7 @@ function initLevel() {
     });
 }
 
-function updateWorldObjects() {
+function updateWorldObjects(deltaTime) {
     for (let i = worldObjects.length - 1; i >= 0; i--) {
         const obj = worldObjects[i];
 
@@ -129,7 +129,7 @@ function updateWorldObjects() {
             continue;
         }
 
-        obj.x -= gameSettings.worldScrollSpeed; // Scrolle das Objekt nach links
+        obj.x -= gameSettings.worldScrollSpeed * deltaTime; // Scrolle das Objekt nach links
 
         if (obj.element) { // Stelle sicher, dass das DOM-Element existiert
             obj.element.style.left = obj.x + 'px';
@@ -154,5 +154,5 @@ function updateWorldObjects() {
     }
 
     // Wichtig: Aktualisiere lastObjectRightX basierend auf der Scrollgeschwindigkeit
-    lastObjectRightX -= gameSettings.worldScrollSpeed;
+    lastObjectRightX -= gameSettings.worldScrollSpeed * deltaTime;
 }

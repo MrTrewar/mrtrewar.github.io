@@ -47,7 +47,7 @@ const TRAINING_PLAN = {
         duration: "65–70 Min",
         sets: 22,
         exercises: [
-            { name: "Bench Press", sets: 3, repRange: [5, 8], rir: "1–2", startWeight: 20, bodyPart: "upper", imageUrl: "" },
+            { name: "Bench Press", sets: 3, repRange: [5, 8], rir: "1–2", startWeight: 20, bodyPart: "upper", imageUrl: "assets/images/pixel_bench_press.png" },
             { name: "Pull-Up", sets: 3, repRange: "amrap", rir: "0–1", startWeight: 0, bodyPart: "upper", isBW: true, imageUrl: "", note: "Stange biegen" },
             { name: "T-Bar Row", sets: 3, repRange: [8, 10], rir: "2", startWeight: 15, bodyPart: "upper", imageUrl: "" },
             { name: "Lateral Raise (DB)", sets: 3, repRange: [10, 15], rir: "2", startWeight: 4, bodyPart: "upper", imageUrl: "" },

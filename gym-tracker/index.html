@@ -55,6 +55,19 @@
             </div>
         </details>
 
+        <!-- Delete History Accordion -->
+        <details class="supps-accordion" style="margin-top: 10px; border-color: rgba(255, 68, 68, 0.4);">
+            <summary style="color: var(--danger);">🗑️ Historie / Verlauf zurücksetzen</summary>
+            <div style="padding: 10px; text-align: center;">
+                <p style="font-size: 0.85rem; margin-bottom: 12px; color: var(--text-muted); line-height: 1.4;">Achtung:
+                    Dies löscht alle jemals eintragenen Gewichte und Wiederholungen unwiderruflich (Ideal für den Start
+                    eines neuen Plans).</p>
+                <button id="deleteHistoryBtn" class="nav-btn"
+                    style="background: var(--danger); color: #fff; width: 100%; font-weight: bold; border-radius: 4px;">Alle
+                    Werte löschen</button>
+            </div>
+        </details>
+
         <!-- Day Navigation -->
         <div class="day-info">
             <h2></h2>
@@ -89,7 +102,8 @@
         <div class="card"
             style="background: rgba(26, 26, 46, 0.8); border: 2px solid var(--accent); border-radius: 8px; padding: 16px;">
             <h2 style="color: var(--accent); margin-bottom: 12px; font-family: 'Orbitron', sans-serif;">📜 Verlauf für
-                <span id="historyDayTitle">diesen Tag</span></h2>
+                <span id="historyDayTitle">diesen Tag</span>
+            </h2>
             <div id="historyContent" style="display: flex; flex-direction: column; gap: 12px;"></div>
         </div>
     </section>

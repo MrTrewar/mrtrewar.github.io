@@ -180,6 +180,33 @@ function setupEventListeners() {
     const saveBtn = document.getElementById('navSaveBtn');
     if (saveBtn) saveBtn.addEventListener('click', saveSession);
 
+    // Historie löschen
+    const deleteBtn = document.getElementById('deleteHistoryBtn');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', async () => {
+            const confirmed = confirm("ACHTUNG: Bist du dir sicher, dass du alle gespeicherten Werte unwiderruflich löschen möchtest?");
+            if (!confirmed) return;
+
+            deleteBtn.textContent = "Lösche...";
+            try {
+                // Lösche alle Sessions (durch ON DELETE CASCADE fliegen auch die set_logs mit raus)
+                const { error } = await supabaseClient
+                    .from('sessions')
+                    .delete()
+                    .gte('week_number', 0);
+
+                if (error) throw error;
+
+                alert("Historie erfolgreich gelöscht!");
+                window.location.reload();
+            } catch (err) {
+                console.error("Fehler beim Löschen:", err);
+                alert("Fehler beim Löschen der Historie: " + err.message);
+                deleteBtn.textContent = "Alle Werte löschen";
+            }
+        });
+    }
+
     // Recovery Modal
     const modal = document.getElementById('recoveryModal');
     const recBtn = document.getElementById('navRecoveryBtn');

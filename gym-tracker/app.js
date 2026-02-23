@@ -159,11 +159,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function setupEventListeners() {
     // Day Navigation
-    document.querySelectorAll('.nav-btn').forEach(btn => {
+    document.querySelectorAll('.nav-btn[data-day]').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            document.querySelector('.nav-btn.active').classList.remove('active');
-            e.target.classList.add('active');
-            currentDay = e.target.dataset.day;
+            const activeBtn = document.querySelector('.nav-btn.active');
+            if (activeBtn) activeBtn.classList.remove('active');
+            e.currentTarget.classList.add('active');
+            currentDay = e.currentTarget.dataset.day;
             renderDayTitle();
             renderDay(currentDay);
         });

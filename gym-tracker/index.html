@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="GymProgress Pro - Cut Edition: Periodisierter Trainings-Tracker für 8 Wochen mit Double Progression & Recovery Monitoring">
+    <meta name="theme-color" content="#0f1113">
+
+    <title>GymProgress Pro – Cut Edition</title>
+
+    <!-- Google Fonts (Orbitron + Rajdhani) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <!-- ============================================
+         HEADER & NAVIGATION
+         ============================================ -->
+    <header>
+        <div class="top-bar">
+            <h1>GYM<span>PROGRESS</span></h1>
+            <div class="week-selector">
+                <label for="weekSelect">Woche:</label>
+                <select id="weekSelect">
+                    <option value="1" selected>1 – Akkumulation</option>
+                    <option value="2">2 – Akkumulation</option>
+                    <option value="3">3 – Akkumulation</option>
+                    <option value="4">4 – Deload</option>
+                    <option value="5">5 – Intensivierung</option>
+                    <option value="6">6 – Intensivierung</option>
+                    <option value="7">7 – Intensivierung</option>
+                    <option value="8">8 – Peak/Review</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Supplements Accordion -->
+        <details class="supps-accordion">
+            <summary>📋 Supplements heute ✓</summary>
+            <div id="suppsContainer" class="supps-grid">
+                <!-- JS-generiert -->
+            </div>
+        </details>
+
+        <!-- Day Navigation -->
+        <div class="day-info">
+            <h2></h2>
+            <div id="weekTracker"></div>
+        </div>
+
+        <nav class="day-nav">
+            <button class="nav-btn active" data-day="mo">Mo (Upper)</button>
+            <button class="nav-btn" data-day="di">Di (Lower)</button>
+            <button class="nav-btn" data-day="do">Do (Push)</button>
+            <button class="nav-btn" data-day="fr">Fr (Pull)</button>
+        </nav>
+    </header>
+
+    <!-- ============================================
+         MAIN CONTENT
+         ============================================ -->
+    <main id="exerciseGrid">
+        <!-- JS-generiert: Exercise Cards -->
+    </main>
+
+    <!-- ============================================
+         FLOATING RECOVERY BUTTON
+         ============================================ -->
+    <button id="recoveryBtn" class="floating-btn" title="Recovery Check Modal">⚡</button>
+
+    <!-- ============================================
+         RECOVERY MODAL
+         ============================================ -->
+    <div id="recoveryModal" class="modal">
+        <div class="modal-content">
+            <h2>Recovery Check</h2>
+            <p style="margin-bottom: 12px; color: #888; font-size: 0.9rem;">
+                Überprüfe deine Signale für Übertraining/Überreaching
+            </p>
+            <div id="recoveryChecklist">
+                <!-- JS-generiert: Checkboxes -->
+            </div>
+            <button id="evaluateRecovery">Auswerten</button>
+            <div id="recoveryFeedback" class="feedback-box" style="display: none;"></div>
+            <button class="close-modal">Schließen</button>
+        </div>
+    </div>
+
+    <!-- ============================================
+         STICKY FOOTER (Session speichern)
+         ============================================ -->
+    <footer class="sticky-footer">
+        <button id="finishSession">💾 Session abschließen & speichern</button>
+    </footer>
+
+    <!-- ============================================
+         SCRIPTS
+         ============================================ -->
+    <script src="app.js"></script>
+
+</body>
+</html>

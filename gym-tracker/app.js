@@ -34,8 +34,8 @@
 // ============================================
 // SUPABASE KONFIGURATION
 // ============================================
-const SUPABASE_URL = 'https://mmckhgdsflyeqtrvjsnr.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_2ah_Fys1RzeOX4EvBPbpSA_U0Plque7';
+const SUPABASE_URL = 'https://whelaaozlexvxkojrljp.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_F1S_lB8kCYj22c-ssxrL4A_3hTHta1h';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ============================================

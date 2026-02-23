@@ -48,13 +48,13 @@ const TRAINING_PLAN = {
         sets: 22,
         exercises: [
             { name: "Bench Press", sets: 3, repRange: [5, 8], rir: "1–2", startWeight: 20, bodyPart: "upper", imageUrl: "assets/images/pixel_bench_press.png" },
-            { name: "Pull-Up", sets: 3, repRange: "amrap", rir: "0–1", startWeight: 0, bodyPart: "upper", isBW: true, imageUrl: "", note: "Stange biegen" },
-            { name: "T-Bar Row", sets: 3, repRange: [8, 10], rir: "2", startWeight: 15, bodyPart: "upper", imageUrl: "" },
-            { name: "Lateral Raise (DB)", sets: 3, repRange: [10, 15], rir: "2", startWeight: 4, bodyPart: "upper", imageUrl: "" },
+            { name: "Pull-Up", sets: 3, repRange: "amrap", rir: "0–1", startWeight: 0, bodyPart: "upper", isBW: true, imageUrl: "assets/images/pixel_pull_up.png", note: "Stange biegen" },
+            { name: "T-Bar Row", sets: 3, repRange: [8, 10], rir: "2", startWeight: 15, bodyPart: "upper", imageUrl: "assets/images/pixel_t_bar_row.png" },
+            { name: "Lateral Raise (DB)", sets: 3, repRange: [10, 15], rir: "2", startWeight: 4, bodyPart: "upper", imageUrl: "assets/images/pixel_lateral_raise.png" },
             { name: "Bayesian Cable Curl", sets: 3, repRange: [10, 15], rir: "2", startWeight: 6, bodyPart: "upper", imageUrl: "" },
-            { name: "Incline DB Shrugs", sets: 3, repRange: [12, 15], rir: "2", startWeight: 14, bodyPart: "upper", imageUrl: "" },
-            { name: "Face Pulls", sets: 2, repRange: [15, 20], rir: "2–3", startWeight: 12.5, bodyPart: "upper", imageUrl: "" },
-            { name: "DB Wrist Curls", sets: 2, repRange: [15, 20], rir: "2", startWeight: 4, bodyPart: "upper", imageUrl: "" }
+            { name: "Incline DB Shrugs", sets: 3, repRange: [12, 15], rir: "2", startWeight: 14, bodyPart: "upper", imageUrl: "assets/images/pixel_incline_bench.png" },
+            { name: "Face Pulls", sets: 2, repRange: [15, 20], rir: "2–3", startWeight: 12.5, bodyPart: "upper", imageUrl: "assets/images/pixel_face_pulls.png" },
+            { name: "DB Wrist Curls", sets: 2, repRange: [15, 20], rir: "2", startWeight: 4, bodyPart: "upper", imageUrl: "assets/images/pixel_wrist_curls.png" }
         ]
     },
     di: {
@@ -62,13 +62,13 @@ const TRAINING_PLAN = {
         duration: "70–75 Min",
         sets: 23,
         exercises: [
-            { name: "Squat", sets: 3, repRange: [5, 8], rir: "1–2", startWeight: 60, bodyPart: "lower", imageUrl: "" },
-            { name: "RDL", sets: 3, repRange: [8, 12], rir: "2", startWeight: 10, bodyPart: "lower", imageUrl: "", note: "langsam - wenig" },
-            { name: "Seated Leg Curl", sets: 3, repRange: [10, 15], rir: "2", startWeight: 27.5, bodyPart: "lower", imageUrl: "", note: "Streckung warten!" },
+            { name: "Squat", sets: 3, repRange: [5, 8], rir: "1–2", startWeight: 60, bodyPart: "lower", imageUrl: "assets/images/pixel_squat.png" },
+            { name: "RDL", sets: 3, repRange: [8, 12], rir: "2", startWeight: 10, bodyPart: "lower", imageUrl: "assets/images/pixel_rdl.png", note: "langsam - wenig" },
+            { name: "Seated Leg Curl", sets: 3, repRange: [10, 15], rir: "2", startWeight: 27.5, bodyPart: "lower", imageUrl: "assets/images/pixel_leg_curl.png", note: "Streckung warten!" },
             { name: "Leg Extension", sets: 3, repRange: [12, 20], rir: "2", startWeight: 35, bodyPart: "lower", imageUrl: "" },
             { name: "Nautilus Glute Drive", sets: 2, repRange: [8, 12], rir: "2", startWeight: 50, bodyPart: "lower", imageUrl: "", note: "Hüfte durchstrecken!" },
-            { name: "Standing Calf Raise", sets: 4, repRange: [10, 15], rir: "1–2", startWeight: 0, bodyPart: "lower", imageUrl: "" },
-            { name: "Seated Calf Raise", sets: 2, repRange: [12, 20], rir: "2", startWeight: 0, bodyPart: "lower", imageUrl: "" },
+            { name: "Standing Calf Raise", sets: 4, repRange: [10, 15], rir: "1–2", startWeight: 0, bodyPart: "lower", imageUrl: "assets/images/pixel_calf_raise.png" },
+            { name: "Seated Calf Raise", sets: 2, repRange: [12, 20], rir: "2", startWeight: 0, bodyPart: "lower", imageUrl: "assets/images/pixel_calf_raise.png" },
             { name: "Cable Crunch", sets: 3, repRange: [10, 15], rir: "2", startWeight: 36.25, bodyPart: "lower", imageUrl: "" }
         ]
     },
@@ -77,13 +77,13 @@ const TRAINING_PLAN = {
         duration: "55–60 Min",
         sets: 19,
         exercises: [
-            { name: "Incline Bench Press", sets: 3, repRange: [6, 10], rir: "1–2", startWeight: 15, bodyPart: "upper", imageUrl: "" },
+            { name: "Incline Bench Press", sets: 3, repRange: [6, 10], rir: "1–2", startWeight: 15, bodyPart: "upper", imageUrl: "assets/images/pixel_incline_bench.png" },
             { name: "Weighted Dips", sets: 3, repRange: [8, 12], rir: "2", startWeight: 0, bodyPart: "upper", isBW: true, imageUrl: "" },
-            { name: "Lateral Raise (DB/Cable)", sets: 3, repRange: [12, 20], rir: "2", startWeight: 4, bodyPart: "upper", imageUrl: "" },
+            { name: "Lateral Raise (DB/Cable)", sets: 3, repRange: [12, 20], rir: "2", startWeight: 4, bodyPart: "upper", imageUrl: "assets/images/pixel_lateral_raise.png" },
             { name: "Machine Pec Deck", sets: 2, repRange: [12, 15], rir: "2", startWeight: 47.5, bodyPart: "upper", imageUrl: "" },
-            { name: "OH Cable Triceps Extension", sets: 3, repRange: [10, 15], rir: "2", startWeight: 16, bodyPart: "upper", imageUrl: "" },
+            { name: "OH Cable Triceps Extension", sets: 3, repRange: [10, 15], rir: "2", startWeight: 16, bodyPart: "upper", imageUrl: "assets/images/pixel_triceps_ext.png" },
             { name: "Neck Curls/Extensions", sets: 3, repRange: [15, 20], rir: "2–3", startWeight: 0, bodyPart: "upper", imageUrl: "" },
-            { name: "Face Pulls", sets: 2, repRange: [15, 20], rir: "3", startWeight: 10, bodyPart: "upper", imageUrl: "" }
+            { name: "Face Pulls", sets: 2, repRange: [15, 20], rir: "3", startWeight: 10, bodyPart: "upper", imageUrl: "assets/images/pixel_face_pulls.png" }
         ]
     },
     fr: {
@@ -95,10 +95,10 @@ const TRAINING_PLAN = {
             { name: "Machine Lat Pullover", sets: 3, repRange: [10, 15], rir: "2", startWeight: 17.5, bodyPart: "upper", imageUrl: "" },
             { name: "Seated Cable Row", sets: 3, repRange: [8, 12], rir: "2", startWeight: 20, bodyPart: "upper", imageUrl: "" },
             { name: "Reverse Pec Deck", sets: 3, repRange: [15, 20], rir: "2–3", startWeight: 20, bodyPart: "upper", imageUrl: "", note: "seitlich setzen in Dehnung !" },
-            { name: "Cable Lateral Raise (Behind-Back)", sets: 2, repRange: [12, 15], rir: "3", startWeight: 2, bodyPart: "upper", imageUrl: "" },
-            { name: "Preacher Curl", sets: 3, repRange: [10, 15], rir: "2", startWeight: 5, bodyPart: "upper", imageUrl: "" },
-            { name: "Hanging Leg Raises", sets: 3, repRange: "amrap", rir: "2", startWeight: 0, bodyPart: "lower", isBW: true, imageUrl: "" },
-            { name: "Standing Calf Raise", sets: 3, repRange: [10, 15], rir: "2", startWeight: 0, bodyPart: "lower", imageUrl: "" }
+            { name: "Cable Lateral Raise (Behind-Back)", sets: 2, repRange: [12, 15], rir: "3", startWeight: 2, bodyPart: "upper", imageUrl: "assets/images/pixel_lateral_raise.png" },
+            { name: "Preacher Curl", sets: 3, repRange: [10, 15], rir: "2", startWeight: 5, bodyPart: "upper", imageUrl: "assets/images/pixel_preacher_curl.png" },
+            { name: "Hanging Leg Raises", sets: 3, repRange: "amrap", rir: "2", startWeight: 0, bodyPart: "lower", isBW: true, imageUrl: "assets/images/pixel_hanging_leg_raise.png" },
+            { name: "Standing Calf Raise", sets: 3, repRange: [10, 15], rir: "2", startWeight: 0, bodyPart: "lower", imageUrl: "assets/images/pixel_calf_raise.png" }
         ]
     }
 };

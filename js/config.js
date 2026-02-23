@@ -38,11 +38,11 @@ const gameSettings = {
 
 // Level configuration
 const LEVELS = [
-    { id: 1, name: "JUNGLE",    bg: "assets/images/backgrounds/level1_bg.jpg", scoreThreshold: 0,    scrollSpeedBase: 2.5 },
-    { id: 2, name: "CITY",      bg: "assets/images/backgrounds/level2_bg.jpg", scoreThreshold: 800,  scrollSpeedBase: 3.5 },
+    { id: 1, name: "JUNGLE", bg: "assets/images/backgrounds/level1_bg.jpg", scoreThreshold: 0, scrollSpeedBase: 2.5 },
+    { id: 2, name: "CITY", bg: "assets/images/backgrounds/level2_bg.jpg", scoreThreshold: 800, scrollSpeedBase: 3.5 },
     { id: 3, name: "NIGHTPARK", bg: "assets/images/backgrounds/level3_bg.jpg", scoreThreshold: 2000, scrollSpeedBase: 4.5 },
 ];
 
 // Supabase configuration — fill in your values from the Supabase dashboard
-const SUPABASE_URL = 'https://mhelaaozlexvxkojrljp.supabase.co';
+const SUPABASE_URL = 'https://whelaaozlexvxkojrljp.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_F1S_lB8kCYj22c-ssxrL4A_3hTHta1h';

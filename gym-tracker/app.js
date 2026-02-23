@@ -235,10 +235,18 @@ async function renderDay(dayKey) {
         const exPrevLogs = prevLogs.filter(log => log.exercise_name === ex.name).sort((a, b) => a.set_number - b.set_number);
         const exPrevPrevLogs = prevPrevLogs.filter(log => log.exercise_name === ex.name).sort((a, b) => a.set_number - b.set_number);
 
-        const savedWeight = exLogs.length > 0 ? exLogs[0].weight_kg : (exPrevLogs.length > 0 ? exPrevLogs[0].weight_kg : ex.startWeight);
+        const prevWeight = exPrevLogs.length > 0 ? exPrevLogs[0].weight_kg : ex.startWeight;
+        const progData = getProgressionData(ex, exPrevLogs, exPrevPrevLogs, prevWeight);
+
+        // Bestimme das Gewicht: Wenn schon was gespeichert ist, nimm das.
+        // Wenn nicht, und wir eine Progression errechnet haben, nimm das neue Gewicht.
+        // Ansonsten nimm das Gewicht der Vorwoche oder das Startgewicht.
+        const savedWeight = exLogs.length > 0 ? exLogs[0].weight_kg : (progData.newWeight !== null ? progData.newWeight : prevWeight);
         const repVals = exLogs.length > 0 ? exLogs.map(l => l.reps) : Array(ex.sets).fill('');
 
-        const adviceHtml = getAdviceBadge(ex, exPrevLogs, exPrevPrevLogs);
+        const adviceHtml = progData.message
+            ? `<div class="progression-badge ${progData.autoIncreased ? 'auto-increased' : ''}" style="margin-top: 4px; display: inline-block;">${progData.message}</div>`
+            : '';
 
         const imageHtml = ex.imageUrl
             ? `<img src="${ex.imageUrl}" alt="${ex.name}">`
@@ -283,6 +291,8 @@ async function renderDay(dayKey) {
         `;
         container.appendChild(card);
     });
+
+    renderHistory(dayKey);
 }
 
 // Lade Vorwoche für AMRAP Vergleiche
@@ -440,9 +450,12 @@ function checkProgression(card, cardIdx, ex, reps, prevExLogs = []) {
     }
 }
 
-function getAdviceBadge(ex, prevLogs, prevPrevLogs) {
-    if (!prevLogs || prevLogs.length === 0) return '';
+function getProgressionData(ex, prevLogs, prevPrevLogs, prevWeight) {
+    if (!prevLogs || prevLogs.length === 0) return { message: '', newWeight: null, autoIncreased: false };
+
     let message = '';
+    let newWeight = null;
+    let autoIncreased = false;
     const reps = prevLogs.map(l => l.reps);
 
     if (ex.repRange === 'amrap') {
@@ -462,24 +475,99 @@ function getAdviceBadge(ex, prevLogs, prevPrevLogs) {
         }
 
         if (improved) {
-            message = "📈 Ziel erreicht! +2,5 kg";
+            newWeight = prevWeight + 2.5;
+            autoIncreased = true;
+            message = "✅ Ziel erreicht! Automatisches +2,5 kg";
         } else {
             message = `💡 Vorwoche: ${reps.join(', ')} Reps`;
         }
     } else {
         const target = ex.repRange[1];
         if (reps.length > 0 && reps.every(r => r > 0 && r >= target)) {
-            const inc = ex.bodyPart === 'upper' ? '1,25' : '2,5';
-            message = `📈 Gewicht erhöhen: +${inc} kg`;
+            const inc = ex.bodyPart === 'upper' ? 1.25 : 2.5;
+            newWeight = prevWeight + inc;
+            autoIncreased = true;
+            message = `✅ +${inc} kg automatisch erhöht!`;
         } else {
             message = `💡 Vorwoche: ${reps.join(', ')} Reps (Ziel: ${target})`;
         }
     }
 
-    if (message) {
-        return `<div class="progression-badge" style="margin-top: 4px; display: inline-block;">${message}</div>`;
+    return { message, newWeight, autoIncreased };
+}
+
+// ============================================
+// HISTORY (Verlauf)
+// ============================================
+async function renderHistory(dayKey) {
+    const historySection = document.getElementById('historySection');
+    const historyTitle = document.getElementById('historyDayTitle');
+    const historyContent = document.getElementById('historyContent');
+    const dayNames = { mo: "Mo", di: "Di", do: "Do", fr: "Fr" };
+
+    if (!historySection) return;
+
+    historyTitle.textContent = `${dayNames[dayKey]} (${TRAINING_PLAN[dayKey].title})`;
+    historyContent.innerHTML = '<div class="loading" style="padding: 20px;">Lade Verlauf...</div>';
+    historySection.style.display = 'block';
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('sessions')
+            .select('week_number, date, set_logs(*)')
+            .eq('day_key', dayKey)
+            .order('week_number', { ascending: false });
+
+        if (error) {
+            historyContent.innerHTML = '<div class="error">Verlauf konnte nicht geladen werden.</div>';
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            historyContent.innerHTML = '<div class="empty" style="color: var(--text-muted);">Noch keine Einträge vorhanden.</div>';
+            return;
+        }
+
+        let html = '';
+        data.forEach(session => {
+            const dateStr = session.date ? new Date(session.date).toLocaleDateString('de-DE') : 'Unbekanntes Datum';
+
+            let exercisesHtml = '';
+            // Übungen gruppieren
+            const groupedLogs = {};
+            session.set_logs.forEach(log => {
+                if (!groupedLogs[log.exercise_name]) groupedLogs[log.exercise_name] = [];
+                groupedLogs[log.exercise_name].push(log);
+            });
+
+            const exNames = Object.keys(groupedLogs);
+            exNames.forEach(exName => {
+                const logs = groupedLogs[exName].sort((a, b) => a.set_number - b.set_number);
+                const weight = logs[0].weight_kg;
+                const repsStr = logs.map(l => l.reps).join(', ');
+                exercisesHtml += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 6px 0;">
+                        <span style="font-weight: 600; font-size: 0.95rem;">${exName}</span>
+                        <span style="color: var(--accent); white-space: nowrap;">${weight} kg <span style="color: #aaa; font-size: 0.85rem;">(${repsStr} Reps)</span></span>
+                    </div>
+                `;
+            });
+
+            html += `
+                <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <strong style="color: #fff;">Woche ${session.week_number}</strong>
+                        <small style="color: var(--text-muted);">${dateStr}</small>
+                    </div>
+                    ${exercisesHtml}
+                </div>
+            `;
+        });
+
+        historyContent.innerHTML = html;
+    } catch (e) {
+        historyContent.innerHTML = '<div class="error">Fehler beim Laden des Verlaufs.</div>';
     }
-    return '';
 }
 
 // ============================================

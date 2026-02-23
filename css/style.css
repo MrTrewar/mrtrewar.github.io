@@ -720,3 +720,99 @@ html, body {
     #game-area.level-3 .rail,
     #level-overlay { animation: none; }
 }
+
+/* --- LANDING PAGE & TRAINING PAGE --- */
+.landing-page {
+    background: linear-gradient(160deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.landing-container {
+    text-align: center;
+    padding: 24px;
+}
+
+.landing-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(1.4rem, 5vw, 2.4rem);
+    color: #f1c40f;
+    text-shadow: 0 0 20px rgba(241, 196, 15, 0.4), 2px 2px #000;
+    line-height: 1.6;
+    margin: 0 0 16px;
+}
+
+.landing-subtitle {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.7rem, 2.5vw, 1rem);
+    color: #ecf0f1;
+    opacity: 0.6;
+    margin: 0 0 32px;
+}
+
+.landing-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+    margin-top: 40px;
+}
+
+.landing-btn {
+    display: inline-block;
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.75rem, 2.5vw, 1rem);
+    padding: 16px 40px;
+    border-radius: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    min-width: 220px;
+    text-align: center;
+}
+
+.landing-btn:hover {
+    transform: translateY(-2px);
+}
+
+.landing-btn:active {
+    transform: translateY(1px);
+}
+
+.landing-btn--play {
+    background: rgba(46, 204, 113, 0.2);
+    border: 2px solid rgba(46, 204, 113, 0.7);
+    color: #2ecc71;
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.15);
+}
+
+.landing-btn--play:hover {
+    background: rgba(46, 204, 113, 0.35);
+    box-shadow: 0 0 25px rgba(46, 204, 113, 0.3);
+}
+
+.landing-btn--train {
+    background: rgba(241, 196, 15, 0.15);
+    border: 2px solid rgba(241, 196, 15, 0.6);
+    color: #f1c40f;
+    box-shadow: 0 0 15px rgba(241, 196, 15, 0.1);
+}
+
+.landing-btn--train:hover {
+    background: rgba(241, 196, 15, 0.3);
+    box-shadow: 0 0 25px rgba(241, 196, 15, 0.25);
+}
+
+.landing-btn--back {
+    background: rgba(236, 240, 241, 0.1);
+    border: 2px solid rgba(236, 240, 241, 0.4);
+    color: #ecf0f1;
+    box-shadow: 0 0 10px rgba(236, 240, 241, 0.05);
+}
+
+.landing-btn--back:hover {
+    background: rgba(236, 240, 241, 0.2);
+    box-shadow: 0 0 20px rgba(236, 240, 241, 0.15);
+}

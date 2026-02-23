@@ -75,13 +75,13 @@
         </div>
 
         <nav class="day-nav">
+            <button id="navSaveBtn" class="nav-btn"
+                style="background: var(--danger); color: #fff; font-weight: 700; border-radius: 4px; box-shadow: 0 0 10px rgba(255, 68, 68, 0.4);">💾
+                Speichern</button>
             <button class="nav-btn active" data-day="mo">Mo (Upper)</button>
             <button class="nav-btn" data-day="di">Di (Lower)</button>
             <button class="nav-btn" data-day="do">Do (Push)</button>
             <button class="nav-btn" data-day="fr">Fr (Pull)</button>
-            <button id="navSaveBtn" class="nav-btn"
-                style="background: var(--danger); color: #fff; font-weight: 700; border-radius: 4px; box-shadow: 0 0 10px rgba(255, 68, 68, 0.4);">💾
-                Speichern</button>
             <button id="navRecoveryBtn" class="nav-btn" title="Recovery Check Modal"
                 style="background: var(--warning); color: #000; font-weight: 700; border-radius: 4px;">⚡
                 Recovery</button>
@@ -94,6 +94,14 @@
     <main id="exerciseGrid">
         <!-- JS-generiert: Exercise Cards -->
     </main>
+
+    <!-- Mid-Page Save Button Container -->
+    <div style="text-align: center; margin: 20px 0 40px 0; padding: 0 15px;">
+        <button id="middleSaveBtn"
+            style="background: var(--danger); color: #fff; font-weight: 700; font-family: 'Orbitron', sans-serif; border: none; border-radius: 8px; font-size: 1.1rem; padding: 15px 30px; width: 100%; max-width: 400px; box-shadow: 0 0 15px rgba(255, 68, 68, 0.6); cursor: pointer; transition: all 0.2s;">
+            💾 Session abschließen & Speichern
+        </button>
+    </div>
 
     <!-- ============================================
          HISTORY VERLAUF

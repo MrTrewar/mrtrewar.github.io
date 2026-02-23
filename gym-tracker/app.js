@@ -180,6 +180,9 @@ function setupEventListeners() {
     const saveBtn = document.getElementById('navSaveBtn');
     if (saveBtn) saveBtn.addEventListener('click', saveSession);
 
+    const middleSaveBtn = document.getElementById('middleSaveBtn');
+    if (middleSaveBtn) middleSaveBtn.addEventListener('click', saveSession);
+
     // Historie löschen
     const deleteBtn = document.getElementById('deleteHistoryBtn');
     if (deleteBtn) {

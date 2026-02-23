@@ -285,12 +285,9 @@ async function renderDay(dayKey) {
             </div>
             <div class="exercise-info">
                 <div class="exercise-header" style="flex-direction: column; align-items: flex-start; gap: 4px;">
-                    <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                        <h3 style="margin: 0;">${exIdx + 1}. ${ex.name}</h3>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <small>${ex.sets} Sätze</small>
-                            <button class="save-single-btn" style="background: var(--accent); color: #000; border: none; padding: 4px 8px; border-radius: 4px; font-weight: bold; cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 0.75rem;">💾</button>
-                        </div>
+                    <div style="display: flex; justify-content: space-between; width: 100%;">
+                        <h3>${exIdx + 1}. ${ex.name}</h3>
+                        <small>${ex.sets} Sätze</small>
                     </div>
                     ${adviceHtml}
                 </div>
@@ -317,13 +314,8 @@ async function renderDay(dayKey) {
                     </div>
                 </div>
                 ${ex.note ? `<div class="exercise-note">💡 ${ex.note}</div>` : ''}
+            </div>
         `;
-
-        const singleSaveBtn = card.querySelector('.save-single-btn');
-        if (singleSaveBtn) {
-            singleSaveBtn.addEventListener('click', () => saveSingleExercise(card, ex.name, exIdx));
-        }
-
         container.appendChild(card);
     });
 
@@ -430,83 +422,9 @@ async function saveSession() {
 
         alert('✅ Session erfolgreich gespeichert!');
         await loadWeekTracker();
-        renderHistory(currentDay);
     } catch (err) {
         console.error('Save error:', err);
         alert('❌ Fehler beim Speichern: ' + err.message);
-    }
-}
-
-async function saveSingleExercise(card, exName, exIdx) {
-    if (!SUPABASE_URL || SUPABASE_URL === 'YOUR_SUPABASE_URL') {
-        alert('⚠️ Supabase nicht konfiguriert.');
-        return;
-    }
-
-    const saveBtn = card.querySelector('.save-single-btn');
-    const originalText = saveBtn.innerHTML;
-    saveBtn.innerHTML = '⏳';
-
-    try {
-        const { data: session, error: sErr } = await supabaseClient
-            .from('sessions')
-            .upsert(
-                { week_number: currentWeek, day_key: currentDay, date: new Date().toISOString().split('T')[0] },
-                { onConflict: 'week_number,day_key' }
-            )
-            .select()
-            .single();
-
-        if (sErr) throw new Error('Session error: ' + sErr.message);
-        const currentSessionId = session.id;
-
-        const logs = [];
-        const weight = parseFloat(card.querySelector('.weight-input').value) || 0;
-        const repInputs = Array.from(card.querySelectorAll('.rep-input'));
-
-        repInputs.forEach((input, setIdx) => {
-            const reps = parseInt(input.value) || 0;
-            if (reps > 0 || weight > 0) {
-                logs.push({
-                    session_id: currentSessionId,
-                    exercise_name: exName,
-                    set_number: setIdx + 1,
-                    weight_kg: weight,
-                    reps: reps
-                });
-            }
-        });
-
-        await supabaseClient
-            .from('set_logs')
-            .delete()
-            .eq('session_id', currentSessionId)
-            .eq('exercise_name', exName);
-
-        if (logs.length > 0) {
-            const { error: lErr } = await supabaseClient.from('set_logs').insert(logs);
-            if (lErr) throw new Error('Log insert error: ' + lErr.message);
-        }
-
-        saveBtn.innerHTML = '✅';
-        setTimeout(() => saveBtn.innerHTML = originalText, 2500);
-
-        const dayData = TRAINING_PLAN[currentDay];
-        const exData = dayData.exercises.find(e => e.name === exName);
-        if (exData) {
-            const prevSessionData = await loadPreviousSessionData(currentWeek, currentDay);
-            const prevLogs = prevSessionData ? prevSessionData.set_logs || [] : [];
-            const prevExLogs = prevLogs.filter(l => l.exercise_name === exName).sort((a, b) => a.set_number - b.set_number);
-            checkProgression(card, exIdx, exData, repInputs.map(i => parseInt(i.value) || 0), prevExLogs);
-        }
-        await loadWeekTracker();
-        renderHistory(currentDay);
-
-    } catch (err) {
-        console.error('Save error:', err);
-        saveBtn.innerHTML = '❌';
-        alert('❌ Fehler beim Speichern: ' + err.message);
-        setTimeout(() => saveBtn.innerHTML = originalText, 2500);
     }
 }
 
@@ -514,7 +432,7 @@ async function saveSingleExercise(card, exName, exIdx) {
 // DOUBLE PROGRESSION LOGIC
 // ============================================
 function checkProgression(card, cardIdx, ex, reps, prevExLogs = []) {
-    const badgeZone = card.querySelector(`#prog - ${cardIdx} `);
+    const badgeZone = card.querySelector(`#prog-${cardIdx}`);
     badgeZone.innerHTML = '';
 
     let message = '';
@@ -598,7 +516,7 @@ function getProgressionData(ex, prevLogs, prevPrevLogs, prevWeight) {
             autoIncreased = true;
             message = `✅ +${inc} kg automatisch erhöht!`;
         } else {
-            message = `💡 Vorwoche: ${reps.join(', ')} Reps(Ziel: ${target})`;
+            message = `💡 Vorwoche: ${reps.join(', ')} Reps (Ziel: ${target})`;
         }
     }
 
@@ -655,22 +573,22 @@ async function renderHistory(dayKey) {
                 const weight = logs[0].weight_kg;
                 const repsStr = logs.map(l => l.reps).join(', ');
                 exercisesHtml += `
-        < div style = "display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 6px 0;" >
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 6px 0;">
                         <span style="font-weight: 600; font-size: 0.95rem;">${exName}</span>
                         <span style="color: var(--accent); white-space: nowrap;">${weight} kg <span style="color: #aaa; font-size: 0.85rem;">(${repsStr} Reps)</span></span>
-                    </div >
-        `;
+                    </div>
+                `;
             });
 
             html += `
-        < div style = "background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; margin-bottom: 8px;" >
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                <strong style="color: #fff;">Woche ${session.week_number}</strong>
-                <small style="color: var(--text-muted);">${dateStr}</small>
-            </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <strong style="color: #fff;">Woche ${session.week_number}</strong>
+                        <small style="color: var(--text-muted);">${dateStr}</small>
+                    </div>
                     ${exercisesHtml}
-                </div >
-        `;
+                </div>
+            `;
         });
 
         historyContent.innerHTML = html;
@@ -690,17 +608,17 @@ function initSupps() {
     Object.entries(SUPPLEMENTS).forEach(([time, list]) => {
         const div = document.createElement('div');
         div.className = 'supp-section';
-        div.innerHTML = `< strong > ${time}</strong > `;
+        div.innerHTML = `<strong>${time}</strong>`;
 
         list.forEach(s => {
-            const id = `supp - ${s.replace(/\s/g, '-')} `;
+            const id = `supp-${s.replace(/\s/g, '-')}`;
             const isChecked = saved[today]?.[id] ? 'checked' : '';
             const label = document.createElement('label');
             label.className = 'supp-item';
             label.innerHTML = `
-        < input type = "checkbox" id = "${id}" ${isChecked} onchange = "window.saveSupp('${id}')" >
-            <span>${s}</span>
-    `;
+                <input type="checkbox" id="${id}" ${isChecked} onchange="window.saveSupp('${id}')">
+                <span>${s}</span>
+            `;
             div.appendChild(label);
         });
         container.appendChild(div);
@@ -724,7 +642,7 @@ function initRecoveryChecklist() {
     RECOVERY_ITEMS.forEach(item => {
         const label = document.createElement('label');
         label.className = 'recovery-item';
-        label.innerHTML = `< input type = "checkbox" > ${item} `;
+        label.innerHTML = `<input type="checkbox"> ${item}`;
         recList.appendChild(label);
     });
 }

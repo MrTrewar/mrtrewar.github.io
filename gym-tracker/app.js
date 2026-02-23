@@ -331,7 +331,10 @@ async function saveSession() {
         // 2. Logs sammeln
         const dayData = TRAINING_PLAN[currentDay];
         cards.forEach((card, cardIdx) => {
-            const exName = card.querySelector('h3').innerText;
+            const h3Text = card.querySelector('h3').innerText;
+            // Entferne die vorgestellte Nummer z.B. "1. Bench Press" -> "Bench Press"
+            const exName = h3Text.substring(h3Text.indexOf(' ') + 1);
+
             const weight = parseFloat(card.querySelector('.weight-input').value) || 0;
             const exData = dayData.exercises.find(e => e.name === exName);
 

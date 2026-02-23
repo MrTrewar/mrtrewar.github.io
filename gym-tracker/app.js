@@ -34,7 +34,7 @@
 // ============================================
 // SUPABASE KONFIGURATION
 // ============================================
-const SUPABASE_URL = 'https://mmckhgdsflyeqtrvjsnr.supabase.com';
+const SUPABASE_URL = 'https://mmckhgdsflyeqtrvjsnr.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_2ah_Fys1RzeOX4EvBPbpSA_U0Plque7';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

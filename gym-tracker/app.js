@@ -215,16 +215,30 @@ async function renderDay(dayKey) {
     const savedData = await loadSavedSession(currentWeek, dayKey);
     const savedLogs = savedData ? savedData.set_logs || [] : [];
 
+    const prevData = await loadPreviousSessionData(currentWeek, dayKey);
+    const prevLogs = prevData ? prevData.set_logs || [] : [];
+
+    let prevPrevLogs = [];
+    if (currentWeek > 2) {
+        const prevPrevData = await loadPreviousSessionData(currentWeek - 1, dayKey);
+        prevPrevLogs = prevPrevData ? prevPrevData.set_logs || [] : [];
+    }
+
     container.innerHTML = '';
 
     dayData.exercises.forEach((ex, exIdx) => {
         const card = document.createElement('div');
         card.className = 'exercise-card';
 
-        // Finde gespeicherte Reps für diese Übung
+        // Finde gespeicherte Reps für diese Übung aus aktueller und vorherigen Wochen
         const exLogs = savedLogs.filter(log => log.exercise_name === ex.name).sort((a, b) => a.set_number - b.set_number);
-        const savedWeight = exLogs.length > 0 ? exLogs[0].weight_kg : ex.startWeight;
+        const exPrevLogs = prevLogs.filter(log => log.exercise_name === ex.name).sort((a, b) => a.set_number - b.set_number);
+        const exPrevPrevLogs = prevPrevLogs.filter(log => log.exercise_name === ex.name).sort((a, b) => a.set_number - b.set_number);
+
+        const savedWeight = exLogs.length > 0 ? exLogs[0].weight_kg : (exPrevLogs.length > 0 ? exPrevLogs[0].weight_kg : ex.startWeight);
         const repVals = exLogs.length > 0 ? exLogs.map(l => l.reps) : Array(ex.sets).fill('');
+
+        const adviceHtml = getAdviceBadge(ex, exPrevLogs, exPrevPrevLogs);
 
         const imageHtml = ex.imageUrl
             ? `<img src="${ex.imageUrl}" alt="${ex.name}">`
@@ -235,9 +249,12 @@ async function renderDay(dayKey) {
                 ${imageHtml}
             </div>
             <div class="exercise-info">
-                <div class="exercise-header">
-                    <h3>${exIdx + 1}. ${ex.name}</h3>
-                    <small>${ex.sets} Sätze</small>
+                <div class="exercise-header" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                    <div style="display: flex; justify-content: space-between; width: 100%;">
+                        <h3>${exIdx + 1}. ${ex.name}</h3>
+                        <small>${ex.sets} Sätze</small>
+                    </div>
+                    ${adviceHtml}
                 </div>
                 <div class="progression-zone" id="prog-${exIdx}"></div>
                 <div class="input-group">
@@ -421,6 +438,48 @@ function checkProgression(card, cardIdx, ex, reps, prevExLogs = []) {
         badge.innerHTML = message;
         badgeZone.appendChild(badge);
     }
+}
+
+function getAdviceBadge(ex, prevLogs, prevPrevLogs) {
+    if (!prevLogs || prevLogs.length === 0) return '';
+    let message = '';
+    const reps = prevLogs.map(l => l.reps);
+
+    if (ex.repRange === 'amrap') {
+        let improved = false;
+        if (prevPrevLogs && prevPrevLogs.length > 0) {
+            let allSetsImproved = reps.length > 0;
+            for (let i = 0; i < reps.length; i++) {
+                const currentRep = reps[i];
+                const prevRepLog = prevPrevLogs.find(l => l.set_number === i + 1);
+                const prevRepCount = prevRepLog ? prevRepLog.reps : 0;
+                if (currentRep < prevRepCount + 2) {
+                    allSetsImproved = false;
+                    break;
+                }
+            }
+            improved = allSetsImproved;
+        }
+
+        if (improved) {
+            message = "📈 Ziel erreicht! +2,5 kg";
+        } else {
+            message = `💡 Vorwoche: ${reps.join(', ')} Reps`;
+        }
+    } else {
+        const target = ex.repRange[1];
+        if (reps.length > 0 && reps.every(r => r > 0 && r >= target)) {
+            const inc = ex.bodyPart === 'upper' ? '1,25' : '2,5';
+            message = `📈 Gewicht erhöhen: +${inc} kg`;
+        } else {
+            message = `💡 Vorwoche: ${reps.join(', ')} Reps (Ziel: ${target})`;
+        }
+    }
+
+    if (message) {
+        return `<div class="progression-badge" style="margin-top: 4px; display: inline-block;">${message}</div>`;
+    }
+    return '';
 }
 
 // ============================================

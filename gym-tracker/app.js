@@ -260,7 +260,7 @@ async function renderDay(dayKey) {
                 <div class="input-group">
                     <div class="weight-wrapper">
                         ${ex.isBW ? '<label class="bw-label">BW +</label>' : '<label></label>'}
-                        <input type="number" class="weight-input" value="${savedWeight}" step="0.25" data-ex-idx="${exIdx}"> 
+                        <input type="number" class="weight-input" value="${savedWeight}" step="0.25" min="0" data-ex-idx="${exIdx}"> 
                         <span style="font-size: 0.9rem; color: var(--text-muted);">kg</span>
                     </div>
                     <div class="sets-wrapper">
@@ -270,7 +270,7 @@ async function renderDay(dayKey) {
             const targetText = ex.targets ? ex.targets[i] : (ex.repRange === 'amrap' ? 'AMRAP' : `${ex.repRange[0]}-${ex.repRange[1]}`);
             return `
                                 <div class="set-col">
-                                    <input type="number" class="rep-input" placeholder="S${i + 1}" value="${repVals[i] || ''}" data-set="${i}" data-ex-idx="${exIdx}">
+                                    <input type="number" class="rep-input" placeholder="S${i + 1}" value="${repVals[i] || ''}" min="0" data-set="${i}" data-ex-idx="${exIdx}">
                                     <span class="rep-target">${targetText}</span>
                                 </div>
                                 `;

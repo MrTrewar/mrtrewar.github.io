@@ -22,7 +22,8 @@
     padding: 0;
 }
 
-html, body {
+html,
+body {
     height: 100%;
 }
 
@@ -32,11 +33,14 @@ body {
     font-family: 'Rajdhani', sans-serif;
     line-height: 1.6;
     overflow-x: hidden;
-    padding-bottom: 100px;
+    padding-bottom: 200px;
 }
 
 /* Typography */
-h1, h2, h3, .nav-btn {
+h1,
+h2,
+h3,
+.nav-btn {
     font-family: 'Orbitron', sans-serif;
     font-weight: 700;
 }
@@ -263,7 +267,7 @@ header {
 main {
     padding: 12px;
     max-width: 1400px;
-    margin: 0 auto;
+    margin: 0 auto 100px auto;
 }
 
 .loading {
@@ -372,22 +376,75 @@ main {
 /* Input Groups */
 .input-group {
     display: flex;
-    gap: 8px;
+    gap: 15px;
     align-items: center;
     flex-wrap: wrap;
     margin-top: 12px;
+}
+
+.weight-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sets-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    flex: 1;
+    min-width: 150px;
+}
+
+.rir-label {
+    font-size: 0.75rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    text-align: center;
+    font-weight: 700;
+}
+
+.set-inputs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.set-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.rep-target {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: 'Rajdhani', sans-serif;
+}
+
+.exercise-note {
+    font-size: 0.85rem;
+    color: var(--warning);
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: rgba(255, 170, 0, 0.05);
+    border-left: 2px solid var(--warning);
+    border-radius: 4px;
+    line-height: 1.4;
 }
 
 .bw-label {
     font-weight: 700;
     color: var(--accent);
     min-width: 45px;
-}
-
-.set-inputs {
-    display: flex;
-    gap: 5px;
-    flex-wrap: wrap;
 }
 
 input[type="number"] {
@@ -416,35 +473,7 @@ input[type="number"]:focus {
     width: 70px;
 }
 
-/* ============================================
-   FLOATING BUTTON & MODAL
-   ============================================ */
 
-.floating-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: #000;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    z-index: 1000;
-    transition: all 0.3s;
-    box-shadow: 0 4px 12px var(--accent-glow);
-}
-
-.floating-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 16px var(--accent-glow);
-}
-
-.floating-btn:active {
-    transform: scale(0.95);
-}
 
 .modal {
     display: none;
@@ -459,8 +488,13 @@ input[type="number"]:focus {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .modal-content {
@@ -479,6 +513,7 @@ input[type="number"]:focus {
         opacity: 0;
         transform: translateY(30px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -559,46 +594,7 @@ input[type="number"]:focus {
     background: rgba(0, 242, 255, 0.2);
 }
 
-/* ============================================
-   STICKY FOOTER
-   ============================================ */
 
-.sticky-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 12px;
-    background: linear-gradient(180deg, #0a0a0d 0%, #000 100%);
-    border-top: 2px solid var(--accent);
-    box-shadow: 0 -4px 12px rgba(0, 242, 255, 0.1);
-    z-index: 99;
-}
-
-#finishSession {
-    width: 100%;
-    padding: 14px 16px;
-    background: var(--accent);
-    color: #000;
-    border: none;
-    border-radius: 6px;
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 700;
-    font-size: 1rem;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: all 0.3s;
-    text-transform: uppercase;
-}
-
-#finishSession:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px var(--accent-glow);
-}
-
-#finishSession:active {
-    transform: translateY(0);
-}
 
 /* ============================================
    RESPONSIVE DESIGN
@@ -682,7 +678,11 @@ input[type="number"]:focus {
 
 /* Print styles */
 @media print {
-    header, .sticky-footer, .floating-btn, .modal {
+
+    header,
+    .sticky-footer,
+    .floating-btn,
+    .modal {
         display: none;
     }
 

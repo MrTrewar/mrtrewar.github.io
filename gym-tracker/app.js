@@ -36,7 +36,7 @@
 // ============================================
 const SUPABASE_URL = 'https://mmckhgdsflyeqtrvjsnr.supabase.com';
 const SUPABASE_ANON_KEY = 'sb_publishable_2ah_Fys1RzeOX4EvBPbpSA_U0Plque7';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ============================================
 // TRAININGSPLAN (zentral, leicht erweiterbar)
@@ -48,7 +48,7 @@ const TRAINING_PLAN = {
         sets: 22,
         exercises: [
             { name: "Bench Press", sets: 3, repRange: [5, 8], rir: "1–2", startWeight: 20, bodyPart: "upper", imageUrl: "" },
-            { name: "Pull-Up", sets: 3, repRange: "amrap", rir: "0–1", startWeight: 0, bodyPart: "upper", isBW: true, imageUrl: "" },
+            { name: "Pull-Up", sets: 3, repRange: "amrap", rir: "0–1", startWeight: 0, bodyPart: "upper", isBW: true, imageUrl: "", note: "Stange biegen" },
             { name: "T-Bar Row", sets: 3, repRange: [8, 10], rir: "2", startWeight: 15, bodyPart: "upper", imageUrl: "" },
             { name: "Lateral Raise (DB)", sets: 3, repRange: [10, 15], rir: "2", startWeight: 4, bodyPart: "upper", imageUrl: "" },
             { name: "Bayesian Cable Curl", sets: 3, repRange: [10, 15], rir: "2", startWeight: 6, bodyPart: "upper", imageUrl: "" },
@@ -63,10 +63,10 @@ const TRAINING_PLAN = {
         sets: 23,
         exercises: [
             { name: "Squat", sets: 3, repRange: [5, 8], rir: "1–2", startWeight: 60, bodyPart: "lower", imageUrl: "" },
-            { name: "RDL", sets: 3, repRange: [8, 12], rir: "2", startWeight: 10, bodyPart: "lower", imageUrl: "" },
-            { name: "Seated Leg Curl", sets: 3, repRange: [10, 15], rir: "2", startWeight: 27.5, bodyPart: "lower", imageUrl: "" },
+            { name: "RDL", sets: 3, repRange: [8, 12], rir: "2", startWeight: 10, bodyPart: "lower", imageUrl: "", note: "langsam - wenig" },
+            { name: "Seated Leg Curl", sets: 3, repRange: [10, 15], rir: "2", startWeight: 27.5, bodyPart: "lower", imageUrl: "", note: "Streckung warten!" },
             { name: "Leg Extension", sets: 3, repRange: [12, 20], rir: "2", startWeight: 35, bodyPart: "lower", imageUrl: "" },
-            { name: "Nautilus Glute Drive", sets: 2, repRange: [8, 12], rir: "2", startWeight: 50, bodyPart: "lower", imageUrl: "" },
+            { name: "Nautilus Glute Drive", sets: 2, repRange: [8, 12], rir: "2", startWeight: 50, bodyPart: "lower", imageUrl: "", note: "Hüfte durchstrecken!" },
             { name: "Standing Calf Raise", sets: 4, repRange: [10, 15], rir: "1–2", startWeight: 0, bodyPart: "lower", imageUrl: "" },
             { name: "Seated Calf Raise", sets: 2, repRange: [12, 20], rir: "2", startWeight: 0, bodyPart: "lower", imageUrl: "" },
             { name: "Cable Crunch", sets: 3, repRange: [10, 15], rir: "2", startWeight: 36.25, bodyPart: "lower", imageUrl: "" }
@@ -94,10 +94,10 @@ const TRAINING_PLAN = {
             { name: "Trap Bar Deadlift", sets: 3, repRange: [3, 6], rir: "2", startWeight: 70, bodyPart: "lower", imageUrl: "" },
             { name: "Machine Lat Pullover", sets: 3, repRange: [10, 15], rir: "2", startWeight: 17.5, bodyPart: "upper", imageUrl: "" },
             { name: "Seated Cable Row", sets: 3, repRange: [8, 12], rir: "2", startWeight: 20, bodyPart: "upper", imageUrl: "" },
-            { name: "Reverse Pec Deck", sets: 3, repRange: [15, 20], rir: "2–3", startWeight: 20, bodyPart: "upper", imageUrl: "" },
+            { name: "Reverse Pec Deck", sets: 3, repRange: [15, 20], rir: "2–3", startWeight: 20, bodyPart: "upper", imageUrl: "", note: "seitlich setzen in Dehnung !" },
             { name: "Cable Lateral Raise (Behind-Back)", sets: 2, repRange: [12, 15], rir: "3", startWeight: 2, bodyPart: "upper", imageUrl: "" },
             { name: "Preacher Curl", sets: 3, repRange: [10, 15], rir: "2", startWeight: 5, bodyPart: "upper", imageUrl: "" },
-            { name: "Hanging Leg Raises", sets: 3, repRange: [10, 20], rir: "2", startWeight: 0, bodyPart: "lower", isBW: true, imageUrl: "" },
+            { name: "Hanging Leg Raises", sets: 3, repRange: "amrap", rir: "2", startWeight: 0, bodyPart: "lower", isBW: true, imageUrl: "" },
             { name: "Standing Calf Raise", sets: 3, repRange: [10, 15], rir: "2", startWeight: 0, bodyPart: "lower", imageUrl: "" }
         ]
     }
@@ -176,11 +176,13 @@ function setupEventListeners() {
     });
 
     // Session speichern
-    document.getElementById('finishSession').addEventListener('click', saveSession);
+    const saveBtn = document.getElementById('navSaveBtn');
+    if (saveBtn) saveBtn.addEventListener('click', saveSession);
 
     // Recovery Modal
     const modal = document.getElementById('recoveryModal');
-    document.getElementById('recoveryBtn').onclick = () => modal.style.display = "block";
+    const recBtn = document.getElementById('navRecoveryBtn');
+    if (recBtn) recBtn.onclick = () => modal.style.display = "block";
     document.querySelector('.close-modal').onclick = () => modal.style.display = "none";
     document.getElementById('evaluateRecovery').onclick = evaluateRecovery;
 
@@ -233,26 +235,42 @@ async function renderDay(dayKey) {
             </div>
             <div class="exercise-info">
                 <div class="exercise-header">
-                    <h3>${ex.name}</h3>
-                    <small>
-                        ${ex.sets}x${ex.repRange === 'amrap' ? 'AMRAP' : ex.repRange[0] + '-' + ex.repRange[1]}
-                        @ RIR ${ex.rir}
-                    </small>
+                    <h3>${exIdx + 1}. ${ex.name}</h3>
+                    <small>${ex.sets} Sätze</small>
                 </div>
                 <div class="progression-zone" id="prog-${exIdx}"></div>
                 <div class="input-group">
-                    ${ex.isBW ? '<label class="bw-label">BW +</label>' : '<label></label>'}
-                    <input type="number" class="weight-input" value="${savedWeight}" step="0.25" data-ex-idx="${exIdx}"> kg
-                    <div class="set-inputs">
-                        ${Array.from({length: ex.sets}).map((_, i) => `
-                            <input type="number" class="rep-input" placeholder="S${i+1}" value="${repVals[i] || ''}" data-set="${i}" data-ex-idx="${exIdx}">
-                        `).join('')}
+                    <div class="weight-wrapper">
+                        ${ex.isBW ? '<label class="bw-label">BW +</label>' : '<label></label>'}
+                        <input type="number" class="weight-input" value="${savedWeight}" step="0.25" data-ex-idx="${exIdx}"> 
+                        <span style="font-size: 0.9rem; color: var(--text-muted);">kg</span>
+                    </div>
+                    <div class="sets-wrapper">
+                        <div class="rir-label">RIR ${ex.rir}</div>
+                        <div class="set-inputs">
+                            ${Array.from({ length: ex.sets }).map((_, i) => {
+            const targetText = ex.targets ? ex.targets[i] : (ex.repRange === 'amrap' ? 'AMRAP' : `${ex.repRange[0]}-${ex.repRange[1]}`);
+            return `
+                                <div class="set-col">
+                                    <input type="number" class="rep-input" placeholder="S${i + 1}" value="${repVals[i] || ''}" data-set="${i}" data-ex-idx="${exIdx}">
+                                    <span class="rep-target">${targetText}</span>
+                                </div>
+                                `;
+        }).join('')}
+                        </div>
                     </div>
                 </div>
+                ${ex.note ? `<div class="exercise-note">💡 ${ex.note}</div>` : ''}
             </div>
         `;
         container.appendChild(card);
     });
+}
+
+// Lade Vorwoche für AMRAP Vergleiche
+async function loadPreviousSessionData(week, dayKey) {
+    if (week <= 1) return null;
+    return await loadSavedSession(week - 1, dayKey);
 }
 
 // ============================================
@@ -265,7 +283,7 @@ async function loadSavedSession(week, day) {
     }
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('sessions')
             .select('id, set_logs(*)')
             .eq('week_number', week)
@@ -294,7 +312,7 @@ async function saveSession() {
 
     try {
         // 1. Session erstellen oder abrufen
-        const { data: session, error: sErr } = await supabase
+        const { data: session, error: sErr } = await supabaseClient
             .from('sessions')
             .upsert(
                 { week_number: currentWeek, day_key: currentDay, date: new Date().toISOString().split('T')[0] },
@@ -305,6 +323,10 @@ async function saveSession() {
 
         if (sErr) throw new Error('Session error: ' + sErr.message);
         sessionId = session.id;
+
+        // Lade Vorwoche für AMRAP Vergleich
+        const prevSessionData = await loadPreviousSessionData(currentWeek, currentDay);
+        const prevLogs = prevSessionData ? prevSessionData.set_logs || [] : [];
 
         // 2. Logs sammeln
         const dayData = TRAINING_PLAN[currentDay];
@@ -329,13 +351,14 @@ async function saveSession() {
 
             // Double Progression Check
             if (exData) {
-                checkProgression(card, cardIdx, exData, repInputs.map(i => parseInt(i.value) || 0));
+                const prevExLogs = prevLogs.filter(l => l.exercise_name === exName).sort((a, b) => a.set_number - b.set_number);
+                checkProgression(card, cardIdx, exData, repInputs.map(i => parseInt(i.value) || 0), prevExLogs);
             }
         });
 
         // 3. Alte Logs löschen & neue einfügen
-        await supabase.from('set_logs').delete().eq('session_id', sessionId);
-        const { error: lErr } = await supabase.from('set_logs').insert(logs);
+        await supabaseClient.from('set_logs').delete().eq('session_id', sessionId);
+        const { error: lErr } = await supabaseClient.from('set_logs').insert(logs);
 
         if (lErr) throw new Error('Log insert error: ' + lErr.message);
 
@@ -350,18 +373,33 @@ async function saveSession() {
 // ============================================
 // DOUBLE PROGRESSION LOGIC
 // ============================================
-function checkProgression(card, cardIdx, ex, reps) {
+function checkProgression(card, cardIdx, ex, reps, prevExLogs = []) {
     const badgeZone = card.querySelector(`#prog-${cardIdx}`);
     badgeZone.innerHTML = '';
 
     let message = '';
 
     if (ex.repRange === 'amrap') {
-        // AMRAP: Wenn alle Sätze >= 10 reps
-        const avgReps = reps.filter(r => r > 0).length > 0
-            ? reps.reduce((a, b) => a + b, 0) / reps.filter(r => r > 0).length
-            : 0;
-        if (avgReps >= 8) {
+        let improved = false;
+
+        // Prüfe, ob in der Vorwoche Logs existierten
+        if (prevExLogs && prevExLogs.length > 0) {
+            // Check ob ALLE Sätze >= Vorwoche + 2 sind
+            let allSetsImproved = reps.length > 0; // Gehe davon aus, dass wir Sätze haben
+            for (let i = 0; i < reps.length; i++) {
+                const currentRep = reps[i];
+                const prevRepLog = prevExLogs.find(l => l.set_number === i + 1);
+                const prevRepCount = prevRepLog ? prevRepLog.reps : 0;
+
+                if (currentRep < prevRepCount + 2) {
+                    allSetsImproved = false;
+                    break;
+                }
+            }
+            improved = allSetsImproved;
+        }
+
+        if (improved) {
             message = "✅ Reps verbessert! Nächstes Mal +2,5 kg Zusatzgewicht";
         }
     } else {
@@ -454,6 +492,7 @@ function evaluateRecovery() {
     box.style.background = bgColor;
     box.style.color = textColor;
     box.innerHTML = message;
+    box.style.display = 'block';
 }
 
 // ============================================
@@ -472,7 +511,7 @@ async function loadWeekTracker() {
 
         const dayKeys = ['mo', 'di', 'do', 'fr'];
         for (const day of dayKeys) {
-            const { data } = await supabase
+            const { data } = await supabaseClient
                 .from('sessions')
                 .select('id')
                 .eq('week_number', currentWeek)

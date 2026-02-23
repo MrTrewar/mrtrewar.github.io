@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Supabase Connection Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #0f1113; color: #e0e0e0; }
+        .test { margin: 20px 0; padding: 15px; background: #1a1d21; border-radius: 5px; }
+        .pass { border-left: 4px solid #00ff88; }
+        .fail { border-left: 4px solid #ff4444; }
+        .pending { border-left: 4px solid #ffaa00; }
+        h1 { color: #00f2ff; }
+        code { background: #000; padding: 5px; display: block; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Supabase Connection Test</h1>
+    <div id="results"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://mmckhgdsflyeqtrvjsnr.supabase.com';
+        const SUPABASE_ANON_KEY = 'sb_publishable_2ah_Fys1RzeOX4EvBPbpSA_U0Plque7';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const resultsDiv = document.getElementById('results');
+
+        async function test(name, fn) {
+            const testDiv = document.createElement('div');
+            testDiv.className = 'test pending';
+            testDiv.innerHTML = `<strong>${name}...</strong>`;
+            resultsDiv.appendChild(testDiv);
+
+            try {
+                const result = await fn();
+                testDiv.className = 'test pass';
+                testDiv.innerHTML = `<strong>✅ ${name}</strong><code>${JSON.stringify(result, null, 2)}</code>`;
+                return true;
+            } catch (err) {
+                testDiv.className = 'test fail';
+                testDiv.innerHTML = `<strong>❌ ${name}</strong><code>${err.message || JSON.stringify(err)}</code>`;
+                return false;
+            }
+        }
+
+        async function runTests() {
+            console.log('Starting tests...');
+
+            // Test 1: Connection
+            await test('Supabase Connection', async () => {
+                return { connected: true, url: SUPABASE_URL };
+            });
+
+            // Test 2: Fetch sessions
+            await test('Fetch sessions table', async () => {
+                const { data, error } = await supabase
+                    .from('sessions')
+                    .select('*')
+                    .limit(1);
+                if (error) throw error;
+                return { rows: data?.length || 0, message: 'Table exists' };
+            });
+
+            // Test 3: Fetch set_logs
+            await test('Fetch set_logs table', async () => {
+                const { data, error } = await supabase
+                    .from('set_logs')
+                    .select('*')
+                    .limit(1);
+                if (error) throw error;
+                return { rows: data?.length || 0, message: 'Table exists' };
+            });
+
+            // Test 4: Insert test session
+            await test('Insert test session (sessions table)', async () => {
+                const { data, error } = await supabase
+                    .from('sessions')
+                    .insert([{
+                        week_number: 99,
+                        day_key: 'test',
+                        date: new Date().toISOString().split('T')[0]
+                    }])
+                    .select();
+                if (error) throw error;
+                return { inserted: data?.length, id: data?.[0]?.id };
+            });
+
+            // Test 5: Insert test set log
+            await test('Insert test set log (set_logs table)', async () => {
+                // First get a session
+                const { data: sessions, error: sessErr } = await supabase
+                    .from('sessions')
+                    .select('id')
+                    .eq('week_number', 99)
+                    .eq('day_key', 'test')
+                    .limit(1);
+
+                if (sessErr || !sessions?.length) throw new Error('No test session found');
+
+                const { data, error } = await supabase
+                    .from('set_logs')
+                    .insert([{
+                        session_id: sessions[0].id,
+                        exercise_name: 'Bench Press',
+                        set_number: 1,
+                        weight_kg: 20,
+                        reps: 5
+                    }])
+                    .select();
+                if (error) throw error;
+                return { inserted: data?.length };
+            });
+
+            // Test 6: Cleanup
+            await test('Cleanup test data', async () => {
+                const { error } = await supabase
+                    .from('sessions')
+                    .delete()
+                    .eq('week_number', 99);
+                if (error) throw error;
+                return { cleaned: true };
+            });
+
+            resultsDiv.innerHTML += '<h2 style="color: #00f2ff; margin-top: 40px;">✅ All tests passed! Supabase is ready.</h2>';
+        }
+
+        runTests();
+    </script>
+</body>
+</html>

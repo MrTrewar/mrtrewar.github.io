@@ -272,7 +272,8 @@ async function renderDay(dayKey) {
         // Wenn nicht, und wir eine Progression errechnet haben, nimm das neue Gewicht.
         // Ansonsten nimm das Gewicht der Vorwoche oder das Startgewicht.
         const savedWeight = exLogs.length > 0 ? exLogs[0].weight_kg : (progData.newWeight !== null ? progData.newWeight : prevWeight);
-        const repVals = exLogs.length > 0 ? exLogs.map(l => l.reps) : Array(ex.sets).fill('');
+        const defaultRepValue = Array.isArray(ex.repRange) ? ex.repRange[1] : '';
+        const repVals = exLogs.length > 0 ? exLogs.map(l => l.reps) : Array(ex.sets).fill(defaultRepValue);
 
         const adviceHtml = progData.message
             ? `<div class="progression-badge ${progData.autoIncreased ? 'auto-increased' : ''}" style="margin-top: 4px; display: inline-block;">${progData.message}</div>`

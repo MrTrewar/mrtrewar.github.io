@@ -51,7 +51,7 @@ const TRAINING_PLAN = {
             { name: "Pull-Up", sets: 3, repRange: "amrap", rir: "0–1", startWeight: 0, bodyPart: "upper", isBW: true, imageUrl: "assets/images/pixel_pull_up.png", note: "Stange biegen" },
             { name: "T-Bar Row", sets: 3, repRange: [8, 10], rir: "2", startWeight: 15, bodyPart: "upper", imageUrl: "assets/images/pixel_t_bar_row.png" },
             { name: "Lateral Raise (DB)", sets: 3, repRange: [10, 15], rir: "2", startWeight: 4, bodyPart: "upper", imageUrl: "assets/images/pixel_lateral_raise.png" },
-            { name: "Bayesian Cable Curl", sets: 3, repRange: [10, 15], rir: "2", startWeight: 6, bodyPart: "upper", imageUrl: "" },
+            { name: "Bayesian Cable Curl", sets: 3, repRange: [10, 15], rir: "2", startWeight: 6, bodyPart: "upper", imageUrl: "assets/images/pixel_bayesian_curl.png" },
             { name: "Incline DB Shrugs", sets: 3, repRange: [12, 15], rir: "2", startWeight: 14, bodyPart: "upper", imageUrl: "assets/images/pixel_incline_bench.png" },
             { name: "Face Pulls", sets: 2, repRange: [15, 20], rir: "2–3", startWeight: 12.5, bodyPart: "upper", imageUrl: "assets/images/pixel_face_pulls.png" },
             { name: "DB Wrist Curls", sets: 2, repRange: [15, 20], rir: "2", startWeight: 4, bodyPart: "upper", imageUrl: "assets/images/pixel_wrist_curls.png" }

@@ -92,8 +92,8 @@ const TRAINING_PLAN = {
         sets: 23,
         exercises: [
             { name: "Trap Bar Deadlift", sets: 3, repRange: [3, 6], rir: "2", startWeight: 70, bodyPart: "lower", imageUrl: "" },
-            { name: "Machine Lat Pullover", sets: 3, repRange: [10, 15], rir: "2", startWeight: 17.5, bodyPart: "upper", imageUrl: "" },
             { name: "Seated Cable Row", sets: 3, repRange: [8, 12], rir: "2", startWeight: 20, bodyPart: "upper", imageUrl: "" },
+            { name: "Machine Lat Pullover", sets: 3, repRange: [10, 15], rir: "2", startWeight: 17.5, bodyPart: "upper", imageUrl: "" },
             { name: "Reverse Pec Deck", sets: 3, repRange: [15, 20], rir: "2–3", startWeight: 20, bodyPart: "upper", imageUrl: "", note: "seitlich setzen in Dehnung !" },
             { name: "Cable Lateral Raise (Behind-Back)", sets: 2, repRange: [12, 15], rir: "3", startWeight: 2, bodyPart: "upper", imageUrl: "assets/images/pixel_lateral_raise.png" },
             { name: "Preacher Curl", sets: 3, repRange: [10, 15], rir: "2", startWeight: 5, bodyPart: "upper", imageUrl: "assets/images/pixel_preacher_curl.png" },

@@ -81,7 +81,7 @@ const TRAINING_PLAN = {
             { name: "Lateral Raise (DB/Cable)", sets: 3, repRange: [12, 20], rir: "2", startWeight: 4, bodyPart: "upper", imageUrl: "assets/images/pixel_lateral_raise.png" },
             { name: "Machine Pec Deck", sets: 2, repRange: [12, 15], rir: "2", startWeight: 47.5, bodyPart: "upper", imageUrl: "" },
             { name: "OH Cable Triceps Extension", sets: 3, repRange: [10, 15], rir: "2", startWeight: 16, bodyPart: "upper", imageUrl: "assets/images/pixel_triceps_ext.png" },
-            { name: "Neck Curls/Extensions", sets: 3, repRange: [15, 20], rir: "2–3", startWeight: 0, bodyPart: "upper", imageUrl: "" },
+            { name: "Hanging Leg Raises", sets: 3, repRange: "amrap", rir: "2", startWeight: 0, bodyPart: "lower", isBW: true, imageUrl: "assets/images/pixel_hanging_leg_raise.png" },
             { name: "Face Pulls", sets: 2, repRange: [15, 20], rir: "3", startWeight: 10, bodyPart: "upper", imageUrl: "assets/images/pixel_face_pulls.png" }
         ]
     },

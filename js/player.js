@@ -58,10 +58,38 @@ function updateComboState() {
     }
 }
 
+function scalePlayerVisuals() {
+    if (!playerElement) return;
+    const pw = gameSettings.playerWidth;
+    const ph = gameSettings.playerHeight;
+    playerElement.style.width = pw + 'px';
+    playerElement.style.height = ph + 'px';
+
+    const bodyEl = document.getElementById('player-body');
+    if (bodyEl) {
+        const bodyW = pw * 0.8;
+        const bodyH = ph * 0.8;
+        bodyEl.style.width = bodyW + 'px';
+        bodyEl.style.height = bodyH + 'px';
+        bodyEl.style.left = ((pw - bodyW) / 2) + 'px';
+        bodyEl.style.top = '0px';
+    }
+
+    const boardEl = document.getElementById('player-board');
+    if (boardEl) {
+        const boardH = ph * 0.2;
+        boardEl.style.width = pw + 'px';
+        boardEl.style.height = boardH + 'px';
+        boardEl.style.top = (ph * 0.8 - boardH * 0.25) + 'px';
+        boardEl.style.left = '0px';
+    }
+}
+
 function resetPlayer() {
     // Sicherstellen, dass gameSettings und playerHeight hier bekannt sind (aus config.js)
     playerState.y = gameSettings.groundLevelY - gameSettings.playerHeight;
     playerState.x = GAME_AREA_WIDTH / 3; // Zurück zur Start-X-Position
+    scalePlayerVisuals();
 
     playerState.dx = 0;
     playerState.dy = 0;

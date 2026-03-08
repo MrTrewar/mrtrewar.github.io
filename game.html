@@ -6,6 +6,14 @@
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Welcome to the Jungle</title>
 
+  <!-- PWA: Als eigene App auf dem Home-Screen -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="WttJ">
+  <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+  <meta name="theme-color" content="#1a1a2e">
+
   <!-- Bibliotheken & Schriftarten -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
@@ -35,10 +43,10 @@
     <div id="game-over-message">GAME OVER<br><small>Press Enter / Tap to Restart</small></div>
     <div id="pause-overlay">PAUSE</div>
     <div id="level-overlay"></div>
+    <div id="screen-flash"></div>
     <div id="mobile-controls">
-      <div id="dpad">
-        <span id="arrow-left" class="dpad-arrow">◀</span>
-        <span id="arrow-right" class="dpad-arrow">▶</span>
+      <div id="joystick">
+        <div id="joystick-knob"></div>
       </div>
       <div id="jump-btn">▲</div>
     </div>

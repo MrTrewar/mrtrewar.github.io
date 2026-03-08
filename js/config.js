@@ -7,7 +7,7 @@ const gameSettings = {
     gravity: 0.48,
     pushForce: 0.68,
     maxPlayerDX: 4.5,
-    worldScrollSpeed: 2.5,
+    worldScrollSpeed: 1.5,
     jumpForce: 13,
     coyoteTimeFrames: 7,
     jumpBufferFrames: 8,
@@ -38,9 +38,9 @@ const gameSettings = {
 
 // Level configuration
 const LEVELS = [
-    { id: 1, name: "JUNGLE", bg: "assets/images/backgrounds/level1_bg.jpg", scoreThreshold: 0, scrollSpeedBase: 2.5 },
-    { id: 2, name: "CITY", bg: "assets/images/backgrounds/level2_bg.jpg", scoreThreshold: 800, scrollSpeedBase: 3.5 },
-    { id: 3, name: "NIGHTPARK", bg: "assets/images/backgrounds/level3_bg.jpg", scoreThreshold: 2000, scrollSpeedBase: 4.5 },
+    { id: 1, name: "JUNGLE", bg: "assets/images/backgrounds/level1_bg.jpg", scoreThreshold: 0, scrollSpeedBase: 1.5 },
+    { id: 2, name: "CITY", bg: "assets/images/backgrounds/level2_bg.jpg", scoreThreshold: 1500, scrollSpeedBase: 3.5 },
+    { id: 3, name: "NIGHTPARK", bg: "assets/images/backgrounds/level3_bg.jpg", scoreThreshold: 3000, scrollSpeedBase: 4.5 },
 ];
 
 // Supabase configuration — fill in your values from the Supabase dashboard

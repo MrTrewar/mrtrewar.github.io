@@ -33,8 +33,9 @@ function resolvePlayerCollisionsAndUpdatePosition(deltaTime) {
         const rail = playerState.currentRail;
         const isHorizontallyOffRail = playerState.x + gameSettings.playerWidth < rail.x || playerState.x > rail.x + rail.width;
         const isRailVisuallyGone = rail.x + rail.width < 0;
+        const isPlayerDraggedToEdge = playerState.x <= 0;
 
-        if (isHorizontallyOffRail || isRailVisuallyGone) {
+        if (isHorizontallyOffRail || isRailVisuallyGone || isPlayerDraggedToEdge) {
             playerState.isGrinding = false;
             playerState.currentRail = null;
             if (soundGrind) {
@@ -61,6 +62,7 @@ function resolvePlayerCollisionsAndUpdatePosition(deltaTime) {
             }
             continue;
         }
+
 
         const objRect = { x: obj.x, y: obj.y, width: obj.width, height: obj.height };
 
@@ -246,18 +248,40 @@ function gameLoop(timestamp) {
             }
         }
 
-        // Level-up check
-        if (currentLevel < LEVELS.length - 1 && playerState.score >= LEVELS[currentLevel + 1].scoreThreshold) {
-            transitionToLevel(currentLevel + 1);
+        // Level-up check: Fade + Flash transition
+        if (currentLevel < LEVELS.length - 1 && !isTransitioning && playerState.score >= LEVELS[currentLevel + 1].scoreThreshold) {
+            triggerLevelTransition(currentLevel + 1);
         }
     }
     requestAnimationFrame(gameLoop);
+}
+
+let isTransitioning = false;
+
+function triggerLevelTransition(levelIndex) {
+    isTransitioning = true;
+    const screenFlash = document.getElementById('screen-flash');
+
+    // Phase 1: Weißer Flash
+    if (screenFlash) screenFlash.classList.add('flash');
+
+    setTimeout(() => {
+        // Phase 2: Level wechseln während Flash noch sichtbar
+        transitionToLevel(levelIndex);
+
+        setTimeout(() => {
+            // Phase 3: Flash ausblenden
+            if (screenFlash) screenFlash.classList.remove('flash');
+            isTransitioning = false;
+        }, 250);
+    }, 200);
 }
 
 function restartGame() {
     keys.KeyA = false;
     keys.KeyD = false;
     keys.Space = false;
+    isTransitioning = false;
     startGame();
 }
 
@@ -284,6 +308,11 @@ function startGame() {
     lastTime = 0;
     scrollSpeedBase = LEVELS[0].scrollSpeedBase;
     backgroundScrollX = 0;
+    isTransitioning = false;
+
+    // Clear screen flash
+    const screenFlash = document.getElementById('screen-flash');
+    if (screenFlash) screenFlash.classList.remove('flash');
 
     // Set background & level class for level 1
     if (gameArea) {
@@ -352,11 +381,7 @@ window.addEventListener('keyup', (e) => {
     if (e.code === 'Space') keys.Space = false;
 });
 
-let activeTouches = {};
-
-// --- Touch-Steuerung: D-Pad links (Slide) + Tap rechts = Sprung ---
-
-const TOUCH_DEADZONE = 15; // px Mindest-Slide bevor Bewegung startet
+// --- Touch-Steuerung: Joystick links (Slide) + Jump-Button rechts ---
 
 function triggerJump() {
     if (playerState.isGameOver) return;
@@ -367,76 +392,123 @@ function triggerJump() {
 }
 
 const gameAreaEl = document.getElementById('game-area');
-const arrowLeftEl = document.getElementById('arrow-left');
-const arrowRightEl = document.getElementById('arrow-right');
+const joystickEl = document.getElementById('joystick');
+const joystickKnobEl = document.getElementById('joystick-knob');
 const jumpBtnEl = document.getElementById('jump-btn');
 
-function updateDpadVisual() {
-    if (arrowLeftEl) arrowLeftEl.classList.toggle('active', keys.KeyA);
-    if (arrowRightEl) arrowRightEl.classList.toggle('active', keys.KeyD);
-    if (jumpBtnEl) jumpBtnEl.classList.toggle('active', keys.Space);
+const JOYSTICK_DEADZONE = 10; // px from center before movement starts
+let joystickTouchId = null;
+let joystickCenterX = 0;
+
+if (joystickEl) {
+    joystickEl.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (playerState.isGameOver) return;
+        const touch = e.changedTouches[0];
+        joystickTouchId = touch.identifier;
+        const rect = joystickEl.getBoundingClientRect();
+        joystickCenterX = rect.left + rect.width / 2;
+        updateJoystick(touch.clientX);
+    }, { passive: false });
+
+    joystickEl.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        for (const touch of e.changedTouches) {
+            if (touch.identifier === joystickTouchId) {
+                updateJoystick(touch.clientX);
+            }
+        }
+    }, { passive: false });
+
+    joystickEl.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        for (const touch of e.changedTouches) {
+            if (touch.identifier === joystickTouchId) {
+                releaseJoystick();
+            }
+        }
+    }, { passive: false });
+
+    joystickEl.addEventListener('touchcancel', (e) => {
+        for (const touch of e.changedTouches) {
+            if (touch.identifier === joystickTouchId) {
+                releaseJoystick();
+            }
+        }
+    });
 }
 
+function updateJoystick(clientX) {
+    const dx = clientX - joystickCenterX;
+    const maxOffset = 38; // max knob displacement in px
+    const clampedDx = Math.max(-maxOffset, Math.min(maxOffset, dx));
+
+    // Move knob visually
+    if (joystickKnobEl) {
+        joystickKnobEl.style.transform = `translate(calc(-50% + ${clampedDx}px), -50%)`;
+    }
+
+    // Update movement keys based on deadzone
+    if (dx < -JOYSTICK_DEADZONE) {
+        keys.KeyA = true;
+        keys.KeyD = false;
+        if (joystickEl) { joystickEl.classList.add('active-left'); joystickEl.classList.remove('active-right'); }
+    } else if (dx > JOYSTICK_DEADZONE) {
+        keys.KeyD = true;
+        keys.KeyA = false;
+        if (joystickEl) { joystickEl.classList.add('active-right'); joystickEl.classList.remove('active-left'); }
+    } else {
+        keys.KeyA = false;
+        keys.KeyD = false;
+        if (joystickEl) { joystickEl.classList.remove('active-left', 'active-right'); }
+    }
+}
+
+function releaseJoystick() {
+    joystickTouchId = null;
+    keys.KeyA = false;
+    keys.KeyD = false;
+    if (joystickKnobEl) {
+        joystickKnobEl.style.transform = 'translate(-50%, -50%)';
+    }
+    if (joystickEl) {
+        joystickEl.classList.remove('active-left', 'active-right');
+    }
+}
+
+// Jump button
+if (jumpBtnEl) {
+    jumpBtnEl.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        triggerJump();
+        if (jumpBtnEl) jumpBtnEl.classList.add('active');
+    }, { passive: false });
+    jumpBtnEl.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        if (jumpBtnEl) jumpBtnEl.classList.remove('active');
+    }, { passive: false });
+    jumpBtnEl.addEventListener('touchcancel', () => {
+        if (jumpBtnEl) jumpBtnEl.classList.remove('active');
+    });
+}
+
+// Game area: only handle restart on game over (but not on leaderboard elements)
 gameAreaEl.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    for (const touch of e.changedTouches) {
-        if (playerState.isGameOver) { restartGame(); return; }
-        const rect = gameAreaEl.getBoundingClientRect();
-        const relX = (touch.clientX - rect.left) / rect.width; // 0..1
-
-        if (relX < 0.45) {
-            // Linke Seite: D-Pad — Startposition merken, noch keine Bewegung (Deadzone)
-            activeTouches[touch.identifier] = {
-                startX: touch.clientX, side: 'dpad'
-            };
-        } else {
-            // Rechte Seite: Sprung
-            activeTouches[touch.identifier] = { side: 'jump' };
-            triggerJump();
-            updateDpadVisual();
-        }
+    if (playerState.isGameOver) {
+        if (
+            e.target.closest('.leaderboard-entry') ||
+            e.target.closest('.leaderboard-submit') ||
+            e.target.closest('.leaderboard-open') ||
+            e.target.closest('.leaderboard') ||
+            e.target.closest('#game-over-message')
+        ) return;
+        e.preventDefault();
+        restartGame();
     }
 }, { passive: false });
-
-gameAreaEl.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    for (const touch of e.changedTouches) {
-        const info = activeTouches[touch.identifier];
-        if (!info || info.side !== 'dpad') continue;
-
-        const dx = touch.clientX - info.startX;
-        if (dx < -TOUCH_DEADZONE) {
-            keys.KeyA = true; keys.KeyD = false;
-        } else if (dx > TOUCH_DEADZONE) {
-            keys.KeyD = true; keys.KeyA = false;
-        } else {
-            keys.KeyA = false; keys.KeyD = false;
-        }
-        updateDpadVisual();
-    }
-}, { passive: false });
-
-function releaseTouch(touch) {
-    const info = activeTouches[touch.identifier];
-    if (!info) return;
-    if (info.side === 'dpad') {
-        // Nur loslassen wenn kein anderer D-Pad-Finger aktiv
-        const otherDpad = Object.entries(activeTouches)
-            .some(([id, t]) => Number(id) !== touch.identifier && t.side === 'dpad');
-        if (!otherDpad) { keys.KeyA = false; keys.KeyD = false; }
-    }
-    delete activeTouches[touch.identifier];
-    updateDpadVisual();
-}
-
-gameAreaEl.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    for (const touch of e.changedTouches) releaseTouch(touch);
-}, { passive: false });
-
-gameAreaEl.addEventListener('touchcancel', (e) => {
-    for (const touch of e.changedTouches) releaseTouch(touch);
-});
 
 if (typeof gameOverMessageElement !== 'undefined' && gameOverMessageElement) {
     gameOverMessageElement.addEventListener('click', (e) => {
@@ -453,10 +525,11 @@ if (typeof gameOverMessageElement !== 'undefined' && gameOverMessageElement) {
         if (
             e.target.closest('.leaderboard-entry') ||
             e.target.closest('.leaderboard-submit') ||
-            e.target.closest('.leaderboard-open')
+            e.target.closest('.leaderboard-open') ||
+            e.target.closest('.leaderboard')
         ) return;
         restartGame();
-    }, { passive: true });
+    }, { passive: false });
 }
 
 startGame();

@@ -2,23 +2,43 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Welcome to the Jungle</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gero Wieger</title>
+  <link rel="stylesheet" href="css/landing.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 </head>
-<body class="landing-page">
+<body>
 
-  <div class="landing-container">
-    <h1 class="landing-title">Welcome to<br>the Jungle</h1>
-    <div class="landing-buttons">
-      <a href="game.html" class="landing-btn landing-btn--play">Spiel</a>
-      <a href="gym-tracker/" class="landing-btn landing-btn--train">Training</a>
-    </div>
+  <!-- Loading -->
+  <div id="loading">
+    <span id="loading-text">Loading</span>
+    <div id="loading-bar"><div id="loading-fill"></div></div>
   </div>
 
+  <!-- Scroll hint -->
+  <div id="scroll-hint">
+    <span>Scroll</span>
+    <div class="arrow"></div>
+  </div>
+
+  <!-- Scroll-driven MRT animation -->
+  <section id="scroll-section">
+    <div id="canvas-wrap">
+      <canvas id="mrt-canvas"></canvas>
+      <!-- Overlay content hovers over animation -->
+      <div id="overlay-content">
+        <h2 class="section-title">Projekte</h2>
+        <div class="buttons">
+          <a href="game.html" class="btn btn--primary">Spiel</a>
+          <a href="gym-tracker/" class="btn">Training</a>
+        </div>
+        <footer>Gero Wieger</footer>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/landing.js"></script>
 </body>
 </html>

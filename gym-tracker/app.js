@@ -139,6 +139,19 @@ const RECOVERY_ITEMS = [
 ];
 
 // ============================================
+// DELOAD WEEKS
+// ============================================
+const DELOAD_WEEKS = [4, 8];
+
+function isDeloadWeek(week) {
+    return DELOAD_WEEKS.includes(week);
+}
+
+function getDeloadSets(normalSets) {
+    return Math.ceil(normalSets / 2);
+}
+
+// ============================================
 // STATE MANAGEMENT
 // ============================================
 let currentDay = 'mo';
@@ -173,6 +186,7 @@ function setupEventListeners() {
     document.getElementById('weekSelect').addEventListener('change', (e) => {
         currentWeek = parseInt(e.target.value);
         renderDay(currentDay);
+        loadWeekTracker();
     });
 
     // Session speichern
@@ -255,9 +269,22 @@ async function renderDay(dayKey) {
 
     container.innerHTML = '';
 
+    const deload = isDeloadWeek(currentWeek);
+
+    // Deload-Banner anzeigen
+    if (deload) {
+        const banner = document.createElement('div');
+        banner.className = 'deload-banner';
+        banner.innerHTML = '⚡ DELOAD WOCHE — Sätze halbiert, Gewichte & RIR beibehalten';
+        container.appendChild(banner);
+    }
+
     dayData.exercises.forEach((ex, exIdx) => {
         const card = document.createElement('div');
         card.className = 'exercise-card';
+
+        // Deload: Sätze halbieren (aufrunden)
+        const effectiveSets = deload ? getDeloadSets(ex.sets) : ex.sets;
 
         // Finde gespeicherte Reps für diese Übung aus aktueller und vorherigen Wochen
         const exLogs = savedLogs.filter(log => log.exercise_name === ex.name).sort((a, b) => a.set_number - b.set_number);
@@ -265,14 +292,16 @@ async function renderDay(dayKey) {
         const exPrevPrevLogs = prevPrevLogs.filter(log => log.exercise_name === ex.name).sort((a, b) => a.set_number - b.set_number);
 
         const prevWeight = exPrevLogs.length > 0 ? exPrevLogs[0].weight_kg : ex.startWeight;
-        const progData = getProgressionData(ex, exPrevLogs, exPrevPrevLogs, prevWeight);
+        const progData = deload
+            ? { message: '', newWeight: null, autoIncreased: false }
+            : getProgressionData(ex, exPrevLogs, exPrevPrevLogs, prevWeight);
 
         // Bestimme das Gewicht: Wenn schon was gespeichert ist, nimm das.
         // Wenn nicht, und wir eine Progression errechnet haben, nimm das neue Gewicht.
         // Ansonsten nimm das Gewicht der Vorwoche oder das Startgewicht.
         const savedWeight = exLogs.length > 0 ? exLogs[0].weight_kg : (progData.newWeight !== null ? progData.newWeight : prevWeight);
         const defaultRepValue = Array.isArray(ex.repRange) ? ex.repRange[1] : '';
-        const repVals = exLogs.length > 0 ? exLogs.map(l => l.reps) : Array(ex.sets).fill(defaultRepValue);
+        const repVals = exLogs.length > 0 ? exLogs.map(l => l.reps) : Array(effectiveSets).fill(defaultRepValue);
 
         const adviceHtml = progData.message
             ? `<div class="progression-badge ${progData.autoIncreased ? 'auto-increased' : ''}" style="margin-top: 4px; display: inline-block;">${progData.message}</div>`
@@ -282,6 +311,8 @@ async function renderDay(dayKey) {
             ? `<img src="${ex.imageUrl}" alt="${ex.name}">`
             : '<div class="placeholder-img">📷</div>';
 
+        const setsLabel = deload ? `${effectiveSets} Sätze <span style="color: var(--warning); font-size: 0.7rem;">(${ex.sets} normal)</span>` : `${ex.sets} Sätze`;
+
         card.innerHTML = `
             <div class="exercise-img">
                 ${imageHtml}
@@ -290,7 +321,7 @@ async function renderDay(dayKey) {
                 <div class="exercise-header" style="flex-direction: column; align-items: flex-start; gap: 4px;">
                     <div style="display: flex; justify-content: space-between; width: 100%;">
                         <h3>${exIdx + 1}. ${ex.name}</h3>
-                        <small>${ex.sets} Sätze</small>
+                        <small>${setsLabel}</small>
                     </div>
                     ${adviceHtml}
                 </div>
@@ -298,13 +329,13 @@ async function renderDay(dayKey) {
                 <div class="input-group">
                     <div class="weight-wrapper">
                         ${ex.isBW ? '<label class="bw-label">BW +</label>' : '<label></label>'}
-                        <input type="number" class="weight-input" value="${savedWeight}" step="0.25" min="0" data-ex-idx="${exIdx}"> 
+                        <input type="number" class="weight-input" value="${savedWeight}" step="0.25" min="0" data-ex-idx="${exIdx}">
                         <span style="font-size: 0.9rem; color: var(--text-muted);">kg</span>
                     </div>
                     <div class="sets-wrapper">
                         <div class="rir-label">RIR ${ex.rir}</div>
                         <div class="set-inputs">
-                            ${Array.from({ length: ex.sets }).map((_, i) => {
+                            ${Array.from({ length: effectiveSets }).map((_, i) => {
             const targetText = ex.targets ? ex.targets[i] : (ex.repRange === 'amrap' ? 'AMRAP' : `${ex.repRange[0]}-${ex.repRange[1]}`);
             return `
                                 <div class="set-col">
@@ -410,8 +441,8 @@ async function saveSession() {
                 }
             });
 
-            // Double Progression Check
-            if (exData) {
+            // Double Progression Check (nicht in Deload-Wochen)
+            if (exData && !isDeloadWeek(currentWeek)) {
                 const prevExLogs = prevLogs.filter(l => l.exercise_name === exName).sort((a, b) => a.set_number - b.set_number);
                 checkProgression(card, cardIdx, exData, repInputs.map(i => parseInt(i.value) || 0), prevExLogs);
             }

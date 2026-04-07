@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Mannheim Skater</title>
+    <link rel="stylesheet" href="css/hud.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+        }
+    }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Three.js canvas gets appended here -->
+        <div id="hud">
+            <div id="score-display">0</div>
+            <div id="powerup-bar" class="hidden"></div>
+            <a href="../" id="back-link" style="position:absolute;bottom:10px;left:10px;color:#fff;font-size:8px;text-decoration:none;opacity:0.5;pointer-events:auto;">Back</a>
+        </div>
+        <div id="game-over-screen" class="hidden">
+            <div class="game-over-title">GAME OVER</div>
+            <div class="game-over-score"></div>
+            <div class="game-over-leaderboard"></div>
+            <div class="game-over-hint">Press Enter / Tap to Restart</div>
+        </div>
+    </div>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

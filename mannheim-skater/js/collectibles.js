@@ -4,24 +4,15 @@ import {
     BREZEL_ROTATION_SPEED, SCORE_PER_BREZEL,
     OBSTACLE_SPAWN_DISTANCE, OBSTACLE_DESPAWN_DISTANCE,
     LANE_COUNT, PLAYER_BODY_W, JUMP_HEIGHT,
-    POWERUP_SPAWN_CHANCE,
-    POWERUP_EISTEE_DURATION, POWERUP_RAD_DURATION,
-    POWERUP_TICKET_DURATION, POWERUP_SPRAY_DURATION, POWERUP_BOARD_DURATION,
+    POWERUP_SPAWN_CHANCE, POWERUP_DEFS,
+    BREZEL_FORMATIONS, FORMATION_CHANCE,
 } from './config.js';
 import { state } from './game-state.js';
 import { playCollect, playPowerUp } from './audio.js';
-
-const POWERUP_DEFS = [
-    { type: 'doener',   color: 0x8B4513, name: 'Döner',       duration: 0,                      emissive: 0x442200 },
-    { type: 'eistee',   color: 0xFFDD00, name: 'Eistee',      duration: POWERUP_EISTEE_DURATION, emissive: 0x665500 },
-    { type: 'rad',      color: 0xDD2222, name: 'Kurpfalz-Rad', duration: POWERUP_RAD_DURATION,   emissive: 0x550000 },
-    { type: 'ticket',   color: 0x22CC44, name: 'Monatsticket', duration: POWERUP_TICKET_DURATION, emissive: 0x005500 },
-    { type: 'spray',    color: 0xFF00FF, name: 'Graffiti',     duration: POWERUP_SPRAY_DURATION,  emissive: 0x550055 },
-    { type: 'board',    color: 0x00FFFF, name: 'Board-Up',     duration: POWERUP_BOARD_DURATION,  emissive: 0x005555 },
-];
+import { getObstacles } from './obstacles.js';
 
 const brezels = [];
-let nextBrezelZ = 8; // start a bit ahead
+let nextBrezelZ = 8;
 
 const powerups = [];
 let nextPowerupZ = 15;
@@ -39,8 +30,75 @@ export function initCollectibles() {
 export function getBrezels() { return brezels; }
 export function getPowerups() { return powerups; }
 
+// --- Formation system ---
+
+function pickFormation() {
+    const totalWeight = BREZEL_FORMATIONS.reduce((s, f) => s + f.weight, 0);
+    let r = Math.random() * totalWeight;
+    for (const f of BREZEL_FORMATIONS) {
+        r -= f.weight;
+        if (r <= 0) return f;
+    }
+    return BREZEL_FORMATIONS[0];
+}
+
+function formationFitsWithOffset(points, offset) {
+    return points.every(p => {
+        const lane = p.lane + offset;
+        return lane >= 0 && lane < LANE_COUNT;
+    });
+}
+
+function spawnFormation(scene, baseVisualZ, obstacles) {
+    const formation = pickFormation();
+    const points = formation.points;
+
+    // Find valid lane offsets
+    const validOffsets = [];
+    for (let offset = -(LANE_COUNT - 1); offset <= LANE_COUNT - 1; offset++) {
+        if (formationFitsWithOffset(points, offset)) {
+            validOffsets.push(offset);
+        }
+    }
+    if (validOffsets.length === 0) return 0;
+
+    // For path formations, prefer lanes away from obstacles
+    let chosenOffset;
+    if (formation.category === 'path' && obstacles.length > 0) {
+        const nearbyObs = obstacles.filter(o =>
+            Math.abs(o.mesh.position.z - baseVisualZ) < 8
+        );
+        const blockedLanes = new Set();
+        nearbyObs.forEach(o => o.lanes.forEach(l => blockedLanes.add(l)));
+
+        const safeOffsets = validOffsets.filter(offset =>
+            points.every(p => !blockedLanes.has(p.lane + offset))
+        );
+        chosenOffset = safeOffsets.length > 0
+            ? safeOffsets[Math.floor(Math.random() * safeOffsets.length)]
+            : validOffsets[Math.floor(Math.random() * validOffsets.length)];
+    } else {
+        chosenOffset = validOffsets[Math.floor(Math.random() * validOffsets.length)];
+    }
+
+    let maxZ = 0;
+    for (const p of points) {
+        const lane = p.lane + chosenOffset;
+        const mesh = new THREE.Mesh(brezelGeo, brezelMat);
+        const y = p.y !== undefined ? p.y : BREZEL_Y_OFFSET;
+        mesh.position.set(LANE_POSITIONS[lane], y, baseVisualZ + p.z);
+        mesh.castShadow = true;
+        scene.add(mesh);
+        brezels.push({ mesh, lane, collected: false });
+        maxZ = Math.max(maxZ, p.z);
+    }
+
+    return maxZ;
+}
+
+// --- Original random scatter ---
+
 function spawnBrezelRow(scene, visualZ) {
-    // Spawn 1-3 brezels on random lanes
     const count = 1 + Math.floor(Math.random() * 3);
     const usedLanes = new Set();
 
@@ -57,6 +115,8 @@ function spawnBrezelRow(scene, visualZ) {
     }
 }
 
+// --- Powerup spawning ---
+
 function spawnPowerup(scene, visualZ) {
     const def = POWERUP_DEFS[Math.floor(Math.random() * POWERUP_DEFS.length)];
     const lane = Math.floor(Math.random() * LANE_COUNT);
@@ -72,41 +132,119 @@ function spawnPowerup(scene, visualZ) {
     mesh.castShadow = true;
     scene.add(mesh);
 
-    powerups.push({ mesh, lane, type: def.type, name: def.name, duration: def.duration, collected: false });
+    powerups.push({ mesh, lane, type: def.type, name: def.name, duration: def.duration, effect: def.effect, collected: false });
 }
+
+// --- Powerup activation/deactivation ---
+
+function activatePowerUp(pu) {
+    playPowerUp();
+
+    // Deactivate previous timed powerup if any
+    if (state.activePowerUp) {
+        deactivatePowerUp(state.activePowerUp.type);
+    }
+
+    const def = POWERUP_DEFS.find(d => d.type === pu.type);
+    if (!def) return;
+
+    switch (def.effect) {
+        case 'shield':
+            state.hasShield = true;
+            return; // No timer
+        case 'slowmo':
+            state.timeScale = 0.5;
+            break;
+        case 'bulldozer':
+            state.isBulldozer = true;
+            break;
+        case 'magnet':
+            // Magnet logic in updateCollectibles
+            break;
+        case 'scoreblast':
+            state.scoreMultiplier = 5;
+            break;
+        case 'hover':
+            state.isHovering = true;
+            break;
+    }
+
+    if (def.duration > 0) {
+        state.activePowerUp = {
+            type: def.type,
+            effect: def.effect,
+            name: def.name,
+            remaining: def.duration,
+            total: def.duration,
+        };
+    }
+}
+
+function deactivatePowerUp(type) {
+    const def = POWERUP_DEFS.find(d => d.type === type);
+    if (!def) return;
+
+    switch (def.effect) {
+        case 'slowmo':
+            state.timeScale = 1;
+            break;
+        case 'bulldozer':
+            state.isBulldozer = false;
+            break;
+        case 'magnet':
+            break;
+        case 'scoreblast':
+            state.scoreMultiplier = 1;
+            break;
+        case 'hover':
+            state.isHovering = false;
+            break;
+    }
+}
+
+export function updatePowerUpTimer(dt) {
+    if (!state.activePowerUp) return;
+    state.activePowerUp.remaining -= dt;
+    if (state.activePowerUp.remaining <= 0) {
+        deactivatePowerUp(state.activePowerUp.type);
+        state.activePowerUp = null;
+    }
+}
+
+// --- Main update ---
 
 export function updateCollectibles(dt, scene) {
     if (!state.isRunning || state.isPaused || state.isGameOver) return;
 
-    const speed = state.activePowerUp?.type === 'eistee'
-        ? state.scrollSpeed * 1.5
+    const speed = state.activePowerUp?.effect === 'slowmo'
+        ? state.scrollSpeed // already scaled via timeScale in main.js
         : state.scrollSpeed;
 
-    // Move brezels and check collection
+    // Player state for collection checks
     const playerLane = state.laneSwitchProgress >= 1 ? state.currentLane : state.targetLane;
     const jumpH = state.hasHighJump ? JUMP_HEIGHT * 1.5 : JUMP_HEIGHT;
     const playerY = state.isJumping
         ? 4 * jumpH * state.jumpProgress * (1 - state.jumpProgress)
         : 0;
 
+    // Hover Y for collection
+    const effectivePlayerY = state.isHovering ? 1.5 : playerY;
+
+    // Move brezels and check collection
     for (let i = brezels.length - 1; i >= 0; i--) {
         const b = brezels[i];
         b.mesh.position.z -= speed * dt;
         b.mesh.rotation.y += BREZEL_ROTATION_SPEED * dt;
-        // Bob up and down
-        b.mesh.position.y = BREZEL_Y_OFFSET + Math.sin(state.elapsedTime * 4 + i) * 0.1;
+        b.mesh.position.y = (b.mesh.userData.baseY || BREZEL_Y_OFFSET) + Math.sin(state.elapsedTime * 4 + i) * 0.1;
 
         // Collection check
         if (!b.collected && Math.abs(b.mesh.position.z) < 0.8) {
-            // Magnet effect (Monatsticket) — pull from any lane
-            const magnetActive = state.activePowerUp?.type === 'ticket';
+            const magnetActive = state.activePowerUp?.effect === 'magnet';
 
             if (b.lane === playerLane || magnetActive) {
-                // Y proximity (allow collection while jumping at brezel height)
-                if (Math.abs(playerY - BREZEL_Y_OFFSET) < 1.5 || magnetActive) {
+                if (Math.abs(effectivePlayerY - BREZEL_Y_OFFSET) < 1.5 || magnetActive) {
                     b.collected = true;
                     state.bonusScore += SCORE_PER_BREZEL * state.scoreMultiplier;
-                    // Shrink + fade animation
                     scene.remove(b.mesh);
                     brezels.splice(i, 1);
                     playCollect();
@@ -115,20 +253,26 @@ export function updateCollectibles(dt, scene) {
             }
         }
 
-        // Despawn if behind (don't dispose shared geometry/material)
         if (b.mesh.position.z < -OBSTACLE_DESPAWN_DISTANCE) {
             scene.remove(b.mesh);
             brezels.splice(i, 1);
         }
     }
 
-    // Spawn new rows
+    // Spawn brezels — formation or random
     const visualSpawnZ = nextBrezelZ - state.playerZ;
     if (visualSpawnZ < OBSTACLE_SPAWN_DISTANCE) {
         if (Math.random() < BREZEL_SPAWN_CHANCE) {
-            spawnBrezelRow(scene, visualSpawnZ);
+            if (Math.random() < FORMATION_CHANCE) {
+                const extent = spawnFormation(scene, visualSpawnZ, getObstacles());
+                nextBrezelZ += extent + 3 + Math.random() * 4;
+            } else {
+                spawnBrezelRow(scene, visualSpawnZ);
+                nextBrezelZ += 3 + Math.random() * 4;
+            }
+        } else {
+            nextBrezelZ += 3 + Math.random() * 4;
         }
-        nextBrezelZ += 3 + Math.random() * 4;
     }
 
     // Power-ups: move + collect
@@ -137,7 +281,6 @@ export function updateCollectibles(dt, scene) {
         const pu = powerups[i];
         pu.mesh.position.z -= speed * dt;
         pu.mesh.rotation.y += 3.0 * dt;
-        // Pulse scale
         const scale = 1 + Math.sin(state.elapsedTime * 5) * 0.1;
         pu.mesh.scale.setScalar(scale);
 
@@ -164,40 +307,5 @@ export function updateCollectibles(dt, scene) {
             spawnPowerup(scene, visualPUSpawnZ);
         }
         nextPowerupZ += 8 + Math.random() * 15;
-    }
-}
-
-function activatePowerUp(pu) {
-    playPowerUp();
-    if (pu.type === 'doener') {
-        state.hasShield = true;
-        return;
-    }
-    if (pu.type === 'board') {
-        state.hasHighJump = true;
-        state.activePowerUp = { type: pu.type, name: pu.name, remaining: pu.duration, total: pu.duration };
-        return;
-    }
-    // Timed power-ups
-    if (pu.type === 'eistee') {
-        state.scoreMultiplier = 2;
-    } else if (pu.type === 'rad') {
-        state.scoreMultiplier = 3;
-    }
-    state.activePowerUp = { type: pu.type, name: pu.name, remaining: pu.duration, total: pu.duration };
-}
-
-export function updatePowerUpTimer(dt) {
-    if (!state.activePowerUp) return;
-    state.activePowerUp.remaining -= dt;
-    if (state.activePowerUp.remaining <= 0) {
-        // Deactivate
-        if (state.activePowerUp.type === 'eistee' || state.activePowerUp.type === 'rad') {
-            state.scoreMultiplier = 1;
-        }
-        if (state.activePowerUp.type === 'board') {
-            state.hasHighJump = false;
-        }
-        state.activePowerUp = null;
     }
 }

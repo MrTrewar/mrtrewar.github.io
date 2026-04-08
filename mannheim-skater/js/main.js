@@ -1,14 +1,14 @@
-import { initScene, updateCameraForPhase, renderScene, getScene, setNightMode } from './scene.js';
+import { initScene, updateCameraForPhase, renderScene, getScene, setNightMode, triggerCameraShake, updateCameraShake } from './scene.js';
 import { state, resetState } from './game-state.js';
 import { createPlayer, updatePlayer } from './player.js';
 import { initInput } from './input.js';
 import { initWorld, updateWorld, checkZoneChange } from './world.js';
-import { initObstacles, updateObstacles, getObstacles } from './obstacles.js';
+import { initObstacles, updateObstacles, getObstacles, destroyObstacle } from './obstacles.js';
 import { checkObstacleCollisions } from './collision.js';
-import { updateHUD, showGameOver, hideGameOver, showPowerUpBar, hidePowerUpBar } from './hud.js';
-import { SCORE_DISTANCE_PER_SECOND, SCORE_NEAR_MISS, SCORE_JUMP_OVER, NIGHT_MODE_SCORE } from './config.js';
+import { updateHUD, showGameOver, hideGameOver, showPowerUpBar, hidePowerUpBar, showStumbleIndicator } from './hud.js';
+import { SCORE_DISTANCE_PER_SECOND, SCORE_NEAR_MISS, SCORE_JUMP_OVER, NIGHT_MODE_SCORE, STUMBLE_DURATION, STUMBLE_SPEED_FACTOR, STUMBLE_RECOVERY_DURATION } from './config.js';
 import { initCollectibles, updateCollectibles, updatePowerUpTimer } from './collectibles.js';
-import { playCrash } from './audio.js';
+import { playCrash, playGraze, playBulldozerHit } from './audio.js';
 
 let lastTime = 0;
 
@@ -66,10 +66,13 @@ function gameLoop(timestamp) {
     const scene = getScene();
 
     if (state.isRunning && !state.isPaused && !state.isGameOver) {
-        state.elapsedTime += dt;
+        const rawDt = dt;
+        const scaledDt = dt * state.timeScale;
 
-        // Distance score
-        state.distanceScore += SCORE_DISTANCE_PER_SECOND * state.scoreMultiplier * dt;
+        state.elapsedTime += rawDt;
+
+        // Distance score (uses raw dt so score ticks normally during slow-mo)
+        state.distanceScore += SCORE_DISTANCE_PER_SECOND * state.scoreMultiplier * rawDt;
         state.score = state.distanceScore + state.bonusScore;
 
         checkZoneChange();
@@ -77,30 +80,62 @@ function gameLoop(timestamp) {
             setNightMode(true);
         }
 
-        updateWorld(dt, scene);
-        updatePlayer(dt);
-        updateObstacles(dt, scene);
-        updateCollectibles(dt, scene);
+        updateWorld(scaledDt, scene);
+        updatePlayer(scaledDt);
+        updateObstacles(scaledDt, scene);
+        updateCollectibles(scaledDt, scene);
 
-        updatePowerUpTimer(dt);
+        updatePowerUpTimer(rawDt);
         if (state.activePowerUp) {
             showPowerUpBar(state.activePowerUp.name, state.activePowerUp.remaining / state.activePowerUp.total);
         } else {
             hidePowerUpBar();
         }
 
+        // Collision handling
         const collisionResult = checkObstacleCollisions(getObstacles());
         if (collisionResult === 'hit') {
             state.isGameOver = true;
             playCrash();
             showGameOver();
+        } else if (collisionResult === 'graze') {
+            state.isStumbling = true;
+            state.stumbleSpeedBackup = state.scrollSpeed;
+            state.stumbleTimer = STUMBLE_DURATION;
+            state.scrollSpeed *= STUMBLE_SPEED_FACTOR;
+            triggerCameraShake(0.3, 0.3);
+            playGraze();
+            showStumbleIndicator();
+        } else if (collisionResult === 'shield-break') {
+            triggerCameraShake(0.5, 0.4);
+            playCrash();
+        } else if (collisionResult === 'bulldozer-hit') {
+            const hitObs = getObstacles().find(o => o._bulldozerHit);
+            if (hitObs) {
+                delete hitObs._bulldozerHit;
+                destroyObstacle(hitObs, scene);
+                state.bonusScore += 10 * state.scoreMultiplier;
+                playBulldozerHit();
+            }
         } else if (collisionResult === 'near-miss') {
             state.bonusScore += SCORE_NEAR_MISS * state.scoreMultiplier;
+        } else if (collisionResult === 'jump-over') {
+            state.bonusScore += SCORE_JUMP_OVER * state.scoreMultiplier;
+        }
+
+        // Stumble recovery
+        if (state.isStumbling) {
+            state.stumbleTimer -= rawDt;
+            if (state.stumbleTimer <= 0) {
+                state.isStumbling = false;
+                state.scrollSpeed = state.stumbleSpeedBackup;
+            }
         }
 
         updateHUD();
     }
 
+    updateCameraShake(dt);
     updateCameraForPhase(state.phase, state.chunkCount);
     renderScene();
     requestAnimationFrame(gameLoop);

@@ -62,6 +62,12 @@ export function updatePlayer(dt) {
         : 0;
     playerGroup.rotation.z += (tiltTarget - playerGroup.rotation.z) * 0.2;
 
+    // Stumble tilt override
+    if (state.isStumbling) {
+        const stumbleWobble = Math.sin(state.elapsedTime * 20) * 0.15;
+        playerGroup.rotation.z += stumbleWobble;
+    }
+
     // --- Jump (parabolic Y) ---
     if (state.isJumping) {
         state.jumpProgress += dt / JUMP_DURATION;
@@ -76,9 +82,13 @@ export function updatePlayer(dt) {
         }
     }
 
-    // --- Idle bob (subtle sine wave when grounded) ---
+    // --- Idle bob or hover ---
     if (!state.isJumping) {
-        playerGroup.position.y = Math.sin(state.elapsedTime * 3) * 0.04;
+        if (state.isHovering) {
+            playerGroup.position.y = 1.5 + Math.sin(state.elapsedTime * 2) * 0.1;
+        } else {
+            playerGroup.position.y = Math.sin(state.elapsedTime * 3) * 0.04;
+        }
     }
 
     // Z position stays at 0 (camera follows world scrolling, player is visually centered)

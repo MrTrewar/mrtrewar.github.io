@@ -57,3 +57,18 @@ export function playJump() {
 export function playLaneSwitch() {
     playTone(200, 0.05, 'sine', 0.05);
 }
+
+export function playGraze() {
+    playTone(150, 0.2, 'sawtooth', 0.15);
+    setTimeout(() => playTone(100, 0.3, 'sawtooth', 0.1), 100);
+}
+
+export function playBulldozerHit() {
+    playTone(80, 0.15, 'square', 0.2);
+    setTimeout(() => playTone(120, 0.1, 'square', 0.15), 80);
+}
+
+export function playHoverStart() {
+    playTone(600, 0.2, 'sine', 0.1);
+    setTimeout(() => playTone(800, 0.3, 'sine', 0.1), 100);
+}

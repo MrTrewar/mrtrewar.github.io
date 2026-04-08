@@ -113,3 +113,13 @@ export function hideGameOver() {
     didSubmitThisRound = false;
     leaderboardData = null;
 }
+
+export function showStumbleIndicator() {
+    const container = document.getElementById('game-container');
+    if (!container) return;
+    const el = document.createElement('div');
+    el.id = 'stumble-indicator';
+    el.textContent = 'STUMBLE!';
+    container.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+}

@@ -140,6 +140,26 @@ export function renderScene() {
 
 export function getActiveCamera() { return activeCamera; }
 
+// Camera shake
+let shakeIntensity = 0;
+let shakeDecay = 0;
+
+export function triggerCameraShake(intensity = 0.3, duration = 0.3) {
+    shakeIntensity = intensity;
+    shakeDecay = intensity / duration;
+}
+
+export function updateCameraShake(dt) {
+    if (shakeIntensity <= 0) return;
+    const offsetX = (Math.random() - 0.5) * shakeIntensity * 2;
+    const offsetY = (Math.random() - 0.5) * shakeIntensity * 2;
+    if (activeCamera) {
+        activeCamera.position.x += offsetX;
+        activeCamera.position.y += offsetY;
+    }
+    shakeIntensity = Math.max(0, shakeIntensity - shakeDecay * dt);
+}
+
 export function setNightMode(enabled) {
     if (enabled) {
         scene.background.set(0x111122);

@@ -9,11 +9,23 @@ import { updateHUD, showGameOver, hideGameOver, showPowerUpBar, hidePowerUpBar, 
 import { SCORE_DISTANCE_PER_SECOND, SCORE_NEAR_MISS, SCORE_JUMP_OVER, NIGHT_MODE_SCORE, STUMBLE_DURATION, STUMBLE_SPEED_FACTOR, STUMBLE_RECOVERY_DURATION } from './config.js';
 import { initCollectibles, updateCollectibles, updatePowerUpTimer } from './collectibles.js';
 import { playCrash, playGraze, playBulldozerHit } from './audio.js';
+import { preloadAllModels } from './models.js';
 
 let lastTime = 0;
 
-function init() {
+async function init() {
     const container = document.getElementById('game-container');
+    const loadingFill = document.getElementById('loading-fill');
+    const loadingScreen = document.getElementById('loading-screen');
+
+    // Preload models with progress bar
+    await preloadAllModels((fraction) => {
+        if (loadingFill) loadingFill.style.width = `${fraction * 100}%`;
+    });
+
+    // Hide loading screen
+    if (loadingScreen) loadingScreen.style.display = 'none';
+
     initScene(container);
     const scene = getScene();
 

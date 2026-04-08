@@ -8,6 +8,7 @@ import {
     TURN_CHUNK, TURN_DURATION_CHUNKS,
 } from './config.js';
 import { state } from './game-state.js';
+import { getCachedModel } from './models.js';
 
 const groundChunks = [];
 let nextChunkZ = 0;
@@ -214,11 +215,19 @@ function getZoneBuildingColor(zone) {
 }
 
 function createSchloss(scene) {
+    // Try to use loaded GLB model
+    const glbModel = getCachedModel('schloss');
+    if (glbModel) {
+        glbModel.position.set(0, 0, -12);
+        scene.add(glbModel);
+        return glbModel;
+    }
+
+    // Fallback: box primitives
     const schloss = new THREE.Group();
     const sandstone = 0xf0e6c8;
     const darkStone = 0xc8b896;
 
-    // Main building — wide, flat block
     const mainGeo = new THREE.BoxGeometry(12, 3, 4);
     const mainMat = new THREE.MeshStandardMaterial({ color: sandstone });
     const main = new THREE.Mesh(mainGeo, mainMat);
@@ -227,7 +236,6 @@ function createSchloss(scene) {
     main.receiveShadow = true;
     schloss.add(main);
 
-    // Left wing
     const wingGeo = new THREE.BoxGeometry(3, 2.5, 3);
     const wingMat = new THREE.MeshStandardMaterial({ color: sandstone });
     const leftWing = new THREE.Mesh(wingGeo, wingMat);
@@ -235,13 +243,11 @@ function createSchloss(scene) {
     leftWing.castShadow = true;
     schloss.add(leftWing);
 
-    // Right wing
     const rightWing = new THREE.Mesh(wingGeo, wingMat);
     rightWing.position.set(7, 1.25, 0);
     rightWing.castShadow = true;
     schloss.add(rightWing);
 
-    // Central tower
     const towerGeo = new THREE.BoxGeometry(2, 5, 2);
     const towerMat = new THREE.MeshStandardMaterial({ color: darkStone });
     const tower = new THREE.Mesh(towerGeo, towerMat);
@@ -249,7 +255,6 @@ function createSchloss(scene) {
     tower.castShadow = true;
     schloss.add(tower);
 
-    // Tower roof (pyramid-like)
     const roofGeo = new THREE.ConeGeometry(1.8, 1.5, 4);
     const roofMat = new THREE.MeshStandardMaterial({ color: 0x556655 });
     const roof = new THREE.Mesh(roofGeo, roofMat);
@@ -257,9 +262,7 @@ function createSchloss(scene) {
     roof.castShadow = true;
     schloss.add(roof);
 
-    // Position behind player start
     schloss.position.set(0, 0, -12);
-
     scene.add(schloss);
     return schloss;
 }

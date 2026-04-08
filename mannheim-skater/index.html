@@ -9,7 +9,8 @@
     <script type="importmap">
     {
         "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
         }
     }
     </script>
@@ -17,6 +18,11 @@
 </head>
 <body>
     <div id="game-container">
+        <div id="loading-screen">
+            <div>MANNHEIM SKATER</div>
+            <div style="font-size:10px;">Laden...</div>
+            <div class="loading-bar"><div class="loading-bar-fill" id="loading-fill"></div></div>
+        </div>
         <!-- Three.js canvas gets appended here -->
         <div id="hud">
             <div id="score-display">0</div>

@@ -1,4 +1,4 @@
-import { initScene, updateCameraForPhase, renderScene, getScene, setNightMode, triggerCameraShake, updateCameraShake } from './scene.js';
+import { initScene, updateCameraForPhase, renderScene, getScene, setNightMode, triggerCameraShake, updateCameraShake, updateIntroZoom, resetIntroZoom } from './scene.js';
 import { state, resetState } from './game-state.js';
 import { createPlayer, updatePlayer } from './player.js';
 import { initInput } from './input.js';
@@ -65,6 +65,7 @@ function restart() {
     const newScene = getScene();
     resetState();
     setNightMode(false);
+    resetIntroZoom();
     initWorld(newScene);
     initObstacles();
     initCollectibles();
@@ -147,6 +148,7 @@ function gameLoop(timestamp) {
         updateHUD();
     }
 
+    updateIntroZoom(dt);
     updateCameraShake(dt);
     updateCameraForPhase(state.phase, state.chunkCount);
     renderScene();

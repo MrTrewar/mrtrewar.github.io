@@ -1,24 +1,28 @@
 import * as THREE from 'three';
-import { CAM_FRUSTUM_SIZE, CAM_OFFSET_Y, CAM_OFFSET_Z, CAM_LOOK_AHEAD, CHASE_CAM_FOV, CHASE_CAM_Y, CHASE_CAM_Z, CHASE_CAM_LOOK_AHEAD, TURN_CHUNK, TURN_DURATION_CHUNKS } from './config.js';
+import { CAM_FRUSTUM_SIZE, CAM_OFFSET_Y, CAM_OFFSET_Z, CAM_LOOK_AHEAD, CHASE_CAM_FOV, CHASE_CAM_Y, CHASE_CAM_Z, CHASE_CAM_LOOK_AHEAD, TURN_CHUNK, TURN_DURATION_CHUNKS, INTRO_ZOOM_DURATION, INTRO_ZOOM_START_FRUSTUM } from './config.js';
 
 let scene, camera, renderer;
 let ambientLight, directionalLight;
 let resizeHandler = null;
 let chaseCamera;
 let activeCamera;
+let introTimer = 0;
+let containerAspect = 1;
 
 export function initScene(container) {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf5efe0);
-    scene.fog = new THREE.Fog(0xf5efe0, 20, 50);
+    scene.fog = new THREE.Fog(0xf5efe0, 30, 80);
 
-    // Isometric orthographic camera
+    // Isometric orthographic camera — start zoomed out for intro
     const aspect = container.clientWidth / container.clientHeight;
-    const frustum = CAM_FRUSTUM_SIZE;
+    containerAspect = aspect;
+    introTimer = 0;
+    const startFrustum = INTRO_ZOOM_START_FRUSTUM;
     camera = new THREE.OrthographicCamera(
-        -frustum * aspect, frustum * aspect,
-        frustum, -frustum,
-        0.1, 100
+        -startFrustum * aspect, startFrustum * aspect,
+        startFrustum, -startFrustum,
+        0.1, 200
     );
 
     // Isometric angle: rotate around Y by 45deg, then tilt X by ~35.264deg
@@ -79,6 +83,24 @@ export function initScene(container) {
 export function getScene() { return scene; }
 export function getCamera() { return camera; }
 export function getRenderer() { return renderer; }
+
+export function updateIntroZoom(dt) {
+    if (introTimer >= INTRO_ZOOM_DURATION) return;
+    introTimer += dt;
+    const t = Math.min(1, introTimer / INTRO_ZOOM_DURATION);
+    // Smooth ease-out
+    const ease = 1 - (1 - t) * (1 - t);
+    const frustum = INTRO_ZOOM_START_FRUSTUM + (CAM_FRUSTUM_SIZE - INTRO_ZOOM_START_FRUSTUM) * ease;
+    camera.left = -frustum * containerAspect;
+    camera.right = frustum * containerAspect;
+    camera.top = frustum;
+    camera.bottom = -frustum;
+    camera.updateProjectionMatrix();
+}
+
+export function resetIntroZoom() {
+    introTimer = 0;
+}
 
 export function updateCameraForPhase(phase, chunkCount) {
     if (phase === 'schloss') {

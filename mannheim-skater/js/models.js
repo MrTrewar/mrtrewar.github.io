@@ -43,11 +43,6 @@ export function loadModel(key, onProgress) {
                     model.scale.setScalar(def.scale);
                 }
 
-                if (def.rotation) {
-                    if (def.rotation.x) model.rotation.x = def.rotation.x;
-                    if (def.rotation.y) model.rotation.y = def.rotation.y;
-                    if (def.rotation.z) model.rotation.z = def.rotation.z;
-                }
                 model.traverse(child => {
                     if (child.isMesh) {
                         child.castShadow = true;

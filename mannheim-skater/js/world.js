@@ -218,8 +218,8 @@ function createSchloss(scene) {
     // Try to use loaded GLB model
     const glbModel = getCachedModel('schloss');
     if (glbModel) {
-        // Wrap in group so position offset works on top of model's auto-centering
         const wrapper = new THREE.Group();
+        glbModel.rotation.y = Math.PI; // face the player
         wrapper.add(glbModel);
         wrapper.position.set(0, 0, -15);
         scene.add(wrapper);

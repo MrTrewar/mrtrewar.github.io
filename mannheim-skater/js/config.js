@@ -220,6 +220,10 @@ export const MODEL_DEFS = {
     schloss: {
         path: 'assets/models/schloss_optimized.glb',
         targetWidth: 15, // auto-scale to fit this width in game units
-        rotation: { y: Math.PI },
     },
 };
+
+// Intro zoom
+export const INTRO_ZOOM_DURATION = 2.5; // seconds
+export const INTRO_ZOOM_START_FRUSTUM = 22; // zoomed out (shows whole Schloss)
+// Normal frustum is CAM_FRUSTUM_SIZE (10)

@@ -35,7 +35,7 @@ export function initWorld(scene) {
     resetBlockState();
     schlossGroup = null;
     wasserturmGroup = null;
-    schlossGroup = createSchloss(scene);
+    createSchloss(scene);
 
     for (let i = 0; i < GROUND_CHUNKS_VISIBLE; i++) {
         addChunk(scene);
@@ -116,13 +116,9 @@ export function updateWorld(dt, scene) {
     // Move player Z forward (virtual, world scrolls toward camera)
     state.playerZ += speed * dt;
 
-    // Move background landmarks at reduced speed (parallax effect — they stay visible)
-    const parallaxSpeed = speed * 0.15;
-    if (schlossGroup && state.phase === 'schloss') {
-        schlossGroup.position.z -= parallaxSpeed * dt;
-    }
+    // Wasserturm moves with the world so it stays at a fixed distance in the background
     if (wasserturmGroup) {
-        wasserturmGroup.position.z -= parallaxSpeed * dt;
+        wasserturmGroup.position.z -= speed * dt;
     }
 
     // Move chunks toward camera

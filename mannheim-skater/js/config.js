@@ -38,6 +38,16 @@ export const CAM_OFFSET_Y = 10;
 export const CAM_OFFSET_Z = 10;
 export const CAM_LOOK_AHEAD = 4; // look slightly ahead of player
 
+// Route phases
+export const TURN_CHUNK = 30;              // chunk index where the turn starts
+export const TURN_DURATION_CHUNKS = 5;     // how many chunks the turn lasts
+
+// Chase camera (Phase 3: Planken — Subway Surfers style)
+export const CHASE_CAM_FOV = 60;
+export const CHASE_CAM_Y = 3;              // height above player
+export const CHASE_CAM_Z = 5;              // distance behind player
+export const CHASE_CAM_LOOK_AHEAD = 8;     // look-ahead distance in front of player
+
 // Obstacles
 export const OBSTACLE_SPAWN_DISTANCE = 30; // spawn this far ahead of player
 export const OBSTACLE_DESPAWN_DISTANCE = 10; // remove when this far behind player

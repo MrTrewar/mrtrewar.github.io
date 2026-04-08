@@ -116,11 +116,6 @@ export function updateWorld(dt, scene) {
     // Move player Z forward (virtual, world scrolls toward camera)
     state.playerZ += speed * dt;
 
-    // Wasserturm moves with the world so it stays at a fixed distance in the background
-    if (wasserturmGroup) {
-        wasserturmGroup.position.z -= speed * dt;
-    }
-
     // Move chunks toward camera
     for (let i = groundChunks.length - 1; i >= 0; i--) {
         const chunk = groundChunks[i];
@@ -273,32 +268,32 @@ function createWasserturm(scene) {
     const turm = new THREE.Group();
     const sandstone = 0xd4c0a0;
 
-    // Scale up because it's far away — needs to be visible
-    const scale = 3;
+    // Large scale — it's far away but needs to be clearly visible on the horizon
+    const scale = 6;
 
     // Tower body (cylinder)
     const bodyGeo = new THREE.CylinderGeometry(1.2 * scale, 1.4 * scale, 6 * scale, 12);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: sandstone });
+    const bodyMat = new THREE.MeshStandardMaterial({ color: sandstone, fog: false });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
     body.position.y = 3 * scale;
     turm.add(body);
 
     // Dome on top
     const domeGeo = new THREE.SphereGeometry(1.6 * scale, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2);
-    const domeMat = new THREE.MeshStandardMaterial({ color: 0x668866 });
+    const domeMat = new THREE.MeshStandardMaterial({ color: 0x668866, fog: false });
     const dome = new THREE.Mesh(domeGeo, domeMat);
     dome.position.y = 6 * scale;
     turm.add(dome);
 
     // Base platform
     const baseGeo = new THREE.BoxGeometry(4 * scale, 0.5 * scale, 4 * scale);
-    const baseMat = new THREE.MeshStandardMaterial({ color: 0xbbaa88 });
+    const baseMat = new THREE.MeshStandardMaterial({ color: 0xbbaa88, fog: false });
     const base = new THREE.Mesh(baseGeo, baseMat);
     base.position.y = 0.25 * scale;
     turm.add(base);
 
-    // Position far ahead in the distance — permanent background landmark
-    turm.position.set(0, 0, 45);
+    // Fixed position far on the horizon — never moves, always visible
+    turm.position.set(0, -5, 80);
 
     scene.add(turm);
     return turm;

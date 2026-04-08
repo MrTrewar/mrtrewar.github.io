@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CAM_FRUSTUM_SIZE, CAM_OFFSET_Y, CAM_OFFSET_Z, GROUND_WIDTH, CHASE_CAM_FOV, CHASE_CAM_Y, CHASE_CAM_Z, CHASE_CAM_LOOK_AHEAD, TURN_CHUNK, TURN_DURATION_CHUNKS } from './config.js';
+import { CAM_FRUSTUM_SIZE, CAM_OFFSET_Y, CAM_OFFSET_Z, CAM_LOOK_AHEAD, CHASE_CAM_FOV, CHASE_CAM_Y, CHASE_CAM_Z, CHASE_CAM_LOOK_AHEAD, TURN_CHUNK, TURN_DURATION_CHUNKS } from './config.js';
 
 let scene, camera, renderer;
 let ambientLight, directionalLight;
@@ -83,7 +83,7 @@ export function getRenderer() { return renderer; }
 export function updateCameraForPhase(phase, chunkCount) {
     if (phase === 'schloss') {
         camera.position.set(CAM_OFFSET_Z, CAM_OFFSET_Y, CAM_OFFSET_Z);
-        camera.lookAt(0, 0, 4);
+        camera.lookAt(0, 0, CAM_LOOK_AHEAD);
         directionalLight.position.set(5, 10, 7);
         directionalLight.target.position.set(0, 0, 0);
         directionalLight.target.updateMatrixWorld();
@@ -112,7 +112,7 @@ export function updateCameraForPhase(phase, chunkCount) {
     const cy = isoPos.y + (chasePos.y - isoPos.y) * s;
     const cz = isoPos.z + (chasePos.z - isoPos.z) * s;
 
-    const isoLook = { x: 0, y: 0, z: 4 };
+    const isoLook = { x: 0, y: 0, z: CAM_LOOK_AHEAD };
     const chaseLook = { x: 0, y: 0.5, z: CHASE_CAM_LOOK_AHEAD };
 
     const lx = isoLook.x + (chaseLook.x - isoLook.x) * s;

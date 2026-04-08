@@ -5,17 +5,33 @@ import {
     SCROLL_SPEED_INCREMENT, SPEED_INCREASE_INTERVAL, SCROLL_SPEED_MAX,
     ZONES, ZONE_CHANGE_INTERVAL,
     QUADRATE_LETTERS, QUADRATE_MAX_NUMBER, NIGHT_MODE_SCORE,
+    TURN_CHUNK, TURN_DURATION_CHUNKS,
 } from './config.js';
 import { state } from './game-state.js';
 
 const groundChunks = [];
 let nextChunkZ = 0;
 
+// Block-pattern state for Mannheim-style buildings (3-4 houses, gap, 3-4 houses)
+const blockState = {
+    left: { remaining: 0, gapRemaining: 0 },
+    right: { remaining: 0, gapRemaining: 0 },
+};
+
+function resetBlockState() {
+    blockState.left.remaining = 0;
+    blockState.left.gapRemaining = 0;
+    blockState.right.remaining = 0;
+    blockState.right.gapRemaining = 0;
+}
+
 export function initWorld(scene) {
     // Clear old chunks
     groundChunks.forEach(c => scene.remove(c));
     groundChunks.length = 0;
     nextChunkZ = -GROUND_CHUNK_DEPTH; // start behind player
+    resetBlockState();
+    createSchloss(scene);
 
     for (let i = 0; i < GROUND_CHUNKS_VISIBLE; i++) {
         addChunk(scene);
@@ -46,14 +62,9 @@ function addChunk(scene) {
         group.add(line);
     }
 
-    // Side decorations (buildings/objects on left and right)
-    const decoChance = 0.6;
-    if (Math.random() < decoChance) {
-        addSideDecoration(group, zone, -GROUND_WIDTH / 2 - 1, GROUND_CHUNK_DEPTH);
-    }
-    if (Math.random() < decoChance) {
-        addSideDecoration(group, zone, GROUND_WIDTH / 2 + 1, GROUND_CHUNK_DEPTH);
-    }
+    // Side decorations: Mannheim-style block pattern (3-4 houses, street gap, repeat)
+    addBlockBuilding(group, zone, 'left', -GROUND_WIDTH / 2 - 1, GROUND_CHUNK_DEPTH);
+    addBlockBuilding(group, zone, 'right', GROUND_WIDTH / 2 + 1, GROUND_CHUNK_DEPTH);
 
     if (Math.random() < 0.2) {
         const side = Math.random() < 0.5 ? -GROUND_WIDTH / 2 - 0.5 : GROUND_WIDTH / 2 + 0.5;
@@ -64,7 +75,14 @@ function addChunk(scene) {
     group.userData.backEdgeZ = nextChunkZ;
 
     scene.add(group);
+
+    // Spawn Wasserturm landmark at the turn point
+    if (state.chunkCount === TURN_CHUNK) {
+        createWasserturm(group);
+    }
+
     groundChunks.push(group);
+    state.chunkCount++;
     nextChunkZ += GROUND_CHUNK_DEPTH;
 }
 
@@ -77,6 +95,14 @@ export function updateWorld(dt, scene) {
         if (state.scrollSpeed < SCROLL_SPEED_MAX) {
             state.scrollSpeed += SCROLL_SPEED_INCREMENT;
         }
+    }
+
+    // Phase transitions based on chunk count
+    if (state.phase === 'schloss' && state.chunkCount >= TURN_CHUNK) {
+        state.phase = 'turn';
+    }
+    if (state.phase === 'turn' && state.chunkCount >= TURN_CHUNK + TURN_DURATION_CHUNKS) {
+        state.phase = 'planken';
     }
 
     const speed = state.activePowerUp?.type === 'eistee'
@@ -105,39 +131,166 @@ export function updateWorld(dt, scene) {
         }
     }
 
-    // Add new chunks ahead as needed (may need multiple per frame during speed boosts)
-    const targetFarthest = GROUND_CHUNK_DEPTH * (GROUND_CHUNKS_VISIBLE - 2);
-    for (let safety = 0; safety < 5; safety++) {
+    // Add new chunks ahead — keep ground filled beyond camera view
+    // We need chunks extending to at least GROUND_CHUNKS_VISIBLE * GROUND_CHUNK_DEPTH ahead
+    const requiredFrontEdge = GROUND_CHUNK_DEPTH * (GROUND_CHUNKS_VISIBLE - 1);
+    for (let safety = 0; safety < 8; safety++) {
         const farthestZ = groundChunks.length > 0
-            ? Math.max(...groundChunks.map(c => c.position.z))
+            ? Math.max(...groundChunks.map(c => c.position.z + GROUND_CHUNK_DEPTH / 2))
             : 0;
-        if (farthestZ + GROUND_CHUNK_DEPTH >= targetFarthest) break;
+        if (farthestZ >= requiredFrontEdge) break;
+        // Position new chunk right after the farthest existing one
+        nextChunkZ = farthestZ;
         addChunk(scene);
     }
 }
 
-function addSideDecoration(parent, zone, sideX, chunkDepth) {
-    // Simple colored boxes representing buildings
-    const height = 1.5 + Math.random() * 3;
-    const width = 1 + Math.random() * 2;
-    const depth = 1 + Math.random() * 2;
+function addBlockBuilding(parent, zone, side, sideX, chunkDepth) {
+    const bs = blockState[side];
 
-    let color;
-    switch (zone.id) {
-        case 'planken':   color = 0xeeddbb; break; // cream buildings
-        case 'jungbusch': color = 0x776655; break;  // dark brownish
-        case 'hafen':     color = 0x995533; break;  // rusty containers
-        case 'luisenpark': color = 0x338833; break;  // trees (green)
-        default: color = 0xaaaaaa;
+    // If in a gap (street between blocks), count down and skip
+    if (bs.gapRemaining > 0) {
+        bs.gapRemaining--;
+        return;
     }
+
+    // If no block is active, start a new one (3-4 houses)
+    if (bs.remaining <= 0) {
+        bs.remaining = 3 + Math.floor(Math.random() * 2); // 3 or 4 houses
+    }
+
+    // Place a building for this chunk
+    const baseColor = getZoneBuildingColor(zone);
+    // Slight color variation per building
+    const colorVariation = (Math.random() - 0.5) * 0.08;
+    const color = new THREE.Color(baseColor);
+    color.r = Math.max(0, Math.min(1, color.r + colorVariation));
+    color.g = Math.max(0, Math.min(1, color.g + colorVariation));
+    color.b = Math.max(0, Math.min(1, color.b + colorVariation));
+
+    const height = 2.0 + Math.random() * 2.5;
+    const width = 1.5 + Math.random() * 1.0;
+    const depth = GROUND_CHUNK_DEPTH * 0.85; // fill most of the chunk depth
 
     const geo = new THREE.BoxGeometry(width, height, depth);
     const mat = new THREE.MeshStandardMaterial({ color });
     const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(sideX, height / 2, (Math.random() - 0.5) * chunkDepth * 0.8);
+    mesh.position.set(sideX, height / 2, 0);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     parent.add(mesh);
+
+    // Optional: add a darker "roof" slab on top for visual variety
+    if (Math.random() < 0.5) {
+        const roofGeo = new THREE.BoxGeometry(width + 0.1, 0.15, depth + 0.1);
+        const roofColor = new THREE.Color(baseColor).multiplyScalar(0.7);
+        const roofMat = new THREE.MeshStandardMaterial({ color: roofColor });
+        const roof = new THREE.Mesh(roofGeo, roofMat);
+        roof.position.set(sideX, height + 0.075, 0);
+        roof.castShadow = true;
+        parent.add(roof);
+    }
+
+    bs.remaining--;
+
+    // When block is done, start a gap (1-2 chunks = cross-street)
+    if (bs.remaining <= 0) {
+        bs.gapRemaining = 1 + Math.floor(Math.random() * 2); // 1 or 2 chunks gap
+    }
+}
+
+function getZoneBuildingColor(zone) {
+    switch (zone.id) {
+        case 'planken':    return 0xeeddbb; // cream buildings
+        case 'jungbusch':  return 0x776655; // dark brownish
+        case 'hafen':      return 0x995533; // rusty containers
+        case 'luisenpark': return 0x338833; // trees (green)
+        default: return 0xaaaaaa;
+    }
+}
+
+function createSchloss(scene) {
+    const schloss = new THREE.Group();
+    const sandstone = 0xf0e6c8;
+    const darkStone = 0xc8b896;
+
+    // Main building — wide, flat block
+    const mainGeo = new THREE.BoxGeometry(12, 3, 4);
+    const mainMat = new THREE.MeshStandardMaterial({ color: sandstone });
+    const main = new THREE.Mesh(mainGeo, mainMat);
+    main.position.y = 1.5;
+    main.castShadow = true;
+    main.receiveShadow = true;
+    schloss.add(main);
+
+    // Left wing
+    const wingGeo = new THREE.BoxGeometry(3, 2.5, 3);
+    const wingMat = new THREE.MeshStandardMaterial({ color: sandstone });
+    const leftWing = new THREE.Mesh(wingGeo, wingMat);
+    leftWing.position.set(-7, 1.25, 0);
+    leftWing.castShadow = true;
+    schloss.add(leftWing);
+
+    // Right wing
+    const rightWing = new THREE.Mesh(wingGeo, wingMat);
+    rightWing.position.set(7, 1.25, 0);
+    rightWing.castShadow = true;
+    schloss.add(rightWing);
+
+    // Central tower
+    const towerGeo = new THREE.BoxGeometry(2, 5, 2);
+    const towerMat = new THREE.MeshStandardMaterial({ color: darkStone });
+    const tower = new THREE.Mesh(towerGeo, towerMat);
+    tower.position.set(0, 2.5, 0);
+    tower.castShadow = true;
+    schloss.add(tower);
+
+    // Tower roof (pyramid-like)
+    const roofGeo = new THREE.ConeGeometry(1.8, 1.5, 4);
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x556655 });
+    const roof = new THREE.Mesh(roofGeo, roofMat);
+    roof.position.set(0, 5.75, 0);
+    roof.castShadow = true;
+    schloss.add(roof);
+
+    // Position behind player start
+    schloss.position.set(0, 0, -12);
+
+    scene.add(schloss);
+    return schloss;
+}
+
+function createWasserturm(parent) {
+    const turm = new THREE.Group();
+    const sandstone = 0xd4c0a0;
+
+    // Tower body (cylinder)
+    const bodyGeo = new THREE.CylinderGeometry(1.2, 1.4, 6, 12);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: sandstone });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = 3;
+    body.castShadow = true;
+    turm.add(body);
+
+    // Dome on top
+    const domeGeo = new THREE.SphereGeometry(1.6, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+    const domeMat = new THREE.MeshStandardMaterial({ color: 0x668866 });
+    const dome = new THREE.Mesh(domeGeo, domeMat);
+    dome.position.y = 6;
+    dome.castShadow = true;
+    turm.add(dome);
+
+    // Base platform
+    const baseGeo = new THREE.BoxGeometry(4, 0.5, 4);
+    const baseMat = new THREE.MeshStandardMaterial({ color: 0xbbaa88 });
+    const base = new THREE.Mesh(baseGeo, baseMat);
+    base.position.y = 0.25;
+    turm.add(base);
+
+    // Position to the right side of the road
+    turm.position.set(GROUND_WIDTH / 2 + 4, 0, 0);
+
+    parent.add(turm);
 }
 
 export function checkZoneChange() {

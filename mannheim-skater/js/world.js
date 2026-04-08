@@ -11,6 +11,8 @@ import { state } from './game-state.js';
 
 const groundChunks = [];
 let nextChunkZ = 0;
+let schlossGroup = null;
+let wasserturmGroup = null;
 
 // Block-pattern state for Mannheim-style buildings (3-4 houses, gap, 3-4 houses)
 const blockState = {
@@ -31,7 +33,9 @@ export function initWorld(scene) {
     groundChunks.length = 0;
     nextChunkZ = -GROUND_CHUNK_DEPTH; // start behind player
     resetBlockState();
-    createSchloss(scene);
+    schlossGroup = null;
+    wasserturmGroup = null;
+    schlossGroup = createSchloss(scene);
 
     for (let i = 0; i < GROUND_CHUNKS_VISIBLE; i++) {
         addChunk(scene);
@@ -76,9 +80,9 @@ function addChunk(scene) {
 
     scene.add(group);
 
-    // Spawn Wasserturm landmark at the turn point
-    if (state.chunkCount === TURN_CHUNK) {
-        createWasserturm(group);
+    // Spawn Wasserturm as permanent background landmark at the turn point
+    if (state.chunkCount === TURN_CHUNK && !wasserturmGroup) {
+        wasserturmGroup = createWasserturm(scene);
     }
 
     groundChunks.push(group);
@@ -111,6 +115,15 @@ export function updateWorld(dt, scene) {
 
     // Move player Z forward (virtual, world scrolls toward camera)
     state.playerZ += speed * dt;
+
+    // Move background landmarks at reduced speed (parallax effect — they stay visible)
+    const parallaxSpeed = speed * 0.15;
+    if (schlossGroup && state.phase === 'schloss') {
+        schlossGroup.position.z -= parallaxSpeed * dt;
+    }
+    if (wasserturmGroup) {
+        wasserturmGroup.position.z -= parallaxSpeed * dt;
+    }
 
     // Move chunks toward camera
     for (let i = groundChunks.length - 1; i >= 0; i--) {
@@ -260,37 +273,39 @@ function createSchloss(scene) {
     return schloss;
 }
 
-function createWasserturm(parent) {
+function createWasserturm(scene) {
     const turm = new THREE.Group();
     const sandstone = 0xd4c0a0;
 
+    // Scale up because it's far away — needs to be visible
+    const scale = 3;
+
     // Tower body (cylinder)
-    const bodyGeo = new THREE.CylinderGeometry(1.2, 1.4, 6, 12);
+    const bodyGeo = new THREE.CylinderGeometry(1.2 * scale, 1.4 * scale, 6 * scale, 12);
     const bodyMat = new THREE.MeshStandardMaterial({ color: sandstone });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.y = 3;
-    body.castShadow = true;
+    body.position.y = 3 * scale;
     turm.add(body);
 
     // Dome on top
-    const domeGeo = new THREE.SphereGeometry(1.6, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+    const domeGeo = new THREE.SphereGeometry(1.6 * scale, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2);
     const domeMat = new THREE.MeshStandardMaterial({ color: 0x668866 });
     const dome = new THREE.Mesh(domeGeo, domeMat);
-    dome.position.y = 6;
-    dome.castShadow = true;
+    dome.position.y = 6 * scale;
     turm.add(dome);
 
     // Base platform
-    const baseGeo = new THREE.BoxGeometry(4, 0.5, 4);
+    const baseGeo = new THREE.BoxGeometry(4 * scale, 0.5 * scale, 4 * scale);
     const baseMat = new THREE.MeshStandardMaterial({ color: 0xbbaa88 });
     const base = new THREE.Mesh(baseGeo, baseMat);
-    base.position.y = 0.25;
+    base.position.y = 0.25 * scale;
     turm.add(base);
 
-    // Position to the right side of the road
-    turm.position.set(GROUND_WIDTH / 2 + 4, 0, 0);
+    // Position far ahead in the distance — permanent background landmark
+    turm.position.set(0, 0, 45);
 
-    parent.add(turm);
+    scene.add(turm);
+    return turm;
 }
 
 export function checkZoneChange() {

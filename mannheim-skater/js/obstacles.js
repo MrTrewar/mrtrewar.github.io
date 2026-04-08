@@ -95,7 +95,9 @@ export function updateObstacles(dt, scene) {
         }
     }
 
-    // Spawn new obstacles ahead
+    // Spawn new obstacles ahead (skip during turn phase)
+    if (state.phase === 'turn') return;
+
     // nextSpawnZ tracks world Z; we convert to visual Z
     // Visual Z for nextSpawnZ relative to player:
     const visualSpawnZ = nextSpawnZ - state.playerZ;

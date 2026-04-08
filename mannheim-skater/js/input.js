@@ -14,7 +14,9 @@ export function switchLane(direction) {
     if (state.isGameOver || state.isPaused) return;
     if (state.laneSwitchProgress < 0.5) return; // prevent double-switch
 
-    const next = state.targetLane + direction;
+    // Invert controls in chase-cam phases (camera is behind player)
+    const dir = (state.phase === 'planken' || state.phase === 'turn') ? -direction : direction;
+    const next = state.targetLane + dir;
     if (next < 0 || next >= LANE_COUNT) return;
 
     if (state.laneSwitchProgress >= 1) {

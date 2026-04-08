@@ -1,28 +1,11 @@
 import * as THREE from 'three';
 import {
-    LANE_POSITIONS, LANE_WIDTH, LANE_COUNT,
+    LANE_POSITIONS, LANE_COUNT,
     OBSTACLE_SPAWN_DISTANCE, OBSTACLE_DESPAWN_DISTANCE,
     OBSTACLE_MIN_GAP, OBSTACLE_MAX_GAP,
+    OBSTACLE_DEFS,
 } from './config.js';
 import { state } from './game-state.js';
-
-/*
- * Each obstacle: { mesh, lane, type, z (spawn Z in world coords), jumpable }
- * Types:
- *   poller:      1 lane, jumpable
- *   car:         1-2 lanes, not jumpable
- *   barrier:     1 lane, jumpable (niedrige Absperrung)
- *   baustelle:   2 lanes, not jumpable
- *   tram:        2-3 lanes, not jumpable, moves
- */
-
-const OBSTACLE_DEFS = [
-    { type: 'poller',    lanesWide: 1, jumpable: true,  color: 0x888888, w: 0.3, h: 0.7,  d: 0.3, weight: 3 },
-    { type: 'barrier',   lanesWide: 1, jumpable: true,  color: 0xff8800, w: 0.9, h: 0.5,  d: 0.2, weight: 2 },
-    { type: 'car',       lanesWide: 1, jumpable: false, color: 0xcc2222, w: 1.0, h: 0.9,  d: 1.8, weight: 3 },
-    { type: 'car_wide',  lanesWide: 2, jumpable: false, color: 0x2255aa, w: 2.2, h: 1.0,  d: 2.0, weight: 1 },
-    { type: 'baustelle', lanesWide: 2, jumpable: false, color: 0xff6600, w: 2.4, h: 1.2,  d: 0.4, weight: 1 },
-];
 
 const obstacles = [];
 let nextSpawnZ = OBSTACLE_SPAWN_DISTANCE;
@@ -44,19 +27,26 @@ function pickObstacleDef() {
     return OBSTACLE_DEFS[0];
 }
 
+function createObstacleMesh(def) {
+    let geo;
+    if (def.shape === 'cylinder') {
+        geo = new THREE.CylinderGeometry(def.w / 2, def.w / 2, def.h, 8);
+    } else {
+        geo = new THREE.BoxGeometry(def.w, def.h, def.d);
+    }
+    const mat = new THREE.MeshStandardMaterial({ color: def.color });
+    return new THREE.Mesh(geo, mat);
+}
+
 function spawnObstacleRow(scene, worldZ) {
     const def = pickObstacleDef();
 
-    // Pick a random start lane that fits
-    const maxStart = LANE_COUNT - def.lanesWide;
+    const maxStart = LANE_COUNT - def.lanes;
     const startLane = Math.floor(Math.random() * (maxStart + 1));
 
-    const geo = new THREE.BoxGeometry(def.w, def.h, def.d);
-    const mat = new THREE.MeshStandardMaterial({ color: def.color });
-    const mesh = new THREE.Mesh(geo, mat);
+    const mesh = createObstacleMesh(def);
 
-    // Position: center across the lanes it occupies
-    const centerLane = startLane + (def.lanesWide - 1) / 2;
+    const centerLane = startLane + (def.lanes - 1) / 2;
     const x = LANE_POSITIONS[0] + centerLane * (LANE_POSITIONS[1] - LANE_POSITIONS[0]);
     mesh.position.set(x, def.h / 2, worldZ);
     mesh.castShadow = true;
@@ -65,8 +55,12 @@ function spawnObstacleRow(scene, worldZ) {
     obstacles.push({
         mesh,
         type: def.type,
-        lanes: Array.from({ length: def.lanesWide }, (_, i) => startLane + i),
+        lanes: Array.from({ length: def.lanes }, (_, i) => startLane + i),
         jumpable: def.jumpable,
+        grazeble: def.grazeble !== false,
+        moving: def.moving || false,
+        moveSpeed: def.moveSpeed || 0,
+        moveDir: def.moveDir || 'toward',
         worldZ,
         w: def.w,
         h: def.h,
@@ -81,10 +75,24 @@ export function updateObstacles(dt, scene) {
         ? state.scrollSpeed * 1.5
         : state.scrollSpeed;
 
-    // Move existing obstacles toward camera
     for (let i = obstacles.length - 1; i >= 0; i--) {
         const obs = obstacles[i];
-        obs.mesh.position.z -= speed * dt;
+
+        // Movement speed based on type
+        let zSpeed = speed;
+        if (obs.moving) {
+            if (obs.moveDir === 'toward') {
+                zSpeed = speed + obs.moveSpeed;
+            } else if (obs.moveDir === 'away') {
+                zSpeed = Math.max(0, speed - obs.moveSpeed);
+            }
+        }
+        obs.mesh.position.z -= zSpeed * dt;
+
+        // Lateral movement
+        if (obs.moving && obs.moveDir === 'lateral') {
+            obs.mesh.position.x += Math.sin(state.elapsedTime * obs.moveSpeed) * dt * 2;
+        }
 
         // Remove if behind camera
         if (obs.mesh.position.z < -OBSTACLE_DESPAWN_DISTANCE) {
@@ -98,12 +106,39 @@ export function updateObstacles(dt, scene) {
     // Spawn new obstacles ahead (skip during turn phase)
     if (state.phase === 'turn') return;
 
-    // nextSpawnZ tracks world Z; we convert to visual Z
-    // Visual Z for nextSpawnZ relative to player:
     const visualSpawnZ = nextSpawnZ - state.playerZ;
     if (visualSpawnZ < OBSTACLE_SPAWN_DISTANCE) {
         spawnObstacleRow(scene, visualSpawnZ);
         const gap = OBSTACLE_MIN_GAP + Math.random() * (OBSTACLE_MAX_GAP - OBSTACLE_MIN_GAP);
         nextSpawnZ += gap;
     }
+}
+
+export function destroyObstacle(obs, scene) {
+    const idx = obstacles.indexOf(obs);
+    if (idx === -1) return;
+    obstacles.splice(idx, 1);
+
+    // Fling animation
+    const mesh = obs.mesh;
+    const startY = mesh.position.y;
+    const startZ = mesh.position.z;
+    const startTime = performance.now();
+    const duration = 400;
+
+    function animate() {
+        const t = Math.min(1, (performance.now() - startTime) / duration);
+        mesh.position.y = startY + t * 5;
+        mesh.position.z = startZ - t * 3;
+        mesh.scale.setScalar(1 - t);
+        mesh.rotation.x += 0.2;
+        if (t < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            scene.remove(mesh);
+            mesh.geometry.dispose();
+            mesh.material.dispose();
+        }
+    }
+    animate();
 }

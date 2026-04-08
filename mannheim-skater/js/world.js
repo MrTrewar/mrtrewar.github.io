@@ -218,9 +218,12 @@ function createSchloss(scene) {
     // Try to use loaded GLB model
     const glbModel = getCachedModel('schloss');
     if (glbModel) {
-        glbModel.position.set(0, 0, -12);
-        scene.add(glbModel);
-        return glbModel;
+        // Wrap in group so position offset works on top of model's auto-centering
+        const wrapper = new THREE.Group();
+        wrapper.add(glbModel);
+        wrapper.position.set(0, 0, -15);
+        scene.add(wrapper);
+        return wrapper;
     }
 
     // Fallback: box primitives

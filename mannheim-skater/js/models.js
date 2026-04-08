@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { MODEL_DEFS } from './config.js';
@@ -20,7 +21,28 @@ export function loadModel(key, onProgress) {
             def.path,
             (gltf) => {
                 const model = gltf.scene;
-                if (def.scale) model.scale.setScalar(def.scale);
+
+                // Auto-scale based on targetWidth if specified
+                if (def.targetWidth) {
+                    const box = new THREE.Box3().setFromObject(model);
+                    const size = new THREE.Vector3();
+                    box.getSize(size);
+                    const maxDim = Math.max(size.x, size.z); // use horizontal extent
+                    const scale = def.targetWidth / maxDim;
+                    model.scale.setScalar(scale);
+
+                    // Re-center the model at origin
+                    const center = new THREE.Vector3();
+                    box.getCenter(center);
+                    model.position.set(
+                        -center.x * scale,
+                        -box.min.y * scale, // sit on ground (y=0)
+                        -center.z * scale
+                    );
+                } else if (def.scale) {
+                    model.scale.setScalar(def.scale);
+                }
+
                 if (def.rotation) {
                     if (def.rotation.x) model.rotation.x = def.rotation.x;
                     if (def.rotation.y) model.rotation.y = def.rotation.y;

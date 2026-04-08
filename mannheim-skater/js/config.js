@@ -67,7 +67,7 @@ export const SCORE_NEAR_MISS = 5;
 export const SCORE_JUMP_OVER = 3;
 
 // Graze / Stumble
-export const GRAZE_OVERLAP_THRESHOLD = 0.3; // overlap ratio above this = frontal hit
+export const GRAZE_OVERLAP_THRESHOLD = 0.65; // overlap ratio above this = frontal hit (generous graze zone)
 export const STUMBLE_DURATION = 1.5; // seconds
 export const STUMBLE_SPEED_FACTOR = 0.6; // speed multiplied by this during stumble
 export const STUMBLE_RECOVERY_DURATION = 0.5; // seconds to lerp speed back
@@ -219,7 +219,7 @@ export const FORMATION_CHANCE = 0.7; // 70% formation, 30% random scatter
 export const MODEL_DEFS = {
     schloss: {
         path: 'assets/models/schloss_optimized.glb',
-        scale: 0.5,
+        targetWidth: 15, // auto-scale to fit this width in game units
         rotation: { y: Math.PI },
     },
 };

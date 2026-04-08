@@ -1,4 +1,4 @@
-import { initScene, updateCamera, renderScene, getScene, setNightMode } from './scene.js';
+import { initScene, updateCameraForPhase, renderScene, getScene, setNightMode } from './scene.js';
 import { state, resetState } from './game-state.js';
 import { createPlayer, updatePlayer } from './player.js';
 import { initInput } from './input.js';
@@ -101,7 +101,7 @@ function gameLoop(timestamp) {
         updateHUD();
     }
 
-    updateCamera(0); // player stays at Z=0 visually, world scrolls
+    updateCameraForPhase(state.phase, state.chunkCount);
     renderScene();
     requestAnimationFrame(gameLoop);
 }

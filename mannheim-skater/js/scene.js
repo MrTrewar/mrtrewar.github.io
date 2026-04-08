@@ -1,9 +1,11 @@
 import * as THREE from 'three';
-import { CAM_FRUSTUM_SIZE, CAM_OFFSET_Y, CAM_OFFSET_Z, GROUND_WIDTH } from './config.js';
+import { CAM_FRUSTUM_SIZE, CAM_OFFSET_Y, CAM_OFFSET_Z, GROUND_WIDTH, CHASE_CAM_FOV, CHASE_CAM_Y, CHASE_CAM_Z, CHASE_CAM_LOOK_AHEAD, TURN_CHUNK, TURN_DURATION_CHUNKS } from './config.js';
 
 let scene, camera, renderer;
 let ambientLight, directionalLight;
 let resizeHandler = null;
+let chaseCamera;
+let activeCamera;
 
 export function initScene(container) {
     scene = new THREE.Scene();
@@ -47,6 +49,13 @@ export function initScene(container) {
     directionalLight.shadow.camera.bottom = -15;
     scene.add(directionalLight);
 
+    chaseCamera = new THREE.PerspectiveCamera(
+        CHASE_CAM_FOV,
+        container.clientWidth / container.clientHeight,
+        0.1, 100
+    );
+    activeCamera = camera; // start with ortho
+
     // Handle resize (remove old listener to avoid stacking on restart)
     if (resizeHandler) window.removeEventListener('resize', resizeHandler);
     resizeHandler = () => {
@@ -56,6 +65,10 @@ export function initScene(container) {
         camera.top = frustum;
         camera.bottom = -frustum;
         camera.updateProjectionMatrix();
+        if (chaseCamera) {
+            chaseCamera.aspect = container.clientWidth / container.clientHeight;
+            chaseCamera.updateProjectionMatrix();
+        }
         renderer.setSize(container.clientWidth, container.clientHeight);
     };
     window.addEventListener('resize', resizeHandler);
@@ -67,18 +80,65 @@ export function getScene() { return scene; }
 export function getCamera() { return camera; }
 export function getRenderer() { return renderer; }
 
-export function updateCamera(playerZ) {
-    camera.position.z = playerZ + CAM_OFFSET_Z;
-    camera.position.x = CAM_OFFSET_Z; // fixed X offset for iso angle
-    camera.lookAt(0, 0, playerZ + 4); // look ahead of player
-    directionalLight.position.set(5, 10, playerZ + 7);
-    directionalLight.target.position.set(0, 0, playerZ);
+export function updateCameraForPhase(phase, chunkCount) {
+    if (phase === 'schloss') {
+        camera.position.set(CAM_OFFSET_Z, CAM_OFFSET_Y, CAM_OFFSET_Z);
+        camera.lookAt(0, 0, 4);
+        directionalLight.position.set(5, 10, 7);
+        directionalLight.target.position.set(0, 0, 0);
+        directionalLight.target.updateMatrixWorld();
+        activeCamera = camera;
+        return;
+    }
+
+    if (phase === 'planken') {
+        chaseCamera.position.set(0, CHASE_CAM_Y, -CHASE_CAM_Z);
+        chaseCamera.lookAt(0, 0.5, CHASE_CAM_LOOK_AHEAD);
+        directionalLight.position.set(0, 10, 5);
+        directionalLight.target.position.set(0, 0, 3);
+        directionalLight.target.updateMatrixWorld();
+        activeCamera = chaseCamera;
+        return;
+    }
+
+    // phase === 'turn': smooth transition
+    const t = Math.max(0, Math.min(1, (chunkCount - TURN_CHUNK) / TURN_DURATION_CHUNKS));
+    const s = t * t * (3 - 2 * t);
+
+    const isoPos = { x: CAM_OFFSET_Z, y: CAM_OFFSET_Y, z: CAM_OFFSET_Z };
+    const chasePos = { x: 0, y: CHASE_CAM_Y, z: -CHASE_CAM_Z };
+
+    const cx = isoPos.x + (chasePos.x - isoPos.x) * s;
+    const cy = isoPos.y + (chasePos.y - isoPos.y) * s;
+    const cz = isoPos.z + (chasePos.z - isoPos.z) * s;
+
+    const isoLook = { x: 0, y: 0, z: 4 };
+    const chaseLook = { x: 0, y: 0.5, z: CHASE_CAM_LOOK_AHEAD };
+
+    const lx = isoLook.x + (chaseLook.x - isoLook.x) * s;
+    const ly = isoLook.y + (chaseLook.y - isoLook.y) * s;
+    const lz = isoLook.z + (chaseLook.z - isoLook.z) * s;
+
+    if (t < 0.5) {
+        camera.position.set(cx, cy, cz);
+        camera.lookAt(lx, ly, lz);
+        activeCamera = camera;
+    } else {
+        chaseCamera.position.set(cx, cy, cz);
+        chaseCamera.lookAt(lx, ly, lz);
+        activeCamera = chaseCamera;
+    }
+
+    directionalLight.position.set(cx * 0.5, 10, cz + 5);
+    directionalLight.target.position.set(0, 0, lz - 2);
     directionalLight.target.updateMatrixWorld();
 }
 
 export function renderScene() {
-    renderer.render(scene, camera);
+    renderer.render(scene, activeCamera);
 }
+
+export function getActiveCamera() { return activeCamera; }
 
 export function setNightMode(enabled) {
     if (enabled) {

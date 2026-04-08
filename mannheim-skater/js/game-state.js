@@ -28,6 +28,16 @@ export const state = {
     hasShield: false,       // Döner shield
     hasHighJump: false,     // Skateboard upgrade
 
+    // Graze / Stumble
+    isStumbling: false,
+    stumbleTimer: 0,
+    stumbleSpeedBackup: 0,
+
+    // Powerup effects
+    isHovering: false,      // Board-Up hover
+    isBulldozer: false,     // Kurpfalz-Rad bulldozer mode
+    timeScale: 1,           // Eistee slow-mo (0.5 = half speed)
+
     // Zone
     currentZoneIndex: 0,
     lastZoneChangeScore: 0,
@@ -57,6 +67,12 @@ export function resetState() {
     state.activePowerUp = null;
     state.hasShield = false;
     state.hasHighJump = false;
+    state.isStumbling = false;
+    state.stumbleTimer = 0;
+    state.stumbleSpeedBackup = 0;
+    state.isHovering = false;
+    state.isBulldozer = false;
+    state.timeScale = 1;
     state.currentZoneIndex = 0;
     state.lastZoneChangeScore = 0;
     state.phase = 'schloss';

@@ -294,12 +294,17 @@ function createWasserturm(parent) {
 }
 
 export function checkZoneChange() {
+    // After the turn, force Planken zone
+    if (state.phase === 'planken' || state.phase === 'turn') {
+        if (state.currentZoneIndex !== 0) {
+            state.currentZoneIndex = 0; // Planken zone (index 0)
+        }
+        return;
+    }
     const targetZone = Math.floor(state.score / ZONE_CHANGE_INTERVAL) % ZONES.length;
     if (targetZone !== state.currentZoneIndex) {
         state.currentZoneIndex = targetZone;
         state.lastZoneChangeScore = state.score;
-        // New chunks will use the new zone colors; existing chunks keep their color
-        // This creates a natural transition as old chunks scroll away
     }
 }
 

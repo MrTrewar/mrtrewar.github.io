@@ -31,6 +31,10 @@ export const state = {
     // Zone
     currentZoneIndex: 0,
     lastZoneChangeScore: 0,
+
+    // Route phase
+    phase: 'schloss',    // 'schloss' | 'turn' | 'planken'
+    chunkCount: 0,       // total chunks created since game start
 };
 
 export function resetState() {
@@ -55,4 +59,6 @@ export function resetState() {
     state.hasHighJump = false;
     state.currentZoneIndex = 0;
     state.lastZoneChangeScore = 0;
+    state.phase = 'schloss';
+    state.chunkCount = 0;
 }

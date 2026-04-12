@@ -262,8 +262,8 @@ async function renderDay(dayKey) {
     const prevLogs = prevData ? prevData.set_logs || [] : [];
 
     let prevPrevLogs = [];
-    if (currentWeek > 2) {
-        const prevPrevData = await loadPreviousSessionData(currentWeek - 1, dayKey);
+    if (prevData && prevData.week_number > 1) {
+        const prevPrevData = await loadPreviousSessionData(prevData.week_number, dayKey);
         prevPrevLogs = prevPrevData ? prevPrevData.set_logs || [] : [];
     }
 
@@ -356,10 +356,29 @@ async function renderDay(dayKey) {
     renderHistory(dayKey);
 }
 
-// Lade Vorwoche für AMRAP Vergleiche
+// Lade letzte trainierte Session VOR der angegebenen Woche (nicht nur week-1)
 async function loadPreviousSessionData(week, dayKey) {
     if (week <= 1) return null;
-    return await loadSavedSession(week - 1, dayKey);
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('sessions')
+            .select('id, week_number, set_logs(*)')
+            .eq('day_key', dayKey)
+            .lt('week_number', week)
+            .order('week_number', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (error && error.code !== 'PGRST116') {
+            console.error('Previous session fetch error:', error);
+            return null;
+        }
+        return data || null;
+    } catch (err) {
+        console.warn('Previous session unavailable:', err.message);
+        return null;
+    }
 }
 
 // ============================================
@@ -374,7 +393,7 @@ async function loadSavedSession(week, day) {
     try {
         const { data, error } = await supabaseClient
             .from('sessions')
-            .select('id, set_logs(*)')
+            .select('id, week_number, set_logs(*)')
             .eq('week_number', week)
             .eq('day_key', day)
             .single();
@@ -400,18 +419,33 @@ async function saveSession() {
     }
 
     try {
-        // 1. Session erstellen oder abrufen
-        const { data: session, error: sErr } = await supabaseClient
+        // 1. Session suchen oder erstellen (robust ohne UNIQUE constraint)
+        const today = new Date().toISOString().split('T')[0];
+        const { data: existingSessions } = await supabaseClient
             .from('sessions')
-            .upsert(
-                { week_number: currentWeek, day_key: currentDay, date: new Date().toISOString().split('T')[0] },
-                { onConflict: 'week_number,day_key' }
-            )
-            .select()
-            .single();
+            .select('id')
+            .eq('week_number', currentWeek)
+            .eq('day_key', currentDay)
+            .order('created_at', { ascending: true });
 
-        if (sErr) throw new Error('Session error: ' + sErr.message);
-        sessionId = session.id;
+        if (existingSessions && existingSessions.length > 0) {
+            sessionId = existingSessions[0].id;
+            await supabaseClient.from('sessions').update({ date: today }).eq('id', sessionId);
+
+            // Duplikate aufräumen falls vorhanden
+            if (existingSessions.length > 1) {
+                const duplicateIds = existingSessions.slice(1).map(s => s.id);
+                await supabaseClient.from('sessions').delete().in('id', duplicateIds);
+            }
+        } else {
+            const { data: newSession, error: sErr } = await supabaseClient
+                .from('sessions')
+                .insert({ week_number: currentWeek, day_key: currentDay, date: today })
+                .select()
+                .single();
+            if (sErr) throw new Error('Session error: ' + sErr.message);
+            sessionId = newSession.id;
+        }
 
         // Lade Vorwoche für AMRAP Vergleich
         const prevSessionData = await loadPreviousSessionData(currentWeek, currentDay);

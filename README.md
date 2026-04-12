@@ -1,37 +1,64 @@
-# Welcome to the Jungle
+# wiegero.com
 
-Arcade-style browser skate game built with plain HTML, CSS, and JavaScript.
+Personal project hub by Gero Wieger, hosted on GitHub Pages.
 
-## Play Locally
+**Live:** [wiegero.com](https://wiegero.com)
 
-Open `/Users/gerorawert/Documents/Github/MrTrewar.github.io/index.html` in a browser.
+---
 
-## Controls
+## Projects
 
-- `A` / `D`: move left and right
-- `Space`: jump / ollie
-- `Enter` (after game over): restart
-- Mobile: tap to jump, touch controls for movement
+### Welcome to the Jungle
+Arcade-style endless runner / skateboarding side-scroller.
 
-## Features
+- **Play:** [wiegero.com/game.html](https://wiegero.com/game.html)
+- **Stack:** Vanilla JS, CSS, anime.js, Supabase (online leaderboard)
+- **Controls:** A/D move, Space jump, P pause, Enter restart
+- **Mobile:** Slide-Joystick + Jump-Button
+- **Features:** 3 Levels (Jungle, City, Nightpark), combo system, rail grinding, PWA support
 
-- Endless side-scrolling level generation
-- Grind rails, tricks, and combo-based scoring
-- Coyote time and jump buffering for smoother controls
-- Game-over screen with local leaderboard (saved in browser `localStorage`)
-- Manual leaderboard entry flow:
-  - Click `Ins Leaderboard eintragen`
-  - Enter your name
-  - Your current run score is saved as-is
+### Mannheim Skater
+3D skateboarding runner through Mannheim landmarks, built with Three.js.
+
+- **Play:** [wiegero.com/mannheim-skater/](https://wiegero.com/mannheim-skater/)
+- **Stack:** Three.js, GLB models, Supabase leaderboard
+- **Features:** Mannheimer Schloss, Brezel-Powerups, stumble mechanics, camera shake
+
+### GymProgress Pro
+Training tracker for periodized 8-week strength programs with double progression.
+
+- **Open:** [wiegero.com/gym-tracker/](https://wiegero.com/gym-tracker/)
+- **Stack:** Vanilla JS, Supabase (cloud sync), localStorage fallback
+- **Features:** 4-day upper/lower split, AMRAP tracking, auto weight progression, recovery check, supplements tracker
+
+---
+
+## Tech Stack
+
+- Vanilla HTML / CSS / JavaScript (no bundler)
+- [Three.js](https://threejs.org/) (Mannheim Skater)
+- [anime.js](https://animejs.com/) (Welcome to the Jungle)
+- [Supabase](https://supabase.com/) (leaderboards + gym data)
+- GitHub Pages (auto-deploy from `main`)
 
 ## Project Structure
 
-- `/Users/gerorawert/Documents/Github/MrTrewar.github.io/index.html` - main page and HUD
-- `/Users/gerorawert/Documents/Github/MrTrewar.github.io/css/style.css` - all styles and animations
-- `/Users/gerorawert/Documents/Github/MrTrewar.github.io/js/config.js` - game settings
-- `/Users/gerorawert/Documents/Github/MrTrewar.github.io/js/game.js` - game loop and input handling
-- `/Users/gerorawert/Documents/Github/MrTrewar.github.io/js/player.js` - player physics and actions
-- `/Users/gerorawert/Documents/Github/MrTrewar.github.io/js/world.js` - level generation and world updates
-- `/Users/gerorawert/Documents/Github/MrTrewar.github.io/js/ui.js` - score, combo, game-over, leaderboard UI
-- `/Users/gerorawert/Documents/Github/MrTrewar.github.io/js/audio.js` - audio playback
-- `/Users/gerorawert/Documents/Github/MrTrewar.github.io/js/effects.js` - sparks/explosion effects
+```
+MrTrewar.github.io/
+├── index.html              # Landing page with scroll-driven MRT animation
+├── game.html               # Welcome to the Jungle entry point
+├── js/                     # Game scripts (config, game, player, world, ui, effects, audio)
+├── css/                    # Styles (game + landing page)
+├── assets/                 # Sprites, backgrounds, sounds
+├── mannheim-skater/        # 3D skater game (Three.js)
+├── gym-tracker/            # Training tracker SPA
+└── CNAME                   # Custom domain (wiegero.com)
+```
+
+## Local Development
+
+Open `index.html` in a browser, or serve with any static file server:
+
+```bash
+npx serve .
+```

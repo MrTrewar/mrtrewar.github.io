@@ -219,7 +219,7 @@ export const FORMATION_CHANCE = 0.7; // 70% formation, 30% random scatter
 export const MODEL_DEFS = {
     schloss: {
         path: 'assets/models/schloss_optimized.glb',
-        targetWidth: 15, // auto-scale to fit this width in game units
+        targetWidth: 30, // auto-scale to fit this width in game units
     },
 };
 

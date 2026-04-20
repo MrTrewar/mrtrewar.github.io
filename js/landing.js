@@ -6,39 +6,37 @@ const TABLE = "shared_strokes";
 const STROKE_LIMIT = 2000;
 
 const ANIMALS = [
-  "Otter",
-  "Fuchs",
-  "Igel",
-  "Eule",
-  "Hase",
-  "Panda",
-  "Koala",
-  "Waschbär",
-  "Reh",
-  "Axolotl",
-  "Frettchen",
-  "Pinguin",
-  "Faultier",
-  "Quokka",
-  "Chinchilla",
-  "Wombat",
-  "Robbe",
-  "Alpaka",
-  "Capybara",
-  "Eichhörnchen",
-  "Hamster",
-  "Meerschweinchen",
-  "Kaninchen",
-  "Erdmännchen",
-  "Küken",
-  "Kätzchen",
-  "Welpe",
-  "Ente",
-  "Kolibri",
-  "Bärchen",
+  "Anonymer Otter",
+  "Anonymer Fuchs",
+  "Anonymer Igel",
+  "Anonyme Eule",
+  "Anonymer Hase",
+  "Anonymer Panda",
+  "Anonymer Koala",
+  "Anonymer Waschbär",
+  "Anonymer Axolotl",
+  "Anonymes Frettchen",
+  "Anonymer Pinguin",
+  "Anonymes Faultier",
+  "Anonymer Quokka",
+  "Anonymes Chinchilla",
+  "Anonymer Wombat",
+  "Anonyme Robbe",
+  "Anonymes Alpaka",
+  "Anonymes Capybara",
+  "Anonymes Eichhörnchen",
+  "Anonymer Hamster",
+  "Anonymes Meerschweinchen",
+  "Anonymes Kaninchen",
+  "Anonymes Erdmännchen",
+  "Anonymes Küken",
+  "Anonymer Welpe",
+  "Anonyme Ente",
+  "Anonymer Kolibri",
+  "Anonyme Katze",
+  "Anonymer Bär",
+  "Anonyme Maus",
 ];
-
-const ANON_PREFIX = "Anonym... ";
 
 const PALETTE = [
   "#3C3C3C",
@@ -66,7 +64,6 @@ const sizeEl = document.getElementById("size");
 const sizePreviewEl = document.getElementById("size-preview");
 const eraserBtn = document.getElementById("eraser");
 const undoBtn = document.getElementById("undo");
-const authorInput = document.getElementById("author");
 const statusEl = document.getElementById("status");
 const cursorSizeEl = document.getElementById("cursor-size");
 
@@ -134,16 +131,6 @@ function initUI() {
 
   eraserBtn.addEventListener("click", toggleEraser);
   undoBtn.addEventListener("click", undoMyLastStroke);
-
-  const savedAuthor = localStorage.getItem("shared_board_author") || "";
-  authorInput.value = savedAuthor;
-  authorInput.placeholder = ANON_PREFIX + myAnimal;
-  authorInput.addEventListener("change", () => {
-    localStorage.setItem(
-      "shared_board_author",
-      authorInput.value.trim().slice(0, 18),
-    );
-  });
 }
 
 function selectColor(color, btn) {
@@ -287,8 +274,7 @@ function drawLabels() {
 
     const cx = ((minX + maxX) / 2) * window.innerWidth;
     const baseY = maxY * window.innerHeight + Math.max(10, stroke.size / 2 + 6);
-    const text =
-      stroke.author || ANON_PREFIX + animalForClient(stroke.client_id);
+    const text = stroke.author || animalForClient(stroke.client_id);
 
     drawLabelPill(cx, baseY, text);
   }
@@ -347,7 +333,7 @@ function onPointerDown(event) {
   canvas.setPointerCapture(event.pointerId);
   activeStroke = {
     client_id: clientId,
-    author: authorInput.value.trim().slice(0, 18) || ANON_PREFIX + myAnimal,
+    author: myAnimal,
     color: currentColor,
     size: currentSize,
     points: [normalizePoint(event.clientX, event.clientY)],

@@ -287,23 +287,6 @@ body {
   border-color: var(--text);
 }
 
-#author {
-  width: 140px;
-  padding: 8px 12px;
-  font-family: "Inter", sans-serif;
-  font-size: 0.78rem;
-  color: var(--text);
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  outline: none;
-  transition: border-color 0.15s ease;
-}
-
-#author:focus {
-  border-color: var(--accent);
-}
-
 /* --- RESPONSIVE --- */
 @media (max-width: 720px) {
   .top-bar {
@@ -339,11 +322,6 @@ body {
 
   .tool-label {
     display: none;
-  }
-
-  #author {
-    width: 110px;
-    font-size: 0.72rem;
   }
 
   .tool-btn {

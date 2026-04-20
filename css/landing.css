@@ -205,113 +205,25 @@ body {
   border: 1px solid var(--accent);
 }
 
-.swatch-custom {
-  background: conic-gradient(
-    from 0deg,
-    hsl(0, 80%, 55%),
-    hsl(60, 80%, 55%),
-    hsl(120, 80%, 55%),
-    hsl(180, 80%, 55%),
-    hsl(240, 80%, 55%),
-    hsl(300, 80%, 55%),
-    hsl(360, 80%, 55%)
-  );
-  position: relative;
-}
-
-.swatch-custom::before {
-  content: "";
-  position: absolute;
-  inset: 4px;
+/* --- CURSOR SIZE INDICATOR --- */
+.cursor-size {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border: 1.5px solid var(--text);
   border-radius: 50%;
-  background: var(--custom-color, #fff);
-  transition: background 0.12s ease;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  z-index: 15;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6);
 }
 
-/* --- COLOR PICKER POPOVER --- */
-.color-picker {
-  bottom: 96px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 18px;
-  background: var(--ui-bg);
-  border: 1px solid var(--ui-border);
-  border-radius: 14px;
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  z-index: 20;
-  animation: picker-in 0.18s ease;
-}
-
-.color-picker[hidden] {
-  display: none;
-}
-
-@keyframes picker-in {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-.wheel-canvas {
-  display: block;
-  width: 180px;
-  height: 180px;
-  cursor: crosshair;
-  touch-action: none;
-}
-
-.picker-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-}
-
-.picker-label {
-  font-size: 0.65rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-  min-width: 60px;
-}
-
-.picker-slider {
-  flex: 1;
-  accent-color: var(--accent);
-  cursor: pointer;
-}
-
-.picker-footer {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.picker-swatch {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #3c3c3c;
-  border: 1px solid var(--border);
-}
-
-.picker-hex {
-  font-family: "Inter", monospace;
-  font-size: 0.78rem;
-  letter-spacing: 0.05em;
-  color: var(--text);
-  text-transform: uppercase;
+.cursor-size.visible {
+  opacity: 1;
 }
 
 /* Size slider */

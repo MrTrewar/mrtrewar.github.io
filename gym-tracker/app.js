@@ -261,6 +261,10 @@ function setupEventListeners() {
         });
     }
 
+    // Skip Button
+    const skipBtn = document.getElementById('navSkipBtn');
+    if (skipBtn) skipBtn.addEventListener('click', skipDay);
+
     // Recovery Modal
     const modal = document.getElementById('recoveryModal');
     const recBtn = document.getElementById('navRecoveryBtn');
@@ -535,6 +539,39 @@ async function saveSession() {
 }
 
 // ============================================
+// SKIP DAY
+// ============================================
+async function skipDay() {
+    const dayNames = { mo: 'Mo', di: 'Di', do: 'Do', fr: 'Fr' };
+    const confirmed = confirm(`${dayNames[currentDay]} (Woche ${currentWeek}) als übersprungen markieren?`);
+    if (!confirmed) return;
+
+    try {
+        const today = new Date().toISOString().split('T')[0];
+
+        const { data: existing } = await supabaseClient
+            .from('sessions')
+            .select('id')
+            .eq('week_number', currentWeek)
+            .eq('day_key', currentDay);
+
+        if (!existing || existing.length === 0) {
+            const { error } = await supabaseClient
+                .from('sessions')
+                .insert({ week_number: currentWeek, day_key: currentDay, date: today });
+            if (error) throw error;
+        }
+
+        await loadWeekTracker();
+        await autoNavigateToNextSession();
+        renderDayTitle();
+        await renderDay(currentDay);
+    } catch (err) {
+        alert('Fehler beim Überspringen: ' + err.message);
+    }
+}
+
+// ============================================
 // DOUBLE PROGRESSION LOGIC
 // ============================================
 function checkProgression(card, cardIdx, ex, reps, prevExLogs = []) {
@@ -666,6 +703,11 @@ async function renderHistory(dayKey) {
             const dateStr = session.date ? new Date(session.date).toLocaleDateString('de-DE') : 'Unbekanntes Datum';
 
             let exercisesHtml = '';
+
+            if (session.set_logs.length === 0) {
+                exercisesHtml = '<span style="color: var(--text-muted); font-style: italic;">⏭ Übersprungen</span>';
+            }
+
             // Übungen gruppieren
             const groupedLogs = {};
             session.set_logs.forEach(log => {

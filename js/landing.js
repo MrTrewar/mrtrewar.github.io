@@ -33,6 +33,13 @@ const eraserBtn = document.getElementById("eraser");
 const undoBtn = document.getElementById("undo");
 const authorInput = document.getElementById("author");
 const statusEl = document.getElementById("status");
+const customSwatch = document.getElementById("custom-swatch");
+const colorPicker = document.getElementById("color-picker");
+const wheelCanvas = document.getElementById("wheel");
+const wheelCtx = wheelCanvas.getContext("2d");
+const lightnessSlider = document.getElementById("lightness");
+const pickerPreview = document.getElementById("picker-preview");
+const pickerHex = document.getElementById("picker-hex");
 
 const clientId = getOrCreateClientId();
 const myStrokeIds = [];
@@ -49,6 +56,7 @@ let statusTimer = null;
 initUI();
 initCanvas();
 initPointerEvents();
+initColorWheel();
 initSupabase();
 
 function getOrCreateClientId() {
@@ -72,7 +80,7 @@ function initUI() {
     btn.setAttribute("aria-label", "Farbe " + color);
     btn.addEventListener("click", () => selectColor(color, btn));
     if (idx === 0) btn.classList.add("active");
-    colorsEl.appendChild(btn);
+    colorsEl.insertBefore(btn, customSwatch);
   });
 
   updateSizePreview();
@@ -117,12 +125,19 @@ function toggleEraser() {
   } else {
     currentColor = lastBrushColor;
     eraserBtn.classList.remove("active");
-    const match = [...document.querySelectorAll(".swatch")].find(
+    const presets = [
+      ...document.querySelectorAll(".swatch:not(.swatch-custom)"),
+    ];
+    const match = presets.find(
       (el) =>
         el.style.background === lastBrushColor ||
         rgbToHex(el.style.background) === lastBrushColor.toLowerCase(),
     );
-    if (match) match.classList.add("active");
+    if (match) {
+      match.classList.add("active");
+    } else {
+      customSwatch.classList.add("active");
+    }
   }
   updateSizePreview();
 }
@@ -399,4 +414,195 @@ function showStatus(text, autoHideMs) {
       autoHideMs,
     );
   }
+}
+
+let pickerHue = 0;
+let pickerSat = 0;
+let pickerLightness = Number(lightnessSlider.value);
+let isPickingColor = false;
+
+function initColorWheel() {
+  drawWheel(pickerLightness);
+  updatePickerPreview(currentColor);
+
+  customSwatch.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleColorPicker();
+  });
+
+  lightnessSlider.addEventListener("input", () => {
+    pickerLightness = Number(lightnessSlider.value);
+    drawWheel(pickerLightness);
+    if (pickerSat > 0) applyWheelColor();
+  });
+
+  wheelCanvas.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    isPickingColor = true;
+    wheelCanvas.setPointerCapture(event.pointerId);
+    pickFromWheelEvent(event);
+  });
+  wheelCanvas.addEventListener("pointermove", (event) => {
+    if (!isPickingColor) return;
+    pickFromWheelEvent(event);
+  });
+  wheelCanvas.addEventListener("pointerup", () => {
+    isPickingColor = false;
+  });
+  wheelCanvas.addEventListener("pointercancel", () => {
+    isPickingColor = false;
+  });
+
+  document.addEventListener("pointerdown", (event) => {
+    if (colorPicker.hasAttribute("hidden")) return;
+    if (
+      colorPicker.contains(event.target) ||
+      customSwatch.contains(event.target)
+    ) {
+      return;
+    }
+    closeColorPicker();
+  });
+}
+
+function toggleColorPicker() {
+  if (colorPicker.hasAttribute("hidden")) {
+    colorPicker.removeAttribute("hidden");
+  } else {
+    closeColorPicker();
+  }
+}
+
+function closeColorPicker() {
+  colorPicker.setAttribute("hidden", "");
+}
+
+function drawWheel(lightness) {
+  const size = wheelCanvas.width;
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = size / 2 - 2;
+  const image = wheelCtx.createImageData(size, size);
+  const data = image.data;
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const dx = x - cx;
+      const dy = y - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const idx = (y * size + x) * 4;
+
+      if (dist > radius) {
+        data[idx + 3] = 0;
+        continue;
+      }
+
+      const angleDeg = ((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360;
+      const sat = Math.min(1, dist / radius);
+      const rgb = hslToRgb(angleDeg, sat, lightness / 100);
+      data[idx] = rgb[0];
+      data[idx + 1] = rgb[1];
+      data[idx + 2] = rgb[2];
+      data[idx + 3] = Math.round(255 * Math.min(1, radius - dist + 0.5));
+    }
+  }
+  wheelCtx.putImageData(image, 0, 0);
+  drawWheelIndicator();
+}
+
+function drawWheelIndicator() {
+  if (pickerSat === 0) return;
+  const size = wheelCanvas.width;
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = size / 2 - 2;
+  const angle = (pickerHue * Math.PI) / 180;
+  const r = pickerSat * radius;
+  const x = cx + Math.cos(angle) * r;
+  const y = cy + Math.sin(angle) * r;
+
+  wheelCtx.save();
+  wheelCtx.beginPath();
+  wheelCtx.arc(x, y, 6, 0, Math.PI * 2);
+  wheelCtx.strokeStyle = "#fff";
+  wheelCtx.lineWidth = 2.5;
+  wheelCtx.stroke();
+  wheelCtx.beginPath();
+  wheelCtx.arc(x, y, 6, 0, Math.PI * 2);
+  wheelCtx.strokeStyle = "rgba(0,0,0,0.55)";
+  wheelCtx.lineWidth = 1;
+  wheelCtx.stroke();
+  wheelCtx.restore();
+}
+
+function pickFromWheelEvent(event) {
+  const rect = wheelCanvas.getBoundingClientRect();
+  const scaleX = wheelCanvas.width / rect.width;
+  const scaleY = wheelCanvas.height / rect.height;
+  const x = (event.clientX - rect.left) * scaleX;
+  const y = (event.clientY - rect.top) * scaleY;
+  const cx = wheelCanvas.width / 2;
+  const cy = wheelCanvas.height / 2;
+  const radius = wheelCanvas.width / 2 - 2;
+  const dx = x - cx;
+  const dy = y - cy;
+  const dist = Math.min(radius, Math.sqrt(dx * dx + dy * dy));
+
+  pickerHue = ((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360;
+  pickerSat = dist / radius;
+  drawWheel(pickerLightness);
+  applyWheelColor();
+}
+
+function applyWheelColor() {
+  const rgb = hslToRgb(pickerHue, pickerSat, pickerLightness / 100);
+  const hex = rgbToHexString(rgb[0], rgb[1], rgb[2]);
+  customSwatch.style.setProperty("--custom-color", hex);
+  updatePickerPreview(hex);
+  selectColor(hex, customSwatch);
+}
+
+function updatePickerPreview(hex) {
+  pickerPreview.style.background = hex;
+  pickerHex.textContent = hex.toUpperCase();
+}
+
+function rgbToHexString(r, g, b) {
+  return (
+    "#" +
+    [r, g, b]
+      .map((value) => Math.round(value).toString(16).padStart(2, "0"))
+      .join("")
+  );
+}
+
+function hslToRgb(hue, saturation, lightness) {
+  const h = hue / 360;
+  let r;
+  let g;
+  let b;
+
+  if (saturation === 0) {
+    r = g = b = lightness;
+  } else {
+    const q =
+      lightness < 0.5
+        ? lightness * (1 + saturation)
+        : lightness + saturation - lightness * saturation;
+    const p = 2 * lightness - q;
+    r = hueToRgbComponent(p, q, h + 1 / 3);
+    g = hueToRgbComponent(p, q, h);
+    b = hueToRgbComponent(p, q, h - 1 / 3);
+  }
+  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+
+function hueToRgbComponent(p, q, t) {
+  let tt = t;
+  if (tt < 0) tt += 1;
+  if (tt > 1) tt -= 1;
+  if (tt < 1 / 6) return p + (q - p) * 6 * tt;
+  if (tt < 1 / 2) return q;
+  if (tt < 2 / 3) return p + (q - p) * (2 / 3 - tt) * 6;
+  return p;
 }

@@ -34,8 +34,35 @@
 
     <div class="ui status" id="status">Verbinde…</div>
 
+    <div class="ui color-picker" id="color-picker" hidden>
+      <canvas id="wheel" class="wheel-canvas" width="180" height="180"></canvas>
+      <div class="picker-row">
+        <span class="picker-label">Helligkeit</span>
+        <input
+          type="range"
+          id="lightness"
+          min="15"
+          max="85"
+          value="50"
+          class="picker-slider"
+        />
+      </div>
+      <div class="picker-footer">
+        <span class="picker-swatch" id="picker-preview"></span>
+        <span class="picker-hex" id="picker-hex">#000000</span>
+      </div>
+    </div>
+
     <footer class="ui tool-bar" id="toolbar">
-      <div class="tool-group colors" id="colors"></div>
+      <div class="tool-group colors" id="colors">
+        <button
+          type="button"
+          class="swatch swatch-custom"
+          id="custom-swatch"
+          title="Eigene Farbe wählen"
+          aria-label="Eigene Farbe wählen"
+        ></button>
+      </div>
 
       <div class="tool-group size-group">
         <label for="size" class="tool-label">Größe</label>

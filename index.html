@@ -1,45 +1,73 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gero Wieger</title>
-  <link rel="stylesheet" href="css/landing.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>Gero Wieger — Shared Board</title>
+    <meta name="theme-color" content="#F5F0EB" />
+    <link rel="stylesheet" href="css/landing.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+  <body>
+    <canvas id="board"></canvas>
 
-  <!-- Loading -->
-  <div id="loading">
-    <span id="loading-text">Loading</span>
-    <div id="loading-bar"><div id="loading-fill"></div></div>
-  </div>
-
-  <!-- Scroll hint -->
-  <div id="scroll-hint">
-    <span>Scroll</span>
-    <div class="arrow"></div>
-  </div>
-
-  <!-- Scroll-driven MRT animation -->
-  <section id="scroll-section">
-    <div id="canvas-wrap">
-      <canvas id="mrt-canvas"></canvas>
-      <!-- Overlay content hovers over animation -->
-      <div id="overlay-content">
-        <h2 class="section-title">Projekte</h2>
-        <div class="buttons">
-          <a href="game.html" class="btn btn--primary">Spiel</a>
-          <a href="mannheim-skater/" class="btn btn--primary">Mannheim Skater</a>
-          <a href="gym-tracker/" class="btn">Training</a>
-        </div>
-        <footer>Gero Wieger</footer>
+    <header class="ui top-bar">
+      <div class="brand">
+        <span class="brand-title">Shared Board</span>
+        <span class="brand-sub">Mal was — bleibt für alle</span>
       </div>
-    </div>
-  </section>
+      <nav class="projects">
+        <a href="game.html" class="nav-link">Spiel</a>
+        <a href="mannheim-skater/" class="nav-link">Skater</a>
+        <a href="gym-tracker/" class="nav-link">Training</a>
+      </nav>
+    </header>
 
-  <script src="js/landing.js"></script>
-</body>
+    <div class="ui status" id="status">Verbinde…</div>
+
+    <footer class="ui tool-bar" id="toolbar">
+      <div class="tool-group colors" id="colors"></div>
+
+      <div class="tool-group size-group">
+        <label for="size" class="tool-label">Größe</label>
+        <input type="range" id="size" min="2" max="28" value="5" />
+        <span class="size-preview" id="size-preview"></span>
+      </div>
+
+      <div class="tool-group actions">
+        <button
+          class="tool-btn"
+          id="eraser"
+          title="Radiergummi (Hintergrundfarbe)"
+        >
+          Radierer
+        </button>
+        <button
+          class="tool-btn"
+          id="undo"
+          title="Letzten eigenen Strich zurücknehmen"
+        >
+          Rückgängig
+        </button>
+        <input
+          type="text"
+          id="author"
+          maxlength="18"
+          placeholder="Dein Name (optional)"
+          autocomplete="off"
+        />
+      </div>
+    </footer>
+
+    <script src="js/landing.js"></script>
+  </body>
 </html>

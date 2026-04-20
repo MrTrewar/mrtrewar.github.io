@@ -1,164 +1,402 @@
-// Scroll-driven MRT frame animation
+// Shared Drawing Board — persisted via Supabase, live-synced
 
-const TOTAL_FRAMES = 240;
-const FRAME_PATH = 'assets/linac/ezgif-frame-';
-const images = new Array(TOTAL_FRAMES);
-let loadedCount = 0;
-let isReady = false;
+const SUPABASE_URL = "https://whelaaozlexvxkojrljp.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_F1S_lB8kCYj22c-ssxrL4A_3hTHta1h";
+const TABLE = "shared_strokes";
+const STROKE_LIMIT = 2000;
 
-const canvas = document.getElementById('mrt-canvas');
-const ctx = canvas.getContext('2d');
-const loadingFill = document.getElementById('loading-fill');
-const loadingScreen = document.getElementById('loading');
-const scrollHint = document.getElementById('scroll-hint');
-const overlayContent = document.getElementById('overlay-content');
+const PALETTE = [
+  "#3C3C3C",
+  "#C4A77D",
+  "#D94F4F",
+  "#4F7FD9",
+  "#5FA85B",
+  "#E8B94D",
+  "#8B5CF6",
+  "#F28FBF",
+];
+const ERASER_COLOR = "#F5F0EB";
 
-// Frame number: 001 = exploded (top), 240 = assembled (bottom)
-function frameIndex(i) {
-    // i goes 0..239, we want frame 001 up to 240
-    return i + 1;
+const STATUS = {
+  CONNECTING: "Verbinde…",
+  ONLINE: "Live verbunden",
+  OFFLINE: "Offline — Striche bleiben nur hier",
+  SAVE_FAIL: "Speichern fehlgeschlagen",
+};
+
+const canvas = document.getElementById("board");
+const ctx = canvas.getContext("2d");
+const colorsEl = document.getElementById("colors");
+const sizeEl = document.getElementById("size");
+const sizePreviewEl = document.getElementById("size-preview");
+const eraserBtn = document.getElementById("eraser");
+const undoBtn = document.getElementById("undo");
+const authorInput = document.getElementById("author");
+const statusEl = document.getElementById("status");
+
+const clientId = getOrCreateClientId();
+const myStrokeIds = [];
+const allStrokes = [];
+let activeStroke = null;
+let currentColor = PALETTE[0];
+let lastBrushColor = PALETTE[0];
+let currentSize = Number(sizeEl.value);
+let isErasing = false;
+let supabase = null;
+let realtimeChannel = null;
+let statusTimer = null;
+
+initUI();
+initCanvas();
+initPointerEvents();
+initSupabase();
+
+function getOrCreateClientId() {
+  const KEY = "shared_board_client_id";
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id =
+      (crypto.randomUUID && crypto.randomUUID()) ||
+      "c_" + Math.random().toString(36).slice(2) + Date.now();
+    localStorage.setItem(KEY, id);
+  }
+  return id;
 }
 
-function frameSrc(frameNum) {
-    return FRAME_PATH + String(frameNum).padStart(3, '0') + '.jpg';
+function initUI() {
+  PALETTE.forEach((color, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "swatch";
+    btn.type = "button";
+    btn.style.background = color;
+    btn.setAttribute("aria-label", "Farbe " + color);
+    btn.addEventListener("click", () => selectColor(color, btn));
+    if (idx === 0) btn.classList.add("active");
+    colorsEl.appendChild(btn);
+  });
+
+  updateSizePreview();
+  sizeEl.addEventListener("input", () => {
+    currentSize = Number(sizeEl.value);
+    updateSizePreview();
+  });
+
+  eraserBtn.addEventListener("click", toggleEraser);
+  undoBtn.addEventListener("click", undoMyLastStroke);
+
+  const savedAuthor = localStorage.getItem("shared_board_author") || "";
+  authorInput.value = savedAuthor;
+  authorInput.addEventListener("change", () => {
+    localStorage.setItem(
+      "shared_board_author",
+      authorInput.value.trim().slice(0, 18),
+    );
+  });
 }
 
-// Preload images in two passes for speed
-function preloadImages() {
-    // Pass 1: every 4th frame (60 images) for quick scrubbing
-    const pass1 = [];
-    for (let i = 0; i < TOTAL_FRAMES; i += 4) {
-        pass1.push(i);
-    }
-    // Pass 2: all remaining frames
-    const pass2 = [];
-    for (let i = 0; i < TOTAL_FRAMES; i++) {
-        if (i % 4 !== 0) pass2.push(i);
-    }
+function selectColor(color, btn) {
+  currentColor = color;
+  lastBrushColor = color;
+  isErasing = false;
+  eraserBtn.classList.remove("active");
+  document
+    .querySelectorAll(".swatch")
+    .forEach((el) => el.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  updateSizePreview();
+}
 
-    let totalToLoad = TOTAL_FRAMES;
+function toggleEraser() {
+  isErasing = !isErasing;
+  if (isErasing) {
+    currentColor = ERASER_COLOR;
+    eraserBtn.classList.add("active");
+    document
+      .querySelectorAll(".swatch")
+      .forEach((el) => el.classList.remove("active"));
+  } else {
+    currentColor = lastBrushColor;
+    eraserBtn.classList.remove("active");
+    const match = [...document.querySelectorAll(".swatch")].find(
+      (el) =>
+        el.style.background === lastBrushColor ||
+        rgbToHex(el.style.background) === lastBrushColor.toLowerCase(),
+    );
+    if (match) match.classList.add("active");
+  }
+  updateSizePreview();
+}
 
-    function loadFrame(i) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-                images[i] = img;
-                loadedCount++;
-                if (loadingFill) {
-                    loadingFill.style.width = Math.round((loadedCount / totalToLoad) * 100) + '%';
-                }
-                // After pass 1 is done, set canvas size and show first frame
-                if (loadedCount === pass1.length && !isReady) {
-                    initCanvas(img);
-                    isReady = true;
-                    drawFrame(0);
-                    if (loadingScreen) loadingScreen.classList.add('done');
-                }
-                resolve();
-            };
-            img.onerror = () => {
-                loadedCount++;
-                resolve();
-            };
-            img.src = frameSrc(frameIndex(i));
+function rgbToHex(rgb) {
+  const m = rgb.match(/\d+/g);
+  if (!m || m.length < 3) return rgb;
+  return (
+    "#" +
+    m
+      .slice(0, 3)
+      .map((n) => Number(n).toString(16).padStart(2, "0"))
+      .join("")
+  );
+}
+
+function updateSizePreview() {
+  const diameter = Math.max(4, currentSize);
+  sizePreviewEl.style.width = diameter + "px";
+  sizePreviewEl.style.height = diameter + "px";
+  sizePreviewEl.style.background = isErasing ? "var(--border)" : currentColor;
+}
+
+function initCanvas() {
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+  window.addEventListener("orientationchange", resizeCanvas);
+}
+
+function resizeCanvas() {
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  canvas.style.width = window.innerWidth + "px";
+  canvas.style.height = window.innerHeight + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  redrawAll();
+}
+
+function normalizePoint(clientX, clientY) {
+  return [clientX / window.innerWidth, clientY / window.innerHeight];
+}
+
+function drawStroke(stroke) {
+  const pts = stroke.points;
+  if (!pts || pts.length === 0) return;
+
+  ctx.strokeStyle = stroke.color;
+  ctx.fillStyle = stroke.color;
+  ctx.lineWidth = stroke.size;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  if (pts.length === 1) {
+    const [x, y] = pts[0];
+    ctx.beginPath();
+    ctx.arc(
+      x * window.innerWidth,
+      y * window.innerHeight,
+      stroke.size / 2,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+    return;
+  }
+
+  ctx.beginPath();
+  const [x0, y0] = pts[0];
+  ctx.moveTo(x0 * window.innerWidth, y0 * window.innerHeight);
+  for (let i = 1; i < pts.length; i++) {
+    const [x, y] = pts[i];
+    ctx.lineTo(x * window.innerWidth, y * window.innerHeight);
+  }
+  ctx.stroke();
+}
+
+function redrawAll() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (const s of allStrokes) drawStroke(s);
+  if (activeStroke) drawStroke(activeStroke);
+}
+
+function initPointerEvents() {
+  canvas.addEventListener("pointerdown", onPointerDown);
+  canvas.addEventListener("pointermove", onPointerMove);
+  canvas.addEventListener("pointerup", onPointerUp);
+  canvas.addEventListener("pointercancel", onPointerUp);
+  canvas.addEventListener("pointerleave", onPointerUp);
+  window.addEventListener("blur", onPointerUp);
+}
+
+function onPointerDown(event) {
+  if (event.button !== undefined && event.button !== 0) return;
+  event.preventDefault();
+  canvas.setPointerCapture(event.pointerId);
+  activeStroke = {
+    client_id: clientId,
+    author: authorInput.value.trim().slice(0, 18) || null,
+    color: currentColor,
+    size: currentSize,
+    points: [normalizePoint(event.clientX, event.clientY)],
+  };
+  redrawAll();
+}
+
+function onPointerMove(event) {
+  if (!activeStroke) return;
+  event.preventDefault();
+
+  if (event.getCoalescedEvents) {
+    const events = event.getCoalescedEvents();
+    for (const ev of events) {
+      activeStroke.points.push(normalizePoint(ev.clientX, ev.clientY));
+    }
+  } else {
+    activeStroke.points.push(normalizePoint(event.clientX, event.clientY));
+  }
+  redrawAll();
+}
+
+function onPointerUp(event) {
+  if (!activeStroke) return;
+  const stroke = activeStroke;
+  activeStroke = null;
+  stroke.points = simplifyPoints(stroke.points);
+  allStrokes.push(stroke);
+  saveStroke(stroke);
+  redrawAll();
+}
+
+function simplifyPoints(points) {
+  if (points.length <= 2) return points;
+  const out = [points[0]];
+  const threshold = 0.001;
+  for (let i = 1; i < points.length - 1; i++) {
+    const last = out[out.length - 1];
+    const curr = points[i];
+    const dx = curr[0] - last[0];
+    const dy = curr[1] - last[1];
+    if (dx * dx + dy * dy >= threshold * threshold) out.push(curr);
+  }
+  out.push(points[points.length - 1]);
+  return out;
+}
+
+function initSupabase() {
+  showStatus(STATUS.CONNECTING);
+  if (!window.supabase) {
+    showStatus(STATUS.OFFLINE, 4000);
+    return;
+  }
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    realtime: { params: { eventsPerSecond: 20 } },
+  });
+  loadStrokes();
+  subscribeRealtime();
+}
+
+async function loadStrokes() {
+  try {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("id, client_id, author, color, size, points, created_at")
+      .order("created_at", { ascending: true })
+      .limit(STROKE_LIMIT);
+    if (error) throw error;
+    for (const row of data || []) {
+      allStrokes.push({
+        id: row.id,
+        client_id: row.client_id,
+        author: row.author,
+        color: row.color,
+        size: row.size,
+        points: row.points,
+      });
+    }
+    redrawAll();
+    showStatus(STATUS.ONLINE, 2000);
+  } catch (err) {
+    console.warn("loadStrokes failed:", err);
+    showStatus(STATUS.OFFLINE, 4000);
+  }
+}
+
+async function saveStroke(stroke) {
+  if (!supabase) return;
+  try {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .insert({
+        client_id: stroke.client_id,
+        author: stroke.author,
+        color: stroke.color,
+        size: stroke.size,
+        points: stroke.points,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    stroke.id = data.id;
+    myStrokeIds.push(data.id);
+  } catch (err) {
+    console.warn("saveStroke failed:", err);
+    showStatus(STATUS.SAVE_FAIL, 3000);
+  }
+}
+
+function subscribeRealtime() {
+  if (!supabase) return;
+  realtimeChannel = supabase
+    .channel("shared_strokes_feed")
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: TABLE },
+      (payload) => {
+        const row = payload.new;
+        if (!row || row.client_id === clientId) return;
+        allStrokes.push({
+          id: row.id,
+          client_id: row.client_id,
+          author: row.author,
+          color: row.color,
+          size: row.size,
+          points: row.points,
         });
-    }
-
-    // Load pass 1 first (concurrent, batched)
-    async function run() {
-        // Pass 1: load key frames
-        await Promise.all(pass1.map(i => loadFrame(i)));
-
-        // Pass 2: fill in remaining frames (smaller batches to not block)
-        for (let batch = 0; batch < pass2.length; batch += 10) {
-            const slice = pass2.slice(batch, batch + 10);
-            await Promise.all(slice.map(i => loadFrame(i)));
+        redrawAll();
+      },
+    )
+    .on(
+      "postgres_changes",
+      { event: "DELETE", schema: "public", table: TABLE },
+      (payload) => {
+        const deletedId = payload.old && payload.old.id;
+        if (!deletedId) return;
+        const idx = allStrokes.findIndex((s) => s.id === deletedId);
+        if (idx !== -1) {
+          allStrokes.splice(idx, 1);
+          redrawAll();
         }
-    }
-
-    run();
+      },
+    )
+    .subscribe();
 }
 
-function initCanvas(img) {
-    // Size canvas to fill viewport (cover behavior)
-    resizeCanvas(img);
-    window.addEventListener('resize', () => resizeCanvas(img));
+async function undoMyLastStroke() {
+  if (myStrokeIds.length === 0) return;
+  const id = myStrokeIds.pop();
+  const idx = allStrokes.findIndex((s) => s.id === id);
+  if (idx !== -1) {
+    allStrokes.splice(idx, 1);
+    redrawAll();
+  }
+  if (!supabase) return;
+  try {
+    const { error } = await supabase
+      .from(TABLE)
+      .delete()
+      .eq("id", id)
+      .eq("client_id", clientId);
+    if (error) throw error;
+  } catch (err) {
+    console.warn("undo failed:", err);
+  }
 }
 
-function resizeCanvas(img) {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const imgRatio = img.naturalWidth / img.naturalHeight;
-    const vpRatio = vw / vh;
-
-    if (vpRatio > imgRatio) {
-        // Viewport wider than image — fit to width
-        canvas.width = vw;
-        canvas.height = vw / imgRatio;
-    } else {
-        // Viewport taller — fit to height
-        canvas.height = vh;
-        canvas.width = vh * imgRatio;
-    }
+function showStatus(text, autoHideMs) {
+  statusEl.textContent = text;
+  statusEl.classList.add("visible");
+  if (statusTimer) clearTimeout(statusTimer);
+  if (autoHideMs) {
+    statusTimer = setTimeout(
+      () => statusEl.classList.remove("visible"),
+      autoHideMs,
+    );
+  }
 }
-
-function drawFrame(index) {
-    // Find closest loaded frame
-    let img = images[index];
-    if (!img) {
-        // Search nearby loaded frames
-        for (let offset = 1; offset < 5; offset++) {
-            if (images[index - offset]) { img = images[index - offset]; break; }
-            if (images[index + offset]) { img = images[index + offset]; break; }
-        }
-    }
-    if (!img) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-}
-
-// Scroll handling
-let currentFrame = 0;
-let ticking = false;
-
-function onScroll() {
-    if (!ticking) {
-        requestAnimationFrame(() => {
-            const scrollSection = document.getElementById('scroll-section');
-            const rect = scrollSection.getBoundingClientRect();
-            const scrollable = scrollSection.offsetHeight - window.innerHeight;
-
-            // How far through the scroll section (0..1)
-            const progress = Math.max(0, Math.min(1, -rect.top / scrollable));
-            const frame = Math.floor(progress * (TOTAL_FRAMES - 1));
-
-            if (frame !== currentFrame) {
-                currentFrame = frame;
-                drawFrame(frame);
-            }
-
-            // Hide scroll hint after scrolling starts
-            if (scrollHint && progress > 0.02) {
-                scrollHint.classList.add('hidden');
-            } else if (scrollHint) {
-                scrollHint.classList.remove('hidden');
-            }
-
-            // Show overlay buttons when near the end (assembled)
-            if (overlayContent && progress > 0.75) {
-                overlayContent.classList.add('visible');
-            } else if (overlayContent) {
-                overlayContent.classList.remove('visible');
-            }
-
-            ticking = false;
-        });
-        ticking = true;
-    }
-}
-
-window.addEventListener('scroll', onScroll, { passive: true });
-
-// Start
-preloadImages();

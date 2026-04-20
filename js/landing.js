@@ -49,7 +49,7 @@ let currentColor = PALETTE[0];
 let lastBrushColor = PALETTE[0];
 let currentSize = Number(sizeEl.value);
 let isErasing = false;
-let supabase = null;
+let supabaseClient = null;
 let realtimeChannel = null;
 let statusTimer = null;
 
@@ -290,16 +290,21 @@ function initSupabase() {
     showStatus(STATUS.OFFLINE, 4000);
     return;
   }
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    realtime: { params: { eventsPerSecond: 20 } },
-  });
+  supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    {
+      realtime: { params: { eventsPerSecond: 20 } },
+    },
+  );
   loadStrokes();
   subscribeRealtime();
 }
 
 async function loadStrokes() {
+  if (!supabaseClient) return;
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from(TABLE)
       .select("id, client_id, author, color, size, points, created_at")
       .order("created_at", { ascending: true })
@@ -324,9 +329,9 @@ async function loadStrokes() {
 }
 
 async function saveStroke(stroke) {
-  if (!supabase) return;
+  if (!supabaseClient) return;
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from(TABLE)
       .insert({
         client_id: stroke.client_id,
@@ -347,8 +352,8 @@ async function saveStroke(stroke) {
 }
 
 function subscribeRealtime() {
-  if (!supabase) return;
-  realtimeChannel = supabase
+  if (!supabaseClient) return;
+  realtimeChannel = supabaseClient
     .channel("shared_strokes_feed")
     .on(
       "postgres_changes",
@@ -391,9 +396,9 @@ async function undoMyLastStroke() {
     allStrokes.splice(idx, 1);
     redrawAll();
   }
-  if (!supabase) return;
+  if (!supabaseClient) return;
   try {
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from(TABLE)
       .delete()
       .eq("id", id)

@@ -142,7 +142,7 @@ function rgbToHex(rgb) {
 }
 
 function updateSizePreview() {
-  const diameter = Math.max(4, currentSize);
+  const diameter = Math.min(28, Math.max(4, currentSize));
   sizePreviewEl.style.width = diameter + "px";
   sizePreviewEl.style.height = diameter + "px";
   sizePreviewEl.style.background = isErasing ? "var(--border)" : currentColor;

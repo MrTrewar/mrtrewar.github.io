@@ -9,40 +9,36 @@ const ANIMALS = [
   "Otter",
   "Fuchs",
   "Igel",
-  "Dachs",
   "Eule",
-  "Bär",
   "Hase",
-  "Biber",
-  "Elch",
   "Panda",
   "Koala",
   "Waschbär",
   "Reh",
-  "Marder",
   "Axolotl",
-  "Maulwurf",
-  "Schildkröte",
   "Frettchen",
   "Pinguin",
   "Faultier",
   "Quokka",
   "Chinchilla",
-  "Ente",
-  "Giraffe",
   "Wombat",
-  "Flamingo",
   "Robbe",
   "Alpaka",
-  "Kapybara",
-  "Luchs",
-  "Wolf",
-  "Kranich",
-  "Kolibri",
-  "Libelle",
+  "Capybara",
   "Eichhörnchen",
-  "Seestern",
+  "Hamster",
+  "Meerschweinchen",
+  "Kaninchen",
+  "Erdmännchen",
+  "Küken",
+  "Kätzchen",
+  "Welpe",
+  "Ente",
+  "Kolibri",
+  "Bärchen",
 ];
+
+const ANON_PREFIX = "Anonym... ";
 
 const PALETTE = [
   "#3C3C3C",
@@ -141,7 +137,7 @@ function initUI() {
 
   const savedAuthor = localStorage.getItem("shared_board_author") || "";
   authorInput.value = savedAuthor;
-  authorInput.placeholder = myAnimal;
+  authorInput.placeholder = ANON_PREFIX + myAnimal;
   authorInput.addEventListener("change", () => {
     localStorage.setItem(
       "shared_board_author",
@@ -291,7 +287,8 @@ function drawLabels() {
 
     const cx = ((minX + maxX) / 2) * window.innerWidth;
     const baseY = maxY * window.innerHeight + Math.max(10, stroke.size / 2 + 6);
-    const text = stroke.author || animalForClient(stroke.client_id);
+    const text =
+      stroke.author || ANON_PREFIX + animalForClient(stroke.client_id);
 
     drawLabelPill(cx, baseY, text);
   }
@@ -350,7 +347,7 @@ function onPointerDown(event) {
   canvas.setPointerCapture(event.pointerId);
   activeStroke = {
     client_id: clientId,
-    author: authorInput.value.trim().slice(0, 18) || myAnimal,
+    author: authorInput.value.trim().slice(0, 18) || ANON_PREFIX + myAnimal,
     color: currentColor,
     size: currentSize,
     points: [normalizePoint(event.clientX, event.clientY)],

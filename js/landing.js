@@ -5,6 +5,45 @@ const SUPABASE_ANON_KEY = "sb_publishable_F1S_lB8kCYj22c-ssxrL4A_3hTHta1h";
 const TABLE = "shared_strokes";
 const STROKE_LIMIT = 2000;
 
+const ANIMALS = [
+  "Otter",
+  "Fuchs",
+  "Igel",
+  "Dachs",
+  "Eule",
+  "Bär",
+  "Hase",
+  "Biber",
+  "Elch",
+  "Panda",
+  "Koala",
+  "Waschbär",
+  "Reh",
+  "Marder",
+  "Axolotl",
+  "Maulwurf",
+  "Schildkröte",
+  "Frettchen",
+  "Pinguin",
+  "Faultier",
+  "Quokka",
+  "Chinchilla",
+  "Ente",
+  "Giraffe",
+  "Wombat",
+  "Flamingo",
+  "Robbe",
+  "Alpaka",
+  "Kapybara",
+  "Luchs",
+  "Wolf",
+  "Kranich",
+  "Kolibri",
+  "Libelle",
+  "Eichhörnchen",
+  "Seestern",
+];
+
 const PALETTE = [
   "#3C3C3C",
   "#C4A77D",
@@ -36,6 +75,7 @@ const statusEl = document.getElementById("status");
 const cursorSizeEl = document.getElementById("cursor-size");
 
 const clientId = getOrCreateClientId();
+const myAnimal = animalForClient(clientId);
 const myStrokes = [];
 const allStrokes = [];
 let activeStroke = null;
@@ -65,6 +105,19 @@ function getOrCreateClientId() {
   return id;
 }
 
+function hashString(input) {
+  let hash = 0;
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash << 5) - hash + input.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function animalForClient(id) {
+  return ANIMALS[hashString(id) % ANIMALS.length];
+}
+
 function initUI() {
   PALETTE.forEach((color, idx) => {
     const btn = document.createElement("button");
@@ -88,6 +141,7 @@ function initUI() {
 
   const savedAuthor = localStorage.getItem("shared_board_author") || "";
   authorInput.value = savedAuthor;
+  authorInput.placeholder = myAnimal;
   authorInput.addEventListener("change", () => {
     localStorage.setItem(
       "shared_board_author",
@@ -206,6 +260,79 @@ function redrawAll() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   for (const s of allStrokes) drawStroke(s);
   if (activeStroke) drawStroke(activeStroke);
+  drawLabels();
+}
+
+function drawLabels() {
+  const lastByClient = new Map();
+  for (const stroke of allStrokes) {
+    if (!stroke.client_id) continue;
+    lastByClient.set(stroke.client_id, stroke);
+  }
+
+  ctx.save();
+  ctx.font = '500 12px "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+
+  for (const stroke of lastByClient.values()) {
+    const pts = stroke.points;
+    if (!pts || pts.length === 0) continue;
+
+    let minX = pts[0][0];
+    let maxX = pts[0][0];
+    let maxY = pts[0][1];
+    for (let i = 1; i < pts.length; i++) {
+      const [x, y] = pts[i];
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+
+    const cx = ((minX + maxX) / 2) * window.innerWidth;
+    const baseY = maxY * window.innerHeight + Math.max(10, stroke.size / 2 + 6);
+    const text = stroke.author || animalForClient(stroke.client_id);
+
+    drawLabelPill(cx, baseY, text);
+  }
+  ctx.restore();
+}
+
+function drawLabelPill(cx, topY, text) {
+  const paddingX = 8;
+  const paddingY = 4;
+  const height = 20;
+  const width = ctx.measureText(text).width + paddingX * 2;
+  const x = Math.max(
+    6,
+    Math.min(window.innerWidth - width - 6, cx - width / 2),
+  );
+  const y = Math.min(window.innerHeight - height - 6, topY);
+
+  ctx.beginPath();
+  roundedRectPath(x, y, width, height, 10);
+  ctx.fillStyle = "rgba(255, 253, 250, 0.9)";
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "rgba(60, 60, 60, 0.18)";
+  ctx.stroke();
+
+  ctx.fillStyle = "#3C3C3C";
+  ctx.fillText(text, x + width / 2, y + paddingY);
+}
+
+function roundedRectPath(x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.arcTo(x + width, y, x + width, y + r, r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.arcTo(x + width, y + height, x + width - r, y + height, r);
+  ctx.lineTo(x + r, y + height);
+  ctx.arcTo(x, y + height, x, y + height - r, r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
 }
 
 function initPointerEvents() {
@@ -223,7 +350,7 @@ function onPointerDown(event) {
   canvas.setPointerCapture(event.pointerId);
   activeStroke = {
     client_id: clientId,
-    author: authorInput.value.trim().slice(0, 18) || null,
+    author: authorInput.value.trim().slice(0, 18) || myAnimal,
     color: currentColor,
     size: currentSize,
     points: [normalizePoint(event.clientX, event.clientY)],

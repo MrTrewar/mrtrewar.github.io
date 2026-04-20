@@ -141,7 +141,7 @@ const RECOVERY_ITEMS = [
 // ============================================
 // DELOAD WEEKS
 // ============================================
-const DELOAD_WEEKS = [4, 8];
+const DELOAD_WEEKS = [4, 8, 12, 16];
 
 function isDeloadWeek(week) {
     return DELOAD_WEEKS.includes(week);
@@ -161,10 +161,48 @@ let sessionId = null;
 // ============================================
 // INITIALISIERUNG
 // ============================================
+async function autoNavigateToNextSession() {
+    try {
+        const dayOrder = ['mo', 'di', 'do', 'fr'];
+
+        const { data: allSessions } = await supabaseClient
+            .from('sessions')
+            .select('week_number, day_key')
+            .order('week_number', { ascending: false });
+
+        if (!allSessions || allSessions.length === 0) return;
+
+        const maxWeek = allSessions[0].week_number;
+        const loggedDaysInMaxWeek = allSessions
+            .filter(s => s.week_number === maxWeek)
+            .map(s => s.day_key);
+
+        const nextDay = dayOrder.find(d => !loggedDaysInMaxWeek.includes(d));
+
+        if (nextDay) {
+            currentWeek = maxWeek;
+            currentDay = nextDay;
+        } else {
+            currentWeek = maxWeek + 1;
+            currentDay = 'mo';
+        }
+
+        const weekSelect = document.getElementById('weekSelect');
+        if (weekSelect) weekSelect.value = currentWeek;
+
+        document.querySelectorAll('.nav-btn[data-day]').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.day === currentDay);
+        });
+    } catch (err) {
+        console.warn('Auto-navigate failed:', err.message);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     initSupps();
+    await autoNavigateToNextSession();
     renderDayTitle();
-    await renderDay('mo');
+    await renderDay(currentDay);
     setupEventListeners();
     await loadWeekTracker();
 });

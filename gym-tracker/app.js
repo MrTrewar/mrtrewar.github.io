@@ -54,7 +54,7 @@ const TRAINING_PLAN = {
             { name: "Bayesian Cable Curl", sets: 3, repRange: [10, 15], rir: "2", startWeight: 6, bodyPart: "upper", imageUrl: "assets/images/pixel_bayesian_curl.png" },
             { name: "Incline DB Shrugs", sets: 3, repRange: [12, 15], rir: "2", startWeight: 14, bodyPart: "upper", imageUrl: "assets/images/pixel_incline_bench.png" },
             { name: "Face Pulls", sets: 2, repRange: [15, 20], rir: "2–3", startWeight: 12.5, bodyPart: "upper", imageUrl: "assets/images/pixel_face_pulls.png" },
-            { name: "DB Wrist Curls", sets: 2, repRange: [15, 20], rir: "2", startWeight: 4, bodyPart: "upper", imageUrl: "assets/images/pixel_wrist_curls.png" }
+            { name: "Triceps Pushdown", sets: 3, repRange: [6, 8], rir: "2", startWeight: 0, bodyPart: "upper", imageUrl: "assets/images/pixel_triceps_ext.png" }
         ]
     },
     di: {

@@ -67,7 +67,7 @@ const TRAINING_PLAN = {
             { name: "Seated Leg Curl", sets: 3, repRange: [10, 15], rir: "2", startWeight: 27.5, bodyPart: "lower", imageUrl: "assets/images/pixel_leg_curl.png", note: "Streckung warten!" },
             { name: "Leg Extension", sets: 3, repRange: [12, 20], rir: "2", startWeight: 35, bodyPart: "lower", imageUrl: "assets/images/pixel_leg_extension.png" },
             { name: "Nautilus Glute Drive", sets: 2, repRange: [8, 12], rir: "2", startWeight: 50, bodyPart: "lower", imageUrl: "", note: "Hüfte durchstrecken!" },
-            { name: "Standing Calf Raise", sets: 4, repRange: [10, 15], rir: "1–2", startWeight: 0, bodyPart: "lower", imageUrl: "assets/images/pixel_calf_raise.png" },
+            { name: "Leg Press", sets: 3, repRange: [6, 8], rir: "2", startWeight: 0, bodyPart: "lower", imageUrl: "" },
             { name: "Cable Crunch", sets: 3, repRange: [10, 15], rir: "2", startWeight: 36.25, bodyPart: "lower", imageUrl: "" }
         ]
     },

@@ -97,7 +97,7 @@ const TRAINING_PLAN = {
             { name: "Cable Lateral Raise (Behind-Back)", sets: 2, repRange: [12, 15], rir: "3", startWeight: 2, bodyPart: "upper", imageUrl: "assets/images/pixel_lateral_raise.png" },
             { name: "Preacher Curl", sets: 3, repRange: [10, 15], rir: "2", startWeight: 5, bodyPart: "upper", imageUrl: "assets/images/pixel_preacher_curl.png" },
             { name: "Hanging Leg Raises", sets: 3, repRange: "amrap", rir: "2", startWeight: 0, bodyPart: "lower", isBW: true, imageUrl: "assets/images/pixel_hanging_leg_raise.png" },
-            { name: "Standing Calf Raise", sets: 3, repRange: [10, 15], rir: "2", startWeight: 0, bodyPart: "lower", imageUrl: "assets/images/pixel_calf_raise.png" }
+            { name: "Plank", sets: 2, repRange: "amrap", rir: "0", startWeight: 0, bodyPart: "lower", isBW: true, imageUrl: "", note: "Max Hold in Sekunden eintragen" }
         ]
     }
 };

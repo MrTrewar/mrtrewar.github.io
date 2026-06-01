@@ -1,156 +1,276 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description"
-        content="GymProgress Pro - Cut Edition: Periodisierter Trainings-Tracker für 8 Wochen mit Double Progression & Recovery Monitoring">
-    <meta name="theme-color" content="#0f1113">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta
+      name="description"
+      content="GymProgress Pro - Cut Edition: Periodisierter Trainings-Tracker für 8 Wochen mit Double Progression & Recovery Monitoring"
+    />
+    <meta name="theme-color" content="#0f1113" />
 
     <title>GymProgress Pro – Cut Edition</title>
 
     <!-- Google Fonts (Orbitron + Rajdhani) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap"
-        rel="stylesheet">
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap"
+      rel="stylesheet"
+    />
 
     <!-- Styles -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css" />
 
     <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
+  </head>
 
-<body>
-
+  <body>
     <!-- ============================================
          HEADER & NAVIGATION
          ============================================ -->
     <header>
-        <div class="top-bar">
-            <h1>GYM<span>PROGRESS</span></h1>
-            <div class="week-selector">
-                <label for="weekSelect">Woche:</label>
-                <select id="weekSelect">
-                    <option value="1" selected>1 – Akkumulation</option>
-                    <option value="2">2 – Akkumulation</option>
-                    <option value="3">3 – Akkumulation</option>
-                    <option value="4">4 – Deload</option>
-                    <option value="5">5 – Intensivierung</option>
-                    <option value="6">6 – Intensivierung</option>
-                    <option value="7">7 – Intensivierung</option>
-                    <option value="8">8 – Peak/Review</option>
-                    <option value="9">9 – Akkumulation</option>
-                    <option value="10">10 – Akkumulation</option>
-                    <option value="11">11 – Akkumulation</option>
-                    <option value="12">12 – Deload</option>
-                    <option value="13">13 – Intensivierung</option>
-                    <option value="14">14 – Intensivierung</option>
-                    <option value="15">15 – Intensivierung</option>
-                    <option value="16">16 – Peak/Review</option>
-                </select>
-            </div>
+      <div class="top-bar">
+        <h1>GYM<span>PROGRESS</span></h1>
+        <div class="plan-selector">
+          <label for="planSelect">Plan:</label>
+          <select id="planSelect">
+            <option value="classic">Classic – 4er-Split</option>
+            <option value="hybrid">Hybrid – Kraft + Laufen</option>
+          </select>
         </div>
-
-        <!-- Supplements Accordion -->
-        <details class="supps-accordion">
-            <summary>📋 Supplements heute ✓</summary>
-            <div id="suppsContainer" class="supps-grid">
-                <!-- JS-generiert -->
-            </div>
-        </details>
-
-        <!-- Delete History Accordion -->
-        <details class="supps-accordion" style="margin-top: 10px; border-color: rgba(255, 68, 68, 0.4);">
-            <summary style="color: var(--danger);">🗑️ Historie / Verlauf zurücksetzen</summary>
-            <div style="padding: 10px; text-align: center;">
-                <p style="font-size: 0.85rem; margin-bottom: 12px; color: var(--text-muted); line-height: 1.4;">Achtung:
-                    Dies löscht alle jemals eintragenen Gewichte und Wiederholungen unwiderruflich (Ideal für den Start
-                    eines neuen Plans).</p>
-                <button id="deleteHistoryBtn" class="nav-btn"
-                    style="background: var(--danger); color: #fff; width: 100%; font-weight: bold; border-radius: 4px;">Alle
-                    Werte löschen</button>
-            </div>
-        </details>
-
-        <!-- Day Navigation -->
-        <div class="day-info">
-            <h2></h2>
-            <div id="weekTracker"></div>
+        <div class="week-selector">
+          <label for="weekSelect">Woche:</label>
+          <select id="weekSelect">
+            <option value="1" selected>1 – Akkumulation</option>
+            <option value="2">2 – Akkumulation</option>
+            <option value="3">3 – Akkumulation</option>
+            <option value="4">4 – Deload</option>
+            <option value="5">5 – Intensivierung</option>
+            <option value="6">6 – Intensivierung</option>
+            <option value="7">7 – Intensivierung</option>
+            <option value="8">8 – Peak/Review</option>
+            <option value="9">9 – Akkumulation</option>
+            <option value="10">10 – Akkumulation</option>
+            <option value="11">11 – Akkumulation</option>
+            <option value="12">12 – Deload</option>
+            <option value="13">13 – Intensivierung</option>
+            <option value="14">14 – Intensivierung</option>
+            <option value="15">15 – Intensivierung</option>
+            <option value="16">16 – Peak/Review</option>
+          </select>
         </div>
+      </div>
 
-        <nav class="day-nav">
-            <button id="navSaveBtn" class="nav-btn"
-                style="background: var(--danger); color: #fff; font-weight: 700; border-radius: 4px; box-shadow: 0 0 10px rgba(255, 68, 68, 0.4);">💾
-                Speichern</button>
-            <button id="navSkipBtn" class="nav-btn" title="Diesen Tag überspringen"
-                style="background: var(--border); color: var(--text-muted); border-radius: 4px;">⏭ Skip</button>
-            <button class="nav-btn active" data-day="mo">Mo (Upper)</button>
-            <button class="nav-btn" data-day="di">Di (Lower)</button>
-            <button class="nav-btn" data-day="do">Do (Push)</button>
-            <button class="nav-btn" data-day="fr">Fr (Pull)</button>
-            <button id="navRecoveryBtn" class="nav-btn" title="Recovery Check Modal"
-                style="background: var(--warning); color: #000; font-weight: 700; border-radius: 4px;">⚡
-                Recovery</button>
-        </nav>
+      <!-- Supplements Accordion -->
+      <details class="supps-accordion">
+        <summary>📋 Supplements heute ✓</summary>
+        <div id="suppsContainer" class="supps-grid">
+          <!-- JS-generiert -->
+        </div>
+      </details>
+
+      <!-- Delete History Accordion -->
+      <details
+        class="supps-accordion"
+        style="margin-top: 10px; border-color: rgba(255, 68, 68, 0.4)"
+      >
+        <summary style="color: var(--danger)">
+          🗑️ Historie / Verlauf zurücksetzen
+        </summary>
+        <div style="padding: 10px; text-align: center">
+          <p
+            style="
+              font-size: 0.85rem;
+              margin-bottom: 12px;
+              color: var(--text-muted);
+              line-height: 1.4;
+            "
+          >
+            Achtung: Dies löscht alle jemals eintragenen Gewichte und
+            Wiederholungen unwiderruflich (Ideal für den Start eines neuen
+            Plans).
+          </p>
+          <button
+            id="deleteHistoryBtn"
+            class="nav-btn"
+            style="
+              background: var(--danger);
+              color: #fff;
+              width: 100%;
+              font-weight: bold;
+              border-radius: 4px;
+            "
+          >
+            Alle Werte löschen
+          </button>
+        </div>
+      </details>
+
+      <!-- 12-Wochen-Laufplan (nur im Hybrid-Modus sichtbar) -->
+      <details
+        id="runPlanAccordion"
+        class="supps-accordion"
+        style="margin-top: 10px; display: none"
+      >
+        <summary>🏃 12-Wochen-Laufplan (ACWR-gesteuert)</summary>
+        <div id="runPlanContent" class="run-plan-wrap">
+          <!-- JS-generiert -->
+        </div>
+      </details>
+
+      <!-- Day Navigation -->
+      <div class="day-info">
+        <h2></h2>
+        <div id="weekTracker"></div>
+        <!-- ACWR-Belastungsampel (nur im Hybrid-Modus sichtbar) -->
+        <div id="acwrBox" class="acwr-box" style="display: none"></div>
+      </div>
+
+      <nav class="day-nav">
+        <button
+          id="navSaveBtn"
+          class="nav-btn"
+          style="
+            background: var(--danger);
+            color: #fff;
+            font-weight: 700;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.4);
+          "
+        >
+          💾 Speichern
+        </button>
+        <button
+          id="navSkipBtn"
+          class="nav-btn"
+          title="Diesen Tag überspringen"
+          style="
+            background: var(--border);
+            color: var(--text-muted);
+            border-radius: 4px;
+          "
+        >
+          ⏭ Skip
+        </button>
+        <!-- Tages-Buttons (data-day) werden in renderDayNav() je Plan erzeugt -->
+        <button
+          id="navRecoveryBtn"
+          class="nav-btn"
+          title="Recovery Check Modal"
+          style="
+            background: var(--warning);
+            color: #000;
+            font-weight: 700;
+            border-radius: 4px;
+          "
+        >
+          ⚡ Recovery
+        </button>
+      </nav>
     </header>
 
     <!-- ============================================
          MAIN CONTENT
          ============================================ -->
     <main id="exerciseGrid">
-        <!-- JS-generiert: Exercise Cards -->
+      <!-- JS-generiert: Exercise Cards -->
     </main>
 
     <!-- Mid-Page Save Button Container -->
-    <div style="text-align: center; margin: 20px 0 40px 0; padding: 0 15px;">
-        <button id="middleSaveBtn"
-            style="background: var(--danger); color: #fff; font-weight: 700; font-family: 'Orbitron', sans-serif; border: none; border-radius: 8px; font-size: 1.1rem; padding: 15px 30px; width: 100%; max-width: 400px; box-shadow: 0 0 15px rgba(255, 68, 68, 0.6); cursor: pointer; transition: all 0.2s;">
-            💾 Session abschließen & Speichern
-        </button>
+    <div style="text-align: center; margin: 20px 0 40px 0; padding: 0 15px">
+      <button
+        id="middleSaveBtn"
+        style="
+          background: var(--danger);
+          color: #fff;
+          font-weight: 700;
+          font-family: &quot;Orbitron&quot;, sans-serif;
+          border: none;
+          border-radius: 8px;
+          font-size: 1.1rem;
+          padding: 15px 30px;
+          width: 100%;
+          max-width: 400px;
+          box-shadow: 0 0 15px rgba(255, 68, 68, 0.6);
+          cursor: pointer;
+          transition: all 0.2s;
+        "
+      >
+        💾 Session abschließen & Speichern
+      </button>
     </div>
 
     <!-- ============================================
          HISTORY VERLAUF
          ============================================ -->
-    <section id="historySection" style="max-width: 1400px; margin: 0 auto 100px auto; padding: 12px; display: none;">
-        <div class="card"
-            style="background: rgba(26, 26, 46, 0.8); border: 2px solid var(--accent); border-radius: 8px; padding: 16px;">
-            <h2 style="color: var(--accent); margin-bottom: 12px; font-family: 'Orbitron', sans-serif;">📜 Verlauf für
-                <span id="historyDayTitle">diesen Tag</span>
-            </h2>
-            <div id="historyContent" style="display: flex; flex-direction: column; gap: 12px;"></div>
-        </div>
+    <section
+      id="historySection"
+      style="
+        max-width: 1400px;
+        margin: 0 auto 100px auto;
+        padding: 12px;
+        display: none;
+      "
+    >
+      <div
+        class="card"
+        style="
+          background: rgba(26, 26, 46, 0.8);
+          border: 2px solid var(--accent);
+          border-radius: 8px;
+          padding: 16px;
+        "
+      >
+        <h2
+          style="
+            color: var(--accent);
+            margin-bottom: 12px;
+            font-family: &quot;Orbitron&quot;, sans-serif;
+          "
+        >
+          📜 Verlauf für
+          <span id="historyDayTitle">diesen Tag</span>
+        </h2>
+        <div
+          id="historyContent"
+          style="display: flex; flex-direction: column; gap: 12px"
+        ></div>
+      </div>
     </section>
 
     <!-- ============================================
          RECOVERY MODAL
          ============================================ -->
     <div id="recoveryModal" class="modal">
-        <div class="modal-content">
-            <h2>Recovery Check</h2>
-            <p style="margin-bottom: 12px; color: #888; font-size: 0.9rem;">
-                Überprüfe deine Signale für Übertraining/Überreaching
-            </p>
-            <div id="recoveryChecklist">
-                <!-- JS-generiert: Checkboxes -->
-            </div>
-            <button id="evaluateRecovery">Auswerten</button>
-            <div id="recoveryFeedback" class="feedback-box" style="display: none;"></div>
-            <button class="close-modal">Schließen</button>
+      <div class="modal-content">
+        <h2>Recovery Check</h2>
+        <p style="margin-bottom: 12px; color: #888; font-size: 0.9rem">
+          Überprüfe deine Signale für Übertraining/Überreaching
+        </p>
+        <div id="recoveryChecklist">
+          <!-- JS-generiert: Checkboxes -->
         </div>
+        <button id="evaluateRecovery">Auswerten</button>
+        <div
+          id="recoveryFeedback"
+          class="feedback-box"
+          style="display: none"
+        ></div>
+        <button class="close-modal">Schließen</button>
+      </div>
     </div>
-
-
 
     <!-- ============================================
          SCRIPTS
+         Reihenfolge: Daten (hybrid-plan) → app.js → cardio.js
          ============================================ -->
+    <script src="hybrid-plan.js"></script>
     <script src="app.js"></script>
-
-</body>
-
+    <script src="cardio.js"></script>
+  </body>
 </html>

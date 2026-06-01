@@ -60,21 +60,36 @@ MrTrewar.github.io/
 │       ├── grind_loop.mp3
 │       └── explosion.wav
 ├── gym-tracker/                       # Separate fitness tracking app (not game)
-├── mannheim-skater/                   # Separate Three.js 3D runner (not the 2D game)
 └── (other files: index, leaderboard, etc.)
 ```
 
 ---
 
-## Sub-Project: Mannheim Skater (`mannheim-skater/`)
+## Sub-Project: GymProgress Pro Hybrid (`gym-tracker/`)
 
-3D endless runner (Three.js, ES modules, Supabase table `mannheim_skater_scores`).
+Training tracker (Vanilla JS, Supabase). **Two switchable plans** via `#planSelect` (active plan persisted in `localStorage` key `gym_active_plan`):
 
-- **Entry:** `mannheim-skater/index.html` → `js/main.js`
-- **Modules:** `config.js` (tuning/zones/obstacles), `world.js` (chunk streaming + Schloss), `models.js` (GLB loader w/ Draco), `scene.js`, `player.js`, `obstacles.js`, `collectibles.js`, `collision.js`, `hud.js`, `input.js`, `audio.js`, `game-state.js`
-- **Lane system:** 5 lanes, positions derived from `LANE_WIDTH + LANE_GAP` in `config.js`
-- **Phases:** `schloss` → `turn` → `planken`, chunk-count driven
-- **Assets:** `mannheim-skater/assets/models/schloss_optimized.glb` (Draco-compressed)
+- **Classic** — original 4-day split (day-keys `mo/di/do/fr`), unchanged.
+- **Hybrid** — pragmatic 3+3 (Mo–Sa, Sun off): 3 strength days (`hmo` Upper Strength, `hmi` Lower Athletic, `hfr` Full Body/Pump) + 3 easy runs (`hdi`, `hdo`, `hsa`). All runs Zone 2 + strides — no hard intervals in early weeks.
+
+Day-keys (`hmo/hdi/hmi/hdo/hfr/hsa`) are deliberately disjoint from Classic (`mo/di/do/fr`), so both plans share the `sessions` / `set_logs` tables without colliding.
+
+**Files:**
+
+- `gym-tracker/app.js` — plan-aware core (`activeDays()`, `renderDayNav()`, `switchPlan()`); strength rendering, double progression, week tracker
+- `gym-tracker/hybrid-plan.js` — data only: `HYBRID_PLAN` (days + exercises) and `RUN_PLAN_12W` (12-week run progression)
+- `gym-tracker/cardio.js` — run logging (`renderCardioDay`, `saveCardioSession`), ACWR (`calculateACWR`/`getACWRColor`), 12-week plan table
+
+**Supabase migration** (run once in SQL editor — also in the `cardio.js` header):
+
+```sql
+ALTER TABLE set_logs ADD COLUMN IF NOT EXISTS distance_km  FLOAT;
+ALTER TABLE set_logs ADD COLUMN IF NOT EXISTS duration_min FLOAT;
+ALTER TABLE set_logs ADD COLUMN IF NOT EXISTS rpe          FLOAT;
+ALTER TABLE set_logs ADD COLUMN IF NOT EXISTS avg_hr       INT;
+```
+
+**ACWR:** acute (last 7 days km) ÷ chronic (28-day weekly average). Colour ampel: <0.8 blue (underloaded), 0.8–1.3 green (sweet spot), 1.3–1.5 yellow (caution), >1.5 red (danger). Only shown in Hybrid mode.
 
 ---
 

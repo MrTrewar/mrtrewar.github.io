@@ -9,6 +9,7 @@ Personal project hub by Gero Wieger, hosted on GitHub Pages.
 ## Projects
 
 ### Welcome to the Jungle
+
 Arcade-style endless runner / skateboarding side-scroller.
 
 - **Play:** [wiegero.com/game.html](https://wiegero.com/game.html)
@@ -17,26 +18,19 @@ Arcade-style endless runner / skateboarding side-scroller.
 - **Mobile:** Slide-Joystick + Jump-Button
 - **Features:** 3 Levels (Jungle, City, Nightpark), combo system, rail grinding, PWA support
 
-### Mannheim Skater
-3D skateboarding runner through Mannheim landmarks, built with Three.js.
-
-- **Play:** [wiegero.com/mannheim-skater/](https://wiegero.com/mannheim-skater/)
-- **Stack:** Three.js, GLB models, Supabase leaderboard
-- **Features:** Mannheimer Schloss, Brezel-Powerups, stumble mechanics, camera shake
-
 ### GymProgress Pro
-Training tracker for periodized 8-week strength programs with double progression.
+
+Training tracker for periodized strength programs with double progression — plus a hybrid strength + running mode.
 
 - **Open:** [wiegero.com/gym-tracker/](https://wiegero.com/gym-tracker/)
 - **Stack:** Vanilla JS, Supabase (cloud sync), localStorage fallback
-- **Features:** 4-day upper/lower split, AMRAP tracking, auto weight progression, recovery check, supplements tracker
+- **Features:** Classic 4-day upper/lower split **and** Hybrid mode (2 strength days + 3 runs), AMRAP tracking, auto weight progression, 12-week run plan with ACWR load monitoring, recovery check, supplements tracker
 
 ---
 
 ## Tech Stack
 
 - Vanilla HTML / CSS / JavaScript (no bundler)
-- [Three.js](https://threejs.org/) (Mannheim Skater)
 - [anime.js](https://animejs.com/) (Welcome to the Jungle)
 - [Supabase](https://supabase.com/) (leaderboards + gym data)
 - GitHub Pages (auto-deploy from `main`)
@@ -50,7 +44,6 @@ MrTrewar.github.io/
 ├── js/                     # Game scripts (config, game, player, world, ui, effects, audio)
 ├── css/                    # Styles (game + landing page)
 ├── assets/                 # Sprites, backgrounds, sounds
-├── mannheim-skater/        # 3D skater game (Three.js)
 ├── gym-tracker/            # Training tracker SPA
 └── CNAME                   # Custom domain (wiegero.com)
 ```

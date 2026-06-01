@@ -528,14 +528,23 @@ function initPlanSelector() {
   select.addEventListener("change", (e) => switchPlan(e.target.value));
 }
 
-function switchPlan(planKey) {
+async function switchPlan(planKey) {
   if (!PLANS[planKey]) return;
   currentPlan = planKey;
   localStorage.setItem("gym_active_plan", planKey);
+  // Beim Planwechsel NICHT die Woche des alten Plans behalten: auf Woche 1
+  // zurücksetzen und dann zur nächsten offenen Session DIESES Plans navigieren
+  // (bleibt bei Woche 1, wenn der Plan noch nicht begonnen wurde).
+  currentWeek = 1;
   currentDay = activeDayKeys()[0];
   renderDayNav();
+  await autoNavigateToNextSession();
+  // Dropdown synchronisieren (autoNavigate setzt es nur, wenn Sessions existieren).
+  const weekSelect = document.getElementById("weekSelect");
+  if (weekSelect) weekSelect.value = currentWeek;
+  renderDayNav();
   renderDayTitle();
-  renderDay(currentDay);
+  await renderDay(currentDay);
   loadWeekTracker();
   refreshHybridViews();
 }

@@ -2,7 +2,7 @@
   "name": "Welcome to the Jungle",
   "short_name": "WttJ",
   "description": "Skateboarding side-scroller game",
-  "start_url": "/game.html",
+  "start_url": "/",
   "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#1a1a2e",

@@ -6,7 +6,7 @@ This project uses JavaScript, CSS, HTML, and Python. Frontend work involves vani
 
 ## Project Overview
 
-A high-octane skateboarding side-scroller runner game. Play at https://mrtrewar.github.io/game.html
+A high-octane skateboarding side-scroller runner game. Play at https://wiegero.com (the game is now the landing page).
 
 **Genre:** Endless runner / skateboarding platformer
 **Tech Stack:** Vanilla HTML/CSS/JS, anime.js for animations, Supabase for online leaderboard
@@ -33,8 +33,9 @@ A high-octane skateboarding side-scroller runner game. Play at https://mrtrewar.
 
 ```
 MrTrewar.github.io/
-├── game.html                          # Game entry point
-├── index.html                         # Landing page (links to game/training)
+├── index.html                         # Game entry point (= wiegero.com landing page)
+├── board.html                         # Shared Board (collaborative canvas, moved from index)
+├── game.html                          # Redirect → / (kept for old bookmarks)
 ├── training.html                      # Training page (stub)
 ├── CLAUDE.md                          # This file
 ├── js/
@@ -206,6 +207,20 @@ const LEVELS = [
   **Geändert:**
 - `game.html` — PWA Meta-Tags hinzugefügt (`apple-mobile-web-app-capable`, manifest link, theme-color, apple-touch-icon)
   **Nutzung:** Auf iPhone Safari → Teilen-Button → "Zum Home-Bildschirm" → öffnet als Fullscreen-App
+
+### 2026-06-18 — Spiel ist jetzt die Landing Page (wiegero.com)
+
+**Ziel:** Beim Öffnen von `wiegero.com` (= Root `/`, via `CNAME`) soll direkt das Skate-Spiel erscheinen statt des Shared Board.
+
+**Was geändert wurde:**
+
+1. **`index.html`** — Inhalt ersetzt durch das Spiel (vorher: Shared Board). Identisch zum bisherigen `game.html`, plus dezente Links in `#game-instructions` zu `board.html` (Shared Board) und `gym-tracker/` (Training).
+2. **`board.html`** (neu) — der bisherige Shared-Board-Inhalt zog hierher um. Nav-Link "Spiel" zeigt jetzt auf `/` statt `game.html`.
+3. **`game.html`** — wurde zum Redirect (`meta http-equiv="refresh"` + `location.replace("/")`) auf `/`, damit alte Bookmarks/Links weiter funktionieren.
+4. **`manifest.json`** — `start_url`: `/game.html` → `/` (sonst startet die PWA auf dem Redirect).
+5. **`css/style.css`** — neue `.page-link`-Regel (dezenter, gepunkteter Unterstrich) für die Links in der Info-Zeile.
+
+**Hinweis:** Alle Asset-Pfade blieben auf derselben Verzeichnisebene → keine Pfadanpassungen nötig. Smoke-Test (lokaler `http.server`): `/`, `/index.html`, `/board.html`, `/game.html`, `/manifest.json` liefern alle `200`; Startseiten-Titel = "Welcome to the Jungle"; alle Spiel-Assets erreichbar.
 
 ---
 

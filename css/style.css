@@ -4,7 +4,7 @@ body {
   margin: 0;
   background-color: #2c3e50;
   color: #ecf0f1;
-  font-family: 'Press Start 2P', 'Courier New', Courier, monospace;
+  font-family: "Press Start 2P", "Courier New", Courier, monospace;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -29,9 +29,16 @@ body {
   border-radius: 6px;
 }
 
-#score-display { color: #f1c40f; }
-#combo-display { color: #2ecc71; }
-#current-trick  { color: #ecf0f1; opacity: 0.9; }
+#score-display {
+  color: #f1c40f;
+}
+#combo-display {
+  color: #2ecc71;
+}
+#current-trick {
+  color: #ecf0f1;
+  opacity: 0.9;
+}
 
 #game-info span {
   white-space: nowrap;
@@ -47,435 +54,473 @@ body {
   letter-spacing: 0.02em;
 }
 
+#game-instructions .page-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dotted currentColor;
+}
+
+#game-instructions .page-link:hover {
+  opacity: 0.8;
+  border-bottom-style: solid;
+}
+
 #game-area {
   width: 100vw;
   height: 100vh;
   position: relative;
   overflow: hidden;
-  background-image: url('../assets/images/vietnam_wald.jpg');
+  background-image: url("../assets/images/vietnam_wald.jpg");
   background-repeat: repeat-x;
   background-position: 0 0;
   background-size: auto 100%;
 }
 
-
 .game-object {
-    position: absolute;
-    box-sizing: border-box;
-    /* border: 1px solid #000; */ /* Optional */
+  position: absolute;
+  box-sizing: border-box;
+  /* border: 1px solid #000; */ /* Optional */
 }
 
 /* --- SPIELER STYLING (Größer, ohne Kopf, Körper berührt Board) --- */
 #player {
-    width: 50px;  /* Breite der Kollisionsbox (z.B. Skateboard-Breite) */
-    height: 75px; /* Gesamthöhe = Körperhöhe (60) + Boardhöhe (15) */
-    z-index: 10;
-    /* Debugging-Rand für die Kollisionsbox: */
-    /* border: 1px dashed hotpink; */
+  width: 50px; /* Breite der Kollisionsbox (z.B. Skateboard-Breite) */
+  height: 75px; /* Gesamthöhe = Körperhöhe (60) + Boardhöhe (15) */
+  z-index: 10;
+  /* Debugging-Rand für die Kollisionsbox: */
+  /* border: 1px dashed hotpink; */
 }
 
 /* Kopf-Styling wurde entfernt */
 
 #player-body {
-    width: 40px;  /* ANPASSEN: Breite deines zugeschnittenen Körper-Bildes */
-    height: 60px; /* ANPASSEN: Höhe deines zugeschnittenen Körper-Bildes */
-    background-image: url('../assets/images/player_body_idle.png');
-    background-size: 100% 100%; /* Streckt Bild auf die Box-Größe */
-    background-repeat: no-repeat;
-    position: absolute;
-    top: 0px;     /* Körper beginnt ganz oben im #player Container */
-    left: 5px;    /* (PlayerContainerBreite 50px - KörperBreite 40px) / 2 = 5px für Zentrierung */
-    z-index: 1;   /* Über dem Board */
-    transition: transform 0.12s cubic-bezier(.4,0,.2,1), background-image 0.01s step-end;
-    /* Debugging-Rand: */
-    /* border: 1px solid green; */
+  width: 40px; /* ANPASSEN: Breite deines zugeschnittenen Körper-Bildes */
+  height: 60px; /* ANPASSEN: Höhe deines zugeschnittenen Körper-Bildes */
+  background-image: url("../assets/images/player_body_idle.png");
+  background-size: 100% 100%; /* Streckt Bild auf die Box-Größe */
+  background-repeat: no-repeat;
+  position: absolute;
+  top: 0px; /* Körper beginnt ganz oben im #player Container */
+  left: 5px; /* (PlayerContainerBreite 50px - KörperBreite 40px) / 2 = 5px für Zentrierung */
+  z-index: 1; /* Über dem Board */
+  transition:
+    transform 0.12s cubic-bezier(0.4, 0, 0.2, 1),
+    background-image 0.01s step-end;
+  /* Debugging-Rand: */
+  /* border: 1px solid green; */
 }
 
 #player-board {
-    width: 50px;  /* ANPASSEN: Breite deines zugeschnittenen Skateboard-Bildes */
-    height: 15px; /* ANPASSEN: Höhe deines zugeschnittenen Skateboard-Bildes */
-    background-image: url('../assets/images/skateboard.png');
-    background-size: 100% 100%; /* Streckt Bild auf die Box-Größe */
-    background-repeat: no-repeat;
-    position: absolute;
-    /* Board beginnt direkt unter dem Körper. Körper ist 60px hoch und startet bei top: 0px. */
-    top: 55px;    /* Körperhöhe */
-    left: 0px;    /* Nimmt volle Breite des #player-Containers ein */
-    z-index: 0; /* Unter dem Körper */
-    transition: transform 0.12s cubic-bezier(.4,0,.2,1);
-    /* Debugging-Rand: */
-    /* border: 1px solid orange; */
+  width: 50px; /* ANPASSEN: Breite deines zugeschnittenen Skateboard-Bildes */
+  height: 15px; /* ANPASSEN: Höhe deines zugeschnittenen Skateboard-Bildes */
+  background-image: url("../assets/images/skateboard.png");
+  background-size: 100% 100%; /* Streckt Bild auf die Box-Größe */
+  background-repeat: no-repeat;
+  position: absolute;
+  /* Board beginnt direkt unter dem Körper. Körper ist 60px hoch und startet bei top: 0px. */
+  top: 55px; /* Körperhöhe */
+  left: 0px; /* Nimmt volle Breite des #player-Containers ein */
+  z-index: 0; /* Unter dem Körper */
+  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Debugging-Rand: */
+  /* border: 1px solid orange; */
 }
 
 /* --- Animationsklassen für den Spieler (transform-Werte sind BEISPIELE!) --- */
 
 #player.jumping #player-body {
-    background-image: url('../assets/images/player_body_jumping.png');
-    transform: scaleY(0.92) translateY(-4px); /* Füße "anziehen" */
+  background-image: url("../assets/images/player_body_jumping.png");
+  transform: scaleY(0.92) translateY(-4px); /* Füße "anziehen" */
 }
 #player.jumping #player-board {
-    /* Kickflip! */
-    animation: kickflip 0.4s cubic-bezier(.4,0,.2,1) forwards;
-    transform-origin: 50% 50%;
+  /* Kickflip! */
+  animation: kickflip 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform-origin: 50% 50%;
 }
 
 /* ---- Neues Keyframe für den Kickflip ---- */
 @keyframes kickflip {
-    0% {
-        transform: rotate(-18deg) translateY(-8px) scaleX(0.95);
-    }
-    50% {
-        transform: rotate(162deg) translateY(-8px) scaleX(0.95);
-    }
-    100% {
-        transform: rotate(342deg) translateY(-8px) scaleX(0.95);
-    }
+  0% {
+    transform: rotate(-18deg) translateY(-8px) scaleX(0.95);
+  }
+  50% {
+    transform: rotate(162deg) translateY(-8px) scaleX(0.95);
+  }
+  100% {
+    transform: rotate(342deg) translateY(-8px) scaleX(0.95);
+  }
 }
 
 #player.landing #player-body {
-    background-image: url('../assets/images/player_body_idle.png');
-    transform: scaleY(0.88) translateY(6px); /* Stärker gestaucht */
+  background-image: url("../assets/images/player_body_idle.png");
+  transform: scaleY(0.88) translateY(6px); /* Stärker gestaucht */
 }
 #player.landing #player-board {
-    transform: scaleY(0.93) translateY(2px) rotate(-5deg); /* Board "federt" */
+  transform: scaleY(0.93) translateY(2px) rotate(-5deg); /* Board "federt" */
 }
 
 #player.pushing-right #player-body {
-    background-image: url('../assets/images/player_body_pushing.png');
-    transform: rotate(10deg) translateX(4px) skewX(-8deg);
+  background-image: url("../assets/images/player_body_pushing.png");
+  transform: rotate(10deg) translateX(4px) skewX(-8deg);
 }
 #player.pushing-right #player-board {
-    transform: translateX(3px) rotate(4deg);
+  transform: translateX(3px) rotate(4deg);
 }
 
 #player.pushing-left #player-body {
-    background-image: url('../assets/images/player_body_pushing.png');
-    transform: scaleX(-1) rotate(10deg) translateX(4px) skewX(-8deg); /* translateX muss ggf. negativ sein bei scaleX(-1) */
+  background-image: url("../assets/images/player_body_pushing.png");
+  transform: scaleX(-1) rotate(10deg) translateX(4px) skewX(-8deg); /* translateX muss ggf. negativ sein bei scaleX(-1) */
 }
 #player.pushing-left #player-board {
-    transform: translateX(-3px) rotate(-4deg) scaleX(-1);
+  transform: translateX(-3px) rotate(-4deg) scaleX(-1);
 }
 
 #player.grinding #player-body {
-    background-image: url('../assets/images/player_body_grinding.png');
-    transform: skewX(-15deg) rotate(-6deg) translateY(1px); /* Leicht nach unten/angepasst für Grind */
+  background-image: url("../assets/images/player_body_grinding.png");
+  transform: skewX(-15deg) rotate(-6deg) translateY(1px); /* Leicht nach unten/angepasst für Grind */
 }
 #player.grinding #player-board {
-    transform: rotate(-21deg) translateY(-1.2px) translateX(-2px); /* Stärker geneigt */
+  transform: rotate(-21deg) translateY(-1.2px) translateX(-2px); /* Stärker geneigt */
 }
 
 /* --- WELT OBJEKTE STYLING --- */
 
 /* Level 1 – Jungle: Holz / Erde (Standard-Fallback mit Bild) */
 .platform {
-    background-image: url('../assets/images/platform_ground.png');
-    background-repeat: repeat-x;
-    background-size: auto 100%;
-    border: none;
-    background-position-y: -3px;
+  background-image: url("../assets/images/platform_ground.png");
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+  border: none;
+  background-position-y: -3px;
 }
 
 /* --- LEVEL 1: JUNGLE (Organisch & Kontrastreich) --- */
 #game-area.level-1 .platform {
-    background-image: none;
-    background: linear-gradient(to bottom, #2d5a27 0%, #4a2c0a 15%, #2a1505 100%);
-    border-top: 3px solid #5da130;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  background-image: none;
+  background: linear-gradient(to bottom, #2d5a27 0%, #4a2c0a 15%, #2a1505 100%);
+  border-top: 3px solid #5da130;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
 /* --- LEVEL 2: CITY (Industrial Metal & Shimmer) --- */
 #game-area.level-2 .platform {
-    background-image: none;
-    background: radial-gradient(circle at 50% 0%, #888 0%, #444 100%);
-    border-top: 3px solid #aaa;
+  background-image: none;
+  background: radial-gradient(circle at 50% 0%, #888 0%, #444 100%);
+  border-top: 3px solid #aaa;
 }
 
 /* --- LEVEL 3: NIGHTPARK (Cyberpunk Neon Glow) --- */
 #game-area.level-3 .platform {
-    background-image: none;
-    background: #0f172a;
-    border-top: 3px solid #a855f7;
-    box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+  background-image: none;
+  background: #0f172a;
+  border-top: 3px solid #a855f7;
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
 }
 
 /* Level 1 – Jungle: Basis (Fallback mit Bild) */
 .rail {
-    height: 8px;
-    background-image: url('../assets/images/rail_segment.png');
-    background-repeat: repeat-x;
-    background-size: auto 100%;
-    border: none;
+  height: 8px;
+  background-image: url("../assets/images/rail_segment.png");
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+  border: none;
 }
 
 #game-area.level-1 .rail {
-    background-image: none;
-    background: linear-gradient(90deg, #8b5a2b, #c8973a, #8b5a2b);
-    border-top: 1px solid #ffe066;
-    border-radius: 4px;
+  background-image: none;
+  background: linear-gradient(90deg, #8b5a2b, #c8973a, #8b5a2b);
+  border-top: 1px solid #ffe066;
+  border-radius: 4px;
 }
 
 @keyframes shimmer {
-    0%   { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 #game-area.level-2 .rail {
-    background-image: none;
-    background: linear-gradient(90deg, #71717a, #d4d4d8, #71717a);
-    background-size: 200% 100%;
-    animation: shimmer 3s infinite linear;
-    border-top: 2px solid #fff;
+  background-image: none;
+  background: linear-gradient(90deg, #71717a, #d4d4d8, #71717a);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite linear;
+  border-top: 2px solid #fff;
 }
 
 @keyframes neonPulse {
-    from { filter: brightness(1) drop-shadow(0 0 2px #fff); }
-    to   { filter: brightness(1.4) drop-shadow(0 0 5px #fff); }
+  from {
+    filter: brightness(1) drop-shadow(0 0 2px #fff);
+  }
+  to {
+    filter: brightness(1.4) drop-shadow(0 0 5px #fff);
+  }
 }
 
 #game-area.level-3 .rail {
-    background-image: none;
-    background: #fff;
-    box-shadow: 0 0 5px #fff, 0 0 15px #a855f7, 0 0 30px #a855f7;
-    animation: neonPulse 1.5s infinite alternate ease-in-out;
+  background-image: none;
+  background: #fff;
+  box-shadow:
+    0 0 5px #fff,
+    0 0 15px #a855f7,
+    0 0 30px #a855f7;
+  animation: neonPulse 1.5s infinite alternate ease-in-out;
 }
 
 .spark {
-    position: absolute;
-    width: 3px;  /* Kleine Funken */
-    height: 3px;
-    background-color: #FFD700; /* Goldgelb für Funken */
-    /* background-color: #FFA500; // Oder Orange */
-    /* background-color: #FFFFFF; // Oder Weiß */
-    border-radius: 50%; /* Runde Funken */
-    pointer-events: none; /* Funken sollen nicht klickbar sein oder Events blockieren */
-    z-index: 11; /* Über dem Spieler, aber unter UI-Popups vielleicht */
-    box-shadow: 0 0 2px 1px rgba(255, 223, 0, 0.7); /* Leichter Glow-Effekt */
+  position: absolute;
+  width: 3px; /* Kleine Funken */
+  height: 3px;
+  background-color: #ffd700; /* Goldgelb für Funken */
+  /* background-color: #FFA500; // Oder Orange */
+  /* background-color: #FFFFFF; // Oder Weiß */
+  border-radius: 50%; /* Runde Funken */
+  pointer-events: none; /* Funken sollen nicht klickbar sein oder Events blockieren */
+  z-index: 11; /* Über dem Spieler, aber unter UI-Popups vielleicht */
+  box-shadow: 0 0 2px 1px rgba(255, 223, 0, 0.7); /* Leichter Glow-Effekt */
 }
 
 /* --- UI ELEMENTE --- */
 .score-popup {
-    position: absolute;
-    font-size: 14px;
-    font-weight: bold;
-    color: #2ecc71;
-    pointer-events: none;
-    text-shadow: 1px 1px #000;
-    z-index: 20;
+  position: absolute;
+  font-size: 14px;
+  font-weight: bold;
+  color: #2ecc71;
+  pointer-events: none;
+  text-shadow: 1px 1px #000;
+  z-index: 20;
 }
 
 #game-over-message {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #e74c3c;
-    font-size: 2em;
-    font-weight: bold;
-    text-shadow: 2px 2px #000;
-    display: none;
-    z-index: 100;
-    background-color: rgba(44, 62, 80, 0.8);
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    cursor: pointer;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #e74c3c;
+  font-size: 2em;
+  font-weight: bold;
+  text-shadow: 2px 2px #000;
+  display: none;
+  z-index: 100;
+  background-color: rgba(44, 62, 80, 0.8);
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 #game-over-message .leaderboard {
-    width: min(320px, 80vw);
-    text-align: left;
-    font-size: 0.5em;
-    background: rgba(0, 0, 0, 0.35);
-    border-radius: 8px;
-    padding: 8px 10px;
+  width: min(320px, 80vw);
+  text-align: left;
+  font-size: 0.5em;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+  padding: 8px 10px;
 }
 
 #game-over-message .leaderboard-title {
-    color: #f1c40f;
-    margin-bottom: 6px;
+  color: #f1c40f;
+  margin-bottom: 6px;
 }
 
 #game-over-message .leaderboard ol {
-    margin: 0;
-    padding-left: 20px;
+  margin: 0;
+  padding-left: 20px;
 }
 
 #game-over-message .leaderboard li {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin: 2px 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 2px 0;
 }
 
 #game-over-message .leaderboard-empty {
-    opacity: 0.8;
+  opacity: 0.8;
 }
 
 #game-over-message .leaderboard-entry {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-    width: min(320px, 80vw);
-    font-size: 0.4em;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: min(320px, 80vw);
+  font-size: 0.4em;
 }
 
 #game-over-message .leaderboard-entry label {
-    color: #ecf0f1;
+  color: #ecf0f1;
 }
 
 #game-over-message .leaderboard-entry input {
-    flex: 1;
-    min-width: 90px;
-    border: 1px solid rgba(236, 240, 241, 0.45);
-    background: rgba(0, 0, 0, 0.35);
-    color: #ecf0f1;
-    border-radius: 6px;
-    padding: 4px 6px;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 0.95em;
+  flex: 1;
+  min-width: 90px;
+  border: 1px solid rgba(236, 240, 241, 0.45);
+  background: rgba(0, 0, 0, 0.35);
+  color: #ecf0f1;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.95em;
 }
 
 #game-over-message .leaderboard-submit {
-    border: 1px solid rgba(241, 196, 15, 0.8);
-    background: rgba(241, 196, 15, 0.2);
-    color: #f1c40f;
-    border-radius: 6px;
-    padding: 4px 8px;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 0.85em;
-    cursor: pointer;
+  border: 1px solid rgba(241, 196, 15, 0.8);
+  background: rgba(241, 196, 15, 0.2);
+  color: #f1c40f;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.85em;
+  cursor: pointer;
 }
 
 #game-over-message .leaderboard-open {
-    border: 1px solid rgba(46, 204, 113, 0.85);
-    background: rgba(46, 204, 113, 0.15);
-    color: #2ecc71;
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 0.35em;
-    cursor: pointer;
+  border: 1px solid rgba(46, 204, 113, 0.85);
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.35em;
+  cursor: pointer;
 }
 
 #game-over-message .leaderboard-entry-score {
-    width: 100%;
-    font-size: 0.9em;
-    color: #f1c40f;
-    opacity: 0.9;
+  width: 100%;
+  font-size: 0.9em;
+  color: #f1c40f;
+  opacity: 0.9;
 }
 
 /* --- PAUSE OVERLAY --- */
 #pause-overlay {
-    display: none;
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.55);
-    z-index: 90;
-    justify-content: center;
-    align-items: center;
-    color: #ecf0f1;
-    font-size: 2em;
-    font-family: 'Press Start 2P', monospace;
-    text-shadow: 2px 2px #000;
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 90;
+  justify-content: center;
+  align-items: center;
+  color: #ecf0f1;
+  font-size: 2em;
+  font-family: "Press Start 2P", monospace;
+  text-shadow: 2px 2px #000;
 }
 
 /* --- LEVEL TRANSITION BANNER (Glassmorphismus + animierte Border) --- */
 @keyframes banner-border {
-    0%, 100% { border-color: rgba(241, 196, 15, 0.35); }
-    50%       { border-color: rgba(241, 196, 15, 0.95); }
+  0%,
+  100% {
+    border-color: rgba(241, 196, 15, 0.35);
+  }
+  50% {
+    border-color: rgba(241, 196, 15, 0.95);
+  }
 }
 
 #level-overlay {
-    display: none;
-    position: absolute;
-    top: 14px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(10, 8, 20, 0.45);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(241, 196, 15, 0.35);
-    border-radius: 10px;
-    padding: 9px 24px;
-    color: #f1c40f;
-    font-size: 0.75em;
-    font-family: 'Press Start 2P', monospace;
-    text-align: center;
-    text-shadow: 0 0 12px rgba(241, 196, 15, 0.7), 1px 1px #000;
-    white-space: nowrap;
-    z-index: 95;
-    pointer-events: none;
-    box-shadow:
-        0 4px 24px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    animation: banner-border 2s ease-in-out infinite;
+  display: none;
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 8, 20, 0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(241, 196, 15, 0.35);
+  border-radius: 10px;
+  padding: 9px 24px;
+  color: #f1c40f;
+  font-size: 0.75em;
+  font-family: "Press Start 2P", monospace;
+  text-align: center;
+  text-shadow:
+    0 0 12px rgba(241, 196, 15, 0.7),
+    1px 1px #000;
+  white-space: nowrap;
+  z-index: 95;
+  pointer-events: none;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: banner-border 2s ease-in-out infinite;
 }
 
 /* --- SCREEN FLASH (Level Transition) --- */
 #screen-flash {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: white;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 90;
-    transition: opacity 0.15s ease-out;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 90;
+  transition: opacity 0.15s ease-out;
 }
 
 #screen-flash.flash {
-    opacity: 0.85;
+  opacity: 0.85;
 }
 
 /* --- EXPLOSION --- */
 .explosion {
-    position: absolute;
-    width: 128px;           /* = Framebreite */
-    height: 128px;          /* = Framehöhe  */
-    pointer-events: none;
-    background-image: url('../assets/images/explosion_sprite.png');
-    background-size: auto 100%;
-    animation: explode 600ms steps(10) forwards;
-    z-index: 99;            /* über dem Spieler, unter Game-Over-Text */
+  position: absolute;
+  width: 128px; /* = Framebreite */
+  height: 128px; /* = Framehöhe  */
+  pointer-events: none;
+  background-image: url("../assets/images/explosion_sprite.png");
+  background-size: auto 100%;
+  animation: explode 600ms steps(10) forwards;
+  z-index: 99; /* über dem Spieler, unter Game-Over-Text */
 }
 
 @keyframes explode {
-    from { background-position:   0    0; }
-    to   { background-position: -1280px 0; } /* -Framebreite × (Frames-1) */
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -1280px 0;
+  } /* -Framebreite × (Frames-1) */
 }
 
 /*Mario-Death*/
 #player.mario-death {
-    animation: marioDeathJump 1.2s ease-in forwards;
-    z-index: 101; /* Über Explosion */
+  animation: marioDeathJump 1.2s ease-in forwards;
+  z-index: 101; /* Über Explosion */
 }
 
 @keyframes marioDeathJump {
-    0% {
-        transform: translateY(0) rotate(0deg);
-    }
-    20% {
-        transform: translateY(-60px) rotate(0deg); /* kurzer Sprung */
-    }
-    40% {
-        transform: translateY(0px) rotate(180deg); /* kopfüber drehen */
-    }
-    100% {
-        transform: translateY(500px) rotate(180deg); /* aus dem Bild fallen */
-        opacity: 0;
-    }
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  20% {
+    transform: translateY(-60px) rotate(0deg); /* kurzer Sprung */
+  }
+  40% {
+    transform: translateY(0px) rotate(180deg); /* kopfüber drehen */
+  }
+  100% {
+    transform: translateY(500px) rotate(180deg); /* aus dem Bild fallen */
+    opacity: 0;
+  }
 }
 
-html, body {
-    touch-action: manipulation;
-    overscroll-behavior: none;
+html,
+body {
+  touch-action: manipulation;
+  overscroll-behavior: none;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -516,21 +561,21 @@ html, body {
 }
 
 #rotate-warning {
-    display: none;
-    position: fixed;
-    z-index: 999;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #2c3e50;
-    color: white;
-    font-size: 18px;
-    font-family: 'Press Start 2P', monospace;
-    text-align: center;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
+  display: none;
+  position: fixed;
+  z-index: 999;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #2c3e50;
+  color: white;
+  font-size: 18px;
+  font-family: "Press Start 2P", monospace;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
 }
 
 @media screen and (orientation: portrait) and (max-width: 1024px) {
@@ -582,7 +627,7 @@ html, body {
     background: rgba(0, 0, 0, 0.4);
     padding: 4px 6px;
     border-radius: 4px;
-    font-size: 3.5vw;       /* relativ zur Breite */
+    font-size: 3.5vw; /* relativ zur Breite */
     line-height: 1.2;
     z-index: 100;
   }
@@ -661,184 +706,202 @@ html, body {
 
 /* --- MOBILE CONTROLS: D-Pad links, Jump-Button rechts --- */
 #mobile-controls {
-    display: none;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 16px 20px;
-    padding-bottom: max(16px, env(safe-area-inset-bottom));
-    pointer-events: none;
-    z-index: 60;
-    justify-content: space-between;
-    align-items: flex-end;
+  display: none;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 20px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  pointer-events: none;
+  z-index: 60;
+  justify-content: space-between;
+  align-items: flex-end;
 }
 
 #joystick {
-    position: relative;
-    width: 130px;
-    height: 130px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    border: 2px solid rgba(255, 255, 255, 0.25);
-    pointer-events: auto;
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+  position: relative;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 #joystick-knob {
-    position: absolute;
-    width: 55px;
-    height: 55px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.5);
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    transition: background 0.08s;
+  position: absolute;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: background 0.08s;
 }
 
 #joystick.active-left #joystick-knob {
-    background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 #joystick.active-right #joystick-knob {
-    background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 #jump-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 110px;
-    height: 110px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.25);
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 28px;
-    user-select: none;
-    -webkit-user-select: none;
-    pointer-events: auto;
-    transition: background 0.08s, border-color 0.08s, color 0.08s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 28px;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: auto;
+  transition:
+    background 0.08s,
+    border-color 0.08s,
+    color 0.08s;
 }
 
 #jump-btn.active {
-    background: rgba(46, 204, 113, 0.3);
-    border-color: rgba(46, 204, 113, 0.7);
-    color: rgba(255, 255, 255, 0.95);
+  background: rgba(46, 204, 113, 0.3);
+  border-color: rgba(46, 204, 113, 0.7);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 @media (hover: none) and (pointer: coarse) {
-    #mobile-controls { display: flex; }
+  #mobile-controls {
+    display: flex;
+  }
 }
 
 /* --- PERFORMANCE: will-change --- */
-#game-area.level-2 .rail { will-change: background-position; }
-#game-area.level-3 .rail { will-change: filter, box-shadow; }
-#level-overlay            { will-change: border-color; }
+#game-area.level-2 .rail {
+  will-change: background-position;
+}
+#game-area.level-3 .rail {
+  will-change: filter, box-shadow;
+}
+#level-overlay {
+  will-change: border-color;
+}
 
 /* --- ACCESSIBILITY: Animationen reduzieren --- */
 @media (prefers-reduced-motion: reduce) {
-    #game-area.level-2 .rail,
-    #game-area.level-3 .rail,
-    #level-overlay { animation: none; }
+  #game-area.level-2 .rail,
+  #game-area.level-3 .rail,
+  #level-overlay {
+    animation: none;
+  }
 }
 
 /* --- LANDING PAGE & TRAINING PAGE --- */
 .landing-page {
-    background: linear-gradient(160deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  background: linear-gradient(160deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .landing-container {
-    text-align: center;
-    padding: 24px;
+  text-align: center;
+  padding: 24px;
 }
 
 .landing-title {
-    font-family: 'Press Start 2P', monospace;
-    font-size: clamp(1.4rem, 5vw, 2.4rem);
-    color: #f1c40f;
-    text-shadow: 0 0 20px rgba(241, 196, 15, 0.4), 2px 2px #000;
-    line-height: 1.6;
-    margin: 0 0 16px;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(1.4rem, 5vw, 2.4rem);
+  color: #f1c40f;
+  text-shadow:
+    0 0 20px rgba(241, 196, 15, 0.4),
+    2px 2px #000;
+  line-height: 1.6;
+  margin: 0 0 16px;
 }
 
 .landing-subtitle {
-    font-family: 'Press Start 2P', monospace;
-    font-size: clamp(0.7rem, 2.5vw, 1rem);
-    color: #ecf0f1;
-    opacity: 0.6;
-    margin: 0 0 32px;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(0.7rem, 2.5vw, 1rem);
+  color: #ecf0f1;
+  opacity: 0.6;
+  margin: 0 0 32px;
 }
 
 .landing-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    align-items: center;
-    margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  margin-top: 40px;
 }
 
 .landing-btn {
-    display: inline-block;
-    font-family: 'Press Start 2P', monospace;
-    font-size: clamp(0.75rem, 2.5vw, 1rem);
-    padding: 16px 40px;
-    border-radius: 8px;
-    text-decoration: none;
-    cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
-    min-width: 220px;
-    text-align: center;
+  display: inline-block;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(0.75rem, 2.5vw, 1rem);
+  padding: 16px 40px;
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s,
+    background 0.15s;
+  min-width: 220px;
+  text-align: center;
 }
 
 .landing-btn:hover {
-    transform: translateY(-2px);
+  transform: translateY(-2px);
 }
 
 .landing-btn:active {
-    transform: translateY(1px);
+  transform: translateY(1px);
 }
 
 .landing-btn--play {
-    background: rgba(46, 204, 113, 0.2);
-    border: 2px solid rgba(46, 204, 113, 0.7);
-    color: #2ecc71;
-    box-shadow: 0 0 15px rgba(46, 204, 113, 0.15);
+  background: rgba(46, 204, 113, 0.2);
+  border: 2px solid rgba(46, 204, 113, 0.7);
+  color: #2ecc71;
+  box-shadow: 0 0 15px rgba(46, 204, 113, 0.15);
 }
 
 .landing-btn--play:hover {
-    background: rgba(46, 204, 113, 0.35);
-    box-shadow: 0 0 25px rgba(46, 204, 113, 0.3);
+  background: rgba(46, 204, 113, 0.35);
+  box-shadow: 0 0 25px rgba(46, 204, 113, 0.3);
 }
 
 .landing-btn--train {
-    background: rgba(241, 196, 15, 0.15);
-    border: 2px solid rgba(241, 196, 15, 0.6);
-    color: #f1c40f;
-    box-shadow: 0 0 15px rgba(241, 196, 15, 0.1);
+  background: rgba(241, 196, 15, 0.15);
+  border: 2px solid rgba(241, 196, 15, 0.6);
+  color: #f1c40f;
+  box-shadow: 0 0 15px rgba(241, 196, 15, 0.1);
 }
 
 .landing-btn--train:hover {
-    background: rgba(241, 196, 15, 0.3);
-    box-shadow: 0 0 25px rgba(241, 196, 15, 0.25);
+  background: rgba(241, 196, 15, 0.3);
+  box-shadow: 0 0 25px rgba(241, 196, 15, 0.25);
 }
 
 .landing-btn--back {
-    background: rgba(236, 240, 241, 0.1);
-    border: 2px solid rgba(236, 240, 241, 0.4);
-    color: #ecf0f1;
-    box-shadow: 0 0 10px rgba(236, 240, 241, 0.05);
+  background: rgba(236, 240, 241, 0.1);
+  border: 2px solid rgba(236, 240, 241, 0.4);
+  color: #ecf0f1;
+  box-shadow: 0 0 10px rgba(236, 240, 241, 0.05);
 }
 
 .landing-btn--back:hover {
-    background: rgba(236, 240, 241, 0.2);
-    box-shadow: 0 0 20px rgba(236, 240, 241, 0.15);
+  background: rgba(236, 240, 241, 0.2);
+  box-shadow: 0 0 20px rgba(236, 240, 241, 0.15);
 }

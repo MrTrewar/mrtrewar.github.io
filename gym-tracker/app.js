@@ -44,7 +44,7 @@ const supabaseClient = window.supabase.createClient(
 // ============================================
 // TRAININGSPLAN (zentral, leicht erweiterbar)
 // ============================================
-const TRAINING_PLAN = {
+const LEGACY_TRAINING_PLAN = {
   mo: {
     dayName: "Mo",
     navLabel: "Mo (Upper)",
@@ -367,6 +367,8 @@ const TRAINING_PLAN = {
 // ============================================
 // SUPPLEMENTS (Checkboxes, localStorage-basiert)
 // ============================================
+const TRAINING_PLAN = StrengthPlan.build(LEGACY_TRAINING_PLAN);
+
 const SUPPLEMENTS = {
   Morgens: [
     "Vitamin D3 (3000–5000 IU)",
@@ -415,10 +417,11 @@ function getDeloadSets(normalSets) {
 
 // ============================================
 // PLAN-VERWALTUNG (Classic + Hybrid)
-// Der klassische 4er-Split bleibt erhalten; der Hybrid-Plan kommt aus hybrid-plan.js.
+// Neue Tageskennungen starten bei Woche 1; der alte Split bleibt als Archiv erhalten.
 // ============================================
 const PLANS = {
-  classic: { label: "Classic – 4er-Split", days: TRAINING_PLAN },
+  classic: { label: "Kraft + Muskelaufbau – 4 Tage", days: TRAINING_PLAN },
+  archive: { label: "Bisheriger 4er-Split – Archiv", days: LEGACY_TRAINING_PLAN },
   hybrid:
     typeof HYBRID_PLAN !== "undefined"
       ? HYBRID_PLAN
@@ -427,6 +430,11 @@ const PLANS = {
 
 let currentPlan = localStorage.getItem("gym_active_plan") || "classic";
 if (!PLANS[currentPlan]) currentPlan = "classic";
+if (localStorage.getItem("gym_strength_revision") !== StrengthPlan.REVISION) {
+  currentPlan = "classic";
+  localStorage.setItem("gym_active_plan", currentPlan);
+  localStorage.setItem("gym_strength_revision", StrengthPlan.REVISION);
+}
 
 function activeDays() {
   return PLANS[currentPlan].days;
@@ -459,21 +467,57 @@ function isCardioDay(dayKey) {
 let currentDay = activeDayKeys()[0] || "mo";
 let currentWeek = 1;
 let sessionId = null;
+let dayRenderVersion = 0;
+let navigationVersion = 0;
+let savingSession = false;
+let historicalSessionsPromise = null;
+
+function setSessionActionsEnabled(enabled) {
+  const canWrite = enabled && currentPlan !== "archive" && !savingSession;
+  ["navSaveBtn", "middleSaveBtn", "navSkipBtn"].forEach(id => {
+    const button = document.getElementById(id);
+    if (button) button.disabled = !canWrite;
+  });
+  document.querySelectorAll("#planSelect, #weekSelect, .nav-btn[data-day]").forEach(el => {
+    el.disabled = savingSession;
+  });
+}
+
+function loadHistoricalSessions() {
+  if (!historicalSessionsPromise) {
+    const keys = [
+      ...Object.keys(LEGACY_TRAINING_PLAN),
+      ...Object.keys(PLANS.hybrid.days),
+    ];
+    historicalSessionsPromise = StrengthPlan.loadSessions(supabaseClient, keys)
+      .catch(error => {
+        historicalSessionsPromise = null;
+        throw error;
+      });
+  }
+  return historicalSessionsPromise;
+}
+
 
 // ============================================
 // INITIALISIERUNG
 // ============================================
 async function autoNavigateToNextSession() {
+  const version = navigationVersion;
+  const planKey = currentPlan;
   try {
     // Nur die Tage des aktiven Plans berücksichtigen (Classic und Hybrid
     // teilen sich dieselbe Tabelle, haben aber disjunkte day_key-Werte).
     const dayOrder = activeDayKeys();
 
-    const { data: allSessions } = await supabaseClient
+    const { data: allSessions, error } = await supabaseClient
       .from("sessions")
       .select("week_number, day_key")
+      .in("day_key", dayOrder)
       .order("week_number", { ascending: false });
 
+    if (version !== navigationVersion || planKey !== currentPlan) return;
+    if (error) throw error;
     const planSessions = (allSessions || []).filter((s) =>
       dayOrder.includes(s.day_key),
     );
@@ -486,7 +530,10 @@ async function autoNavigateToNextSession() {
 
     const nextDay = dayOrder.find((d) => !loggedDaysInMaxWeek.includes(d));
 
-    if (nextDay) {
+    if (currentPlan === "archive") {
+      currentWeek = maxWeek;
+      currentDay = dayOrder.find(day => loggedDaysInMaxWeek.includes(day)) || dayOrder[0];
+    } else if (nextDay) {
       currentWeek = maxWeek;
       currentDay = nextDay;
     } else {
@@ -509,11 +556,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   initSupps();
   initPlanSelector();
   renderDayNav();
+  setupEventListeners();
+  const version = navigationVersion;
   await autoNavigateToNextSession();
+  if (version !== navigationVersion) return;
   renderDayNav();
   renderDayTitle();
   await renderDay(currentDay);
-  setupEventListeners();
   await loadWeekTracker();
   refreshHybridViews();
 });
@@ -524,12 +573,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 function initPlanSelector() {
   const select = document.getElementById("planSelect");
   if (!select) return;
+  select.replaceChildren();
+  Object.entries(PLANS).forEach(([key, plan]) => {
+    const option = document.createElement("option");
+    option.value = key;
+    option.textContent = plan.label;
+    select.appendChild(option);
+  });
   select.value = currentPlan;
   select.addEventListener("change", (e) => switchPlan(e.target.value));
 }
 
 async function switchPlan(planKey) {
-  if (!PLANS[planKey]) return;
+  if (!PLANS[planKey] || savingSession) return;
+  const version = ++navigationVersion;
+  dayRenderVersion++;
+  setSessionActionsEnabled(false);
   currentPlan = planKey;
   localStorage.setItem("gym_active_plan", planKey);
   // Beim Planwechsel NICHT die Woche des alten Plans behalten: auf Woche 1
@@ -539,6 +598,7 @@ async function switchPlan(planKey) {
   currentDay = activeDayKeys()[0];
   renderDayNav();
   await autoNavigateToNextSession();
+  if (version !== navigationVersion) return;
   // Dropdown synchronisieren (autoNavigate setzt es nur, wenn Sessions existieren).
   const weekSelect = document.getElementById("weekSelect");
   if (weekSelect) weekSelect.value = currentWeek;
@@ -569,12 +629,15 @@ function renderDayNav() {
 }
 
 function selectDay(dayKey) {
+  if (savingSession) return;
+  navigationVersion++;
   currentDay = dayKey;
   document.querySelectorAll(".nav-btn[data-day]").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.day === dayKey);
   });
   renderDayTitle();
   renderDay(dayKey);
+  loadWeekTracker();
 }
 
 // Blendet ACWR-Ampel + 12-Wochen-Laufplan nur im Hybrid-Modus ein.
@@ -599,6 +662,8 @@ function setupEventListeners() {
 
   // Week Selector
   document.getElementById("weekSelect").addEventListener("change", (e) => {
+    if (savingSession) return;
+    navigationVersion++;
     currentWeek = parseInt(e.target.value);
     renderDay(currentDay);
     loadWeekTracker();
@@ -665,12 +730,40 @@ function setupEventListeners() {
 function renderDayTitle() {
   const titleEl = document.querySelector(".day-info h2");
   if (titleEl) titleEl.textContent = dayTitleLine(currentDay);
+  const weekSelect = document.getElementById("weekSelect");
+  if (weekSelect) {
+    while (weekSelect.options.length < Math.max(16, currentWeek)) {
+      const option = document.createElement("option");
+      option.value = weekSelect.options.length + 1;
+      weekSelect.appendChild(option);
+    }
+    [...weekSelect.options].forEach(option => {
+      const week = Number(option.value);
+      option.textContent = week + (isDeloadWeek(week) ? " - Deload" : " - Training");
+    });
+    weekSelect.value = currentWeek;
+  }
+  const status = document.getElementById("planStatus");
+  if (status) {
+    status.hidden = currentPlan === "hybrid";
+    status.textContent = currentPlan === "archive"
+      ? "Archiv: bisherige Einheiten bleiben erhalten. Ansicht ohne Speichern."
+      : "Neuer 4-Tage-Plan: 70 Arbeitssaetze pro Woche. Startgewichte unveraendert aus Supabase. Danach automatische Steigerung bei vollstaendig erreichtem Rep-Ziel: Oberkoerper +1,25 kg, Unterkoerper +2,5 kg. Alte Einheiten stehen im Archiv. Gewichtsangaben wie bisher zaehlen; leichte Tage passend zu RIR anpassen.";
+  }
 }
 
 async function renderDay(dayKey) {
+  const renderVersion = ++dayRenderVersion;
+  const viewPlan = currentPlan;
+  const viewWeek = currentWeek;
+  setSessionActionsEnabled(false);
+  const historySection = document.getElementById("historySection");
+  if (historySection) historySection.style.display = "none";
   // Lauf-Tage haben eine eigene Eingabemaske (siehe cardio.js).
   if (isCardioDay(dayKey)) {
-    return renderCardioDay(dayKey, activeDays()[dayKey]);
+    await renderCardioDay(dayKey, activeDays()[dayKey]);
+    if (renderVersion === dayRenderVersion) setSessionActionsEnabled(true);
+    return;
   }
 
   const container = document.getElementById("exerciseGrid");
@@ -678,25 +771,52 @@ async function renderDay(dayKey) {
 
   const dayData = activeDays()[dayKey];
 
-  // Lade Daten aus Supabase (falls vorhanden)
-  const savedData = await loadSavedSession(currentWeek, dayKey);
-  const savedLogs = savedData ? savedData.set_logs || [] : [];
-
-  const prevData = await loadPreviousSessionData(currentWeek, dayKey);
-  const prevLogs = prevData ? prevData.set_logs || [] : [];
-
+  const strengthMode = viewPlan === "classic";
+  let savedData = null;
+  let prevData = null;
   let prevPrevLogs = [];
-  if (prevData && prevData.week_number > 1) {
-    const prevPrevData = await loadPreviousSessionData(
-      prevData.week_number,
-      dayKey,
-    );
-    prevPrevLogs = prevPrevData ? prevPrevData.set_logs || [] : [];
+  let daySessions = [];
+  let historicalSessions = [];
+  try {
+    if (strengthMode) {
+      [daySessions, historicalSessions] = await Promise.all([
+        StrengthPlan.loadSessions(supabaseClient, [dayKey]),
+        loadHistoricalSessions(),
+      ]);
+      savedData = [...daySessions].sort((a, b) =>
+        Date.parse(a.created_at) - Date.parse(b.created_at)
+      ).find(s => s.week_number === viewWeek) || null;
+    } else {
+      savedData = await loadSavedSession(viewWeek, dayKey);
+      prevData = await loadPreviousSessionData(viewWeek, dayKey);
+      if (prevData && prevData.week_number > 1) {
+        const earlier = await loadPreviousSessionData(prevData.week_number, dayKey);
+        prevPrevLogs = earlier?.set_logs || [];
+      }
+    }
+  } catch (error) {
+    if (renderVersion !== dayRenderVersion) return;
+    container.replaceChildren();
+    const notice = document.createElement("p");
+    notice.className = "error";
+    notice.textContent = "Trainingsdaten/Startgewichte konnten nicht geladen werden. Es wurde nichts gespeichert. " + error.message;
+    const retry = document.createElement("button");
+    retry.className = "nav-btn";
+    retry.textContent = "Erneut laden";
+    retry.onclick = () => renderDay(dayKey);
+    container.append(notice, retry);
+    return;
   }
+  if (renderVersion !== dayRenderVersion) return;
+  const savedLogs = savedData?.set_logs || [];
+  const prevLogs = prevData?.set_logs || [];
+  container.dataset.plan = viewPlan;
+  container.dataset.day = dayKey;
+  container.dataset.week = viewWeek;
 
   container.innerHTML = "";
 
-  const deload = isDeloadWeek(currentWeek);
+  const deload = isDeloadWeek(viewWeek);
 
   // Deload-Banner anzeigen
   if (deload) {
@@ -710,6 +830,10 @@ async function renderDay(dayKey) {
   dayData.exercises.forEach((ex, exIdx) => {
     const card = document.createElement("div");
     card.className = "exercise-card";
+    card.dataset.exerciseName = ex.name;
+    const preset = strengthMode
+      ? StrengthPlan.preset(ex, daySessions, historicalSessions, viewWeek, dayKey)
+      : null;
 
     // Deload: Sätze halbieren (aufrunden)
     const effectiveSets = deload ? getDeloadSets(ex.sets) : ex.sets;
@@ -725,23 +849,38 @@ async function renderDay(dayKey) {
       .filter((log) => log.exercise_name === ex.name)
       .sort((a, b) => a.set_number - b.set_number);
 
-    const prevWeight =
+    const prevWeight = preset ? preset.weight :
       exPrevLogs.length > 0 ? exPrevLogs[0].weight_kg : ex.startWeight;
-    const progData = deload
+    const progData = viewPlan === "archive"
       ? { message: "", newWeight: null, autoIncreased: false }
-      : getProgressionData(ex, exPrevLogs, exPrevPrevLogs, prevWeight);
+      : strengthMode
+      ? {
+          message: preset.autoIncreased
+            ? "+" + preset.increment.toLocaleString("de-DE") +
+              " kg automatisch: " + preset.reference.weight.toLocaleString("de-DE") +
+              " → " + preset.weight.toLocaleString("de-DE") +
+              " kg. Bei Bedarf an Technik/RIR anpassen."
+            : "",
+          newWeight: preset.autoIncreased ? preset.weight : null,
+          autoIncreased: preset.autoIncreased,
+        }
+      : deload
+        ? { message: "", newWeight: null, autoIncreased: false }
+        : getProgressionData(ex, exPrevLogs, exPrevPrevLogs, prevWeight);
 
     // Bestimme das Gewicht: Wenn schon was gespeichert ist, nimm das.
     // Wenn nicht, und wir eine Progression errechnet haben, nimm das neue Gewicht.
     // Ansonsten nimm das Gewicht der Vorwoche oder das Startgewicht.
-    const savedWeight =
+    const savedWeight = viewPlan === "archive" ? (exLogs[0]?.weight_kg ?? "") : preset ? preset.weight :
       exLogs.length > 0
         ? exLogs[0].weight_kg
         : progData.newWeight !== null
           ? progData.newWeight
           : prevWeight;
     const defaultRepValue = Array.isArray(ex.repRange) ? ex.repRange[1] : "";
-    const repVals =
+    const repVals = viewPlan === "archive"
+      ? Array.from({length: effectiveSets}, (_, i) => exLogs.find(log => log.set_number === i + 1)?.reps ?? "")
+      : preset ? preset.reps :
       exLogs.length > 0
         ? exLogs.map((l) => l.reps)
         : Array(effectiveSets).fill(defaultRepValue);
@@ -801,9 +940,34 @@ async function renderDay(dayKey) {
                 ${ex.note ? `<div class="exercise-note">💡 ${ex.note}</div>` : ""}
             </div>
         `;
+    if (preset) {
+      card.dataset.weightSource = preset.source;
+      const note = document.createElement("div");
+      note.className = "baseline-note";
+      if (preset.reference) {
+        const reference = preset.reference;
+        const date = reference.date
+          ? new Date(reference.date + "T12:00:00").toLocaleDateString("de-DE") : "";
+        const label = preset.source === "previous" || preset.source === "saved"
+          ? "Letzte Referenz" : "Startwert aus bisherigem Verlauf";
+        note.textContent = label + ": " + reference.weight + " kg" +
+          (date ? " (" + date + ")" : "") +
+          ". Damals: " + reference.reps.join(" / ") +
+          " Wdh. Neue Wiederholungen erst nach dem Training eintragen.";
+      } else {
+        note.textContent = preset.source === "saved"
+          ? "Gespeicherte Werte dieser Einheit."
+          : "Kein passender Verlauf: Gewicht vor dem Training festlegen.";
+      }
+      card.querySelector(".exercise-info").appendChild(note);
+    }
+    if (viewPlan === "archive") {
+      card.querySelectorAll("input").forEach(input => input.disabled = true);
+    }
     container.appendChild(card);
   });
 
+  setSessionActionsEnabled(true);
   renderHistory(dayKey);
 }
 
@@ -861,110 +1025,109 @@ async function loadSavedSession(week, day) {
 }
 
 async function saveSession() {
-  // Lauf-Tage werden über das Cardio-Modul gespeichert (siehe cardio.js).
-  if (isCardioDay(currentDay)) {
-    return saveCardioSession();
-  }
+  if (currentPlan === "archive" || savingSession) return;
+  if (isCardioDay(currentDay)) return saveCardioSession();
 
-  const cards = document.querySelectorAll(".exercise-card");
+  const grid = document.getElementById("exerciseGrid");
+  if (grid.dataset.plan !== currentPlan || grid.dataset.day !== currentDay ||
+      Number(grid.dataset.week) !== currentWeek) return;
+  const savePlan = currentPlan;
+  const saveDay = currentDay;
+  const saveWeek = currentWeek;
+  const cards = [...document.querySelectorAll(".exercise-card")];
+  const exercises = activeDays()[saveDay].exercises;
   const logs = [];
-
-  if (!SUPABASE_URL || SUPABASE_URL === "YOUR_SUPABASE_URL") {
-    alert(
-      "⚠️ Supabase nicht konfiguriert. Bitte SUPABASE_URL und SUPABASE_ANON_KEY in app.js eintragen.",
-    );
-    return;
-  }
-
   try {
-    // 1. Session suchen oder erstellen (robust ohne UNIQUE constraint)
-    const today = new Date().toISOString().split("T")[0];
-    const { data: existingSessions } = await supabaseClient
-      .from("sessions")
-      .select("id")
-      .eq("week_number", currentWeek)
-      .eq("day_key", currentDay)
-      .order("created_at", { ascending: true });
-
-    if (existingSessions && existingSessions.length > 0) {
-      sessionId = existingSessions[0].id;
-      await supabaseClient
-        .from("sessions")
-        .update({ date: today })
-        .eq("id", sessionId);
-
-      // Duplikate aufräumen falls vorhanden
-      if (existingSessions.length > 1) {
-        const duplicateIds = existingSessions.slice(1).map((s) => s.id);
-        await supabaseClient.from("sessions").delete().in("id", duplicateIds);
+    cards.forEach((card, index) => {
+      const input = card.querySelector(".weight-input");
+      const weight = Number(input.value);
+      if (input.value === "" || !Number.isFinite(weight) || weight < 0) {
+        throw new Error("Gueltiges Gewicht fuer " + exercises[index].name + " eintragen.");
       }
-    } else {
-      const { data: newSession, error: sErr } = await supabaseClient
-        .from("sessions")
-        .insert({ week_number: currentWeek, day_key: currentDay, date: today })
-        .select()
-        .single();
-      if (sErr) throw new Error("Session error: " + sErr.message);
-      sessionId = newSession.id;
-    }
-
-    // Lade Vorwoche für AMRAP Vergleich
-    const prevSessionData = await loadPreviousSessionData(
-      currentWeek,
-      currentDay,
-    );
-    const prevLogs = prevSessionData ? prevSessionData.set_logs || [] : [];
-
-    // 2. Logs sammeln
-    const dayData = activeDays()[currentDay];
-    cards.forEach((card, cardIdx) => {
-      const h3Text = card.querySelector("h3").innerText;
-      // Entferne die vorgestellte Nummer z.B. "1. Bench Press" -> "Bench Press"
-      const exName = h3Text.substring(h3Text.indexOf(" ") + 1);
-
-      const weight = parseFloat(card.querySelector(".weight-input").value) || 0;
-      const exData = dayData.exercises.find((e) => e.name === exName);
-
-      const repInputs = Array.from(card.querySelectorAll(".rep-input"));
-      repInputs.forEach((input, setIdx) => {
-        const reps = parseInt(input.value) || 0;
-        if (reps > 0 || weight > 0) {
+      card.querySelectorAll(".rep-input").forEach((input, setIndex) => {
+        if (input.value === "") return;
+        const reps = Number(input.value);
+        if (!Number.isInteger(reps) || reps < 0) {
+          throw new Error("Gueltige Wiederholungen fuer " + exercises[index].name + " eintragen.");
+        }
+        if (reps > 0 || (savePlan !== "classic" && weight > 0)) {
           logs.push({
-            session_id: sessionId,
-            exercise_name: exName,
-            set_number: setIdx + 1,
-            weight_kg: weight,
-            reps: reps,
+            exercise_name: exercises[index].name,
+            set_number: setIndex + 1, weight_kg: weight, reps,
           });
         }
       });
-
-      // Double Progression Check (nicht in Deload-Wochen)
-      if (exData && !isDeloadWeek(currentWeek)) {
-        const prevExLogs = prevLogs
-          .filter((l) => l.exercise_name === exName)
-          .sort((a, b) => a.set_number - b.set_number);
-        checkProgression(
-          card,
-          cardIdx,
-          exData,
-          repInputs.map((i) => parseInt(i.value) || 0),
-          prevExLogs,
-        );
-      }
     });
+    if (!logs.length) {
+      alert("Noch keine Saetze eingetragen. Referenzgewichte allein werden nicht als Training gespeichert.");
+      return;
+    }
+  } catch (error) {
+    alert(error.message);
+    return;
+  }
 
-    // 3. Alte Logs löschen & neue einfügen
-    await supabaseClient.from("set_logs").delete().eq("session_id", sessionId);
-    const { error: lErr } = await supabaseClient.from("set_logs").insert(logs);
+  savingSession = true;
+  setSessionActionsEnabled(false);
+  let newSessionId = null;
+  let logsInserted = false;
+  try {
+    const today = new Date().toISOString().split("T")[0];
+    const { data: existing, error: findError } = await supabaseClient
+      .from("sessions").select("id")
+      .eq("week_number", saveWeek).eq("day_key", saveDay)
+      .order("created_at", { ascending: true });
+    if (findError) throw findError;
+    if (existing?.length) {
+      sessionId = existing[0].id;
+    } else {
+      const { data, error } = await supabaseClient.from("sessions")
+        .insert({ week_number: saveWeek, day_key: saveDay, date: today })
+        .select().single();
+      if (error) throw error;
+      sessionId = data.id;
+      newSessionId = data.id;
+    }
+    const { data: oldLogs, error: oldError } = await supabaseClient
+      .from("set_logs").select("id").eq("session_id", sessionId);
+    if (oldError) throw oldError;
+    // Insert before replacing existing logs so a failed insert cannot erase history.
+    const { error: insertError } = await supabaseClient.from("set_logs")
+      .insert(logs.map(log => ({ ...log, session_id: sessionId })));
+    if (insertError) throw insertError;
+    logsInserted = true;
+    if (oldLogs?.length) {
+      const { error } = await supabaseClient.from("set_logs").delete()
+        .eq("session_id", sessionId).in("id", oldLogs.map(log => log.id));
+      if (error) throw error;
+    }
+    const { error: dateError } = await supabaseClient.from("sessions")
+      .update({ date: today }).eq("id", sessionId);
+    if (dateError) throw dateError;
 
-    if (lErr) throw new Error("Log insert error: " + lErr.message);
-
-    alert("✅ Session erfolgreich gespeichert!");
-    await loadWeekTracker();
-  } catch (err) {
-    console.error("Save error:", err);
-    alert("❌ Fehler beim Speichern: " + err.message);
+    if (savePlan === currentPlan && saveDay === currentDay && saveWeek === currentWeek) {
+      const previous = await loadPreviousSessionData(saveWeek, saveDay);
+      cards.forEach((card, index) => {
+        if (isDeloadWeek(saveWeek)) return;
+        const ex = exercises[index];
+        checkProgression(card, index, ex,
+          [...card.querySelectorAll(".rep-input")].map(input => Number(input.value) || 0),
+          (previous?.set_logs || []).filter(log => log.exercise_name === ex.name));
+      });
+      await loadWeekTracker();
+      await renderHistory(saveDay);
+    }
+    alert("Session erfolgreich gespeichert!");
+  } catch (error) {
+    if (newSessionId && !logsInserted) {
+      const { error: cleanupError } = await supabaseClient.from("sessions").delete().eq("id", newSessionId);
+      if (cleanupError) console.warn("Leere Session konnte nicht entfernt werden:", cleanupError.message);
+    }
+    console.error("Save error:", error);
+    alert("Fehler beim Speichern: " + error.message);
+  } finally {
+    savingSession = false;
+    setSessionActionsEnabled(true);
   }
 }
 
@@ -972,33 +1135,35 @@ async function saveSession() {
 // SKIP DAY
 // ============================================
 async function skipDay() {
+  if (currentPlan === "archive" || savingSession) return;
   const confirmed = confirm(
-    `${dayLabel(currentDay)} (Woche ${currentWeek}) als übersprungen markieren?`,
+    dayLabel(currentDay) + " (Woche " + currentWeek + ") als uebersprungen markieren?"
   );
   if (!confirmed) return;
-
+  const day = currentDay;
+  const week = currentWeek;
+  savingSession = true;
+  setSessionActionsEnabled(false);
   try {
     const today = new Date().toISOString().split("T")[0];
-
-    const { data: existing } = await supabaseClient
-      .from("sessions")
-      .select("id")
-      .eq("week_number", currentWeek)
-      .eq("day_key", currentDay);
-
-    if (!existing || existing.length === 0) {
-      const { error } = await supabaseClient
-        .from("sessions")
-        .insert({ week_number: currentWeek, day_key: currentDay, date: today });
+    const { data: existing, error: findError } = await supabaseClient
+      .from("sessions").select("id")
+      .eq("week_number", week).eq("day_key", day);
+    if (findError) throw findError;
+    if (!existing?.length) {
+      const { error } = await supabaseClient.from("sessions")
+        .insert({ week_number: week, day_key: day, date: today });
       if (error) throw error;
     }
-
     await loadWeekTracker();
     await autoNavigateToNextSession();
     renderDayTitle();
     await renderDay(currentDay);
-  } catch (err) {
-    alert("Fehler beim Überspringen: " + err.message);
+  } catch (error) {
+    alert("Fehler beim Ueberspringen: " + error.message);
+  } finally {
+    savingSession = false;
+    setSessionActionsEnabled(true);
   }
 }
 
@@ -1008,6 +1173,18 @@ async function skipDay() {
 function checkProgression(card, cardIdx, ex, reps, prevExLogs = []) {
   const badgeZone = card.querySelector(`#prog-${cardIdx}`);
   badgeZone.innerHTML = "";
+  if (currentPlan === "classic") {
+    const weight = Number(card.querySelector(".weight-input").value);
+    const logs = reps.map((reps, i) => ({
+      set_number: i + 1, reps, weight_kg: weight,
+    }));
+    if (StrengthPlan.canProgress(ex, logs)) {
+      badgeZone.textContent = "Rep-Ziel erreicht. Naechste passende Einheit automatisch +" +
+        StrengthPlan.progressionStep(ex).toLocaleString("de-DE") +
+        " kg (ausser Deload). Bei Bedarf an Technik/RIR anpassen.";
+    }
+    return;
+  }
 
   let message = "";
 
@@ -1102,6 +1279,8 @@ function getProgressionData(ex, prevLogs, prevPrevLogs, prevWeight) {
 // HISTORY (Verlauf)
 // ============================================
 async function renderHistory(dayKey) {
+  const version = dayRenderVersion;
+  const isCurrent = () => version === dayRenderVersion && dayKey === currentDay;
   const historySection = document.getElementById("historySection");
   const historyTitle = document.getElementById("historyDayTitle");
   const historyContent = document.getElementById("historyContent");
@@ -1120,6 +1299,7 @@ async function renderHistory(dayKey) {
       .eq("day_key", dayKey)
       .order("week_number", { ascending: false });
 
+    if (!isCurrent()) return;
     if (error) {
       historyContent.innerHTML =
         '<div class="error">Verlauf konnte nicht geladen werden.</div>';
@@ -1184,6 +1364,7 @@ async function renderHistory(dayKey) {
 
     historyContent.innerHTML = html;
   } catch (e) {
+    if (!isCurrent()) return;
     historyContent.innerHTML =
       '<div class="error">Fehler beim Laden des Verlaufs.</div>';
   }
@@ -1273,33 +1454,32 @@ function evaluateRecovery() {
 // WEEK TRACKER (visuelle Übersicht)
 // ============================================
 async function loadWeekTracker() {
-  if (!SUPABASE_URL || SUPABASE_URL === "YOUR_SUPABASE_URL") {
-    return;
-  }
-
+  const tracker = document.getElementById("weekTracker");
+  if (!tracker || !SUPABASE_URL || SUPABASE_URL === "YOUR_SUPABASE_URL") return;
+  const week = currentWeek;
+  const plan = currentPlan;
+  const days = activeDays();
+  const dayKeys = Object.keys(days);
+  const isCurrent = () => week === currentWeek && plan === currentPlan;
   try {
-    const trackerEl = document.getElementById("weekTracker");
-    if (!trackerEl) return;
-
-    trackerEl.innerHTML =
-      '<div class="tracker-label">Woche ' + currentWeek + ":&nbsp;</div>";
-
-    const dayKeys = activeDayKeys();
-    for (const day of dayKeys) {
-      const { data } = await supabaseClient
-        .from("sessions")
-        .select("id")
-        .eq("week_number", currentWeek)
-        .eq("day_key", day)
-        .maybeSingle();
-
-      const dayEl = document.createElement("span");
-      dayEl.className = "tracker-day " + (data ? "done" : "pending");
-      dayEl.textContent = dayShort(day);
-      trackerEl.appendChild(dayEl);
-    }
-  } catch (err) {
-    console.warn("Week tracker load failed:", err.message);
+    const { data, error } = await supabaseClient.from("sessions")
+      .select("day_key").eq("week_number", week).in("day_key", dayKeys);
+    if (!isCurrent()) return;
+    if (error) throw error;
+    const completed = new Set((data || []).map(session => session.day_key));
+    const label = document.createElement("div");
+    label.className = "tracker-label";
+    label.textContent = "Woche " + week + ": ";
+    tracker.replaceChildren(label);
+    dayKeys.forEach(day => {
+      const badge = document.createElement("span");
+      badge.className = "tracker-day " + (completed.has(day) ? "done" : "pending");
+      badge.textContent = days[day].dayName || day.toUpperCase();
+      tracker.appendChild(badge);
+    });
+  } catch (error) {
+    if (isCurrent()) tracker.textContent = "Wochenstatus konnte nicht geladen werden.";
+    console.warn("Week tracker load failed:", error.message);
   }
 }
 

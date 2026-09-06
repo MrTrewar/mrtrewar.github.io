@@ -8,11 +8,11 @@
     />
     <meta
       name="description"
-      content="GymProgress Pro - Cut Edition: Periodisierter Trainings-Tracker für 8 Wochen mit Double Progression & Recovery Monitoring"
+      content="GymProgress Pro: Vier Tage Kraft und Muskelaufbau mit Supabase-Verlauf und uebernommenen Startgewichten"
     />
     <meta name="theme-color" content="#0f1113" />
 
-    <title>GymProgress Pro – Cut Edition</title>
+    <title>GymProgress Pro – Kraft + Muskelaufbau</title>
 
     <!-- Google Fonts (Orbitron + Rajdhani) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -23,7 +23,7 @@
     />
 
     <!-- Styles -->
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=strength-2026-09-auto" />
 
     <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -39,7 +39,8 @@
         <div class="plan-selector">
           <label for="planSelect">Plan:</label>
           <select id="planSelect">
-            <option value="classic">Classic – 4er-Split</option>
+            <option value="classic">Kraft + Muskelaufbau – 4 Tage</option>
+            <option value="archive">Bisheriger 4er-Split – Archiv</option>
             <option value="hybrid">Hybrid – Kraft + Laufen</option>
           </select>
         </div>
@@ -92,8 +93,8 @@
             "
           >
             Achtung: Dies löscht alle jemals eintragenen Gewichte und
-            Wiederholungen unwiderruflich (Ideal für den Start eines neuen
-            Plans).
+            Wiederholungen unwiderruflich, auch aus dem Archiv und dem Hybrid-Plan.
+            Fuer den neuen Vier-Tage-Plan NICHT erforderlich: Dieser startet separat bei Woche 1.
           </p>
           <button
             id="deleteHistoryBtn"
@@ -126,6 +127,7 @@
       <!-- Day Navigation -->
       <div class="day-info">
         <h2></h2>
+        <p id="planStatus" class="plan-status" aria-live="polite"></p>
         <div id="weekTracker"></div>
         <!-- ACWR-Belastungsampel (nur im Hybrid-Modus sichtbar) -->
         <div id="acwrBox" class="acwr-box" style="display: none"></div>
@@ -270,7 +272,8 @@
          Reihenfolge: Daten (hybrid-plan) → app.js → cardio.js
          ============================================ -->
     <script src="hybrid-plan.js"></script>
-    <script src="app.js"></script>
+    <script src="strength-plan.js?v=strength-2026-09-auto"></script>
+    <script src="app.js?v=strength-2026-09-auto"></script>
     <script src="cardio.js"></script>
   </body>
 </html>

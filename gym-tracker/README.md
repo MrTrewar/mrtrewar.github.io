@@ -1,356 +1,165 @@
-# GymProgress Pro – Cut Edition
+# GymProgress Pro - Kraft + Muskelaufbau
 
-**Single-Page Web-Applikation (SPA)** für periodisiertes Krafttraining mit 8-Wochen-Plan, Double Progression & Recovery Monitoring.
+Browserbasierter Trainings-Tracker mit Supabase-Verlauf. Der neue Vier-Tage-Plan
+verbindet schwere Hauptuebungen mit gezieltem Muskelaufbau.
 
----
+## Neuer Plan
 
-## 🚀 Quick Start
+| Tag | Schwerpunkt | Arbeitssaetze |
+| --- | --- | ---: |
+| Montag | Oberkoerper A, schweres Bankdruecken | 18 |
+| Dienstag | Unterkoerper A, schwere Kniebeugen | 16 |
+| Donnerstag | Oberkoerper B, moderates Bankdruecken | 20 |
+| Freitag | Unterkoerper B, Trap Bar und leichtere Kniebeugen | 16 |
+| Gesamt | | 70 |
 
-### 1. **Dateien öffnen**
+- **Mo:** Bench Press 3x3-5, Pull-Up 3x5-8, T-Bar Row 3x6-10, Pec Deck 2x10-15,
+  Seitheben 3x12-20, Bayesian Curl 2x10-15, Pushdown 2x8-12.
+- **Di:** Squat 3x3-5, RDL 2x6-10, sitzender Beinbeuger 3x10-15,
+  Glute Drive 2x8-12, stehendes Wadenheben 3x8-15, Cable Crunch 3x10-15.
+- **Do:** Bench Press 3x6-8, Incline Bench Press 2x8-12, Cable Row 3x8-12,
+  Lat Pullover 2x10-15, Seitheben 3x12-20, Reverse Pec Deck 3x12-20,
+  OH Cable Triceps Extension 2x10-15, Preacher Curl 2x10-15.
+- **Fr:** Trap Bar Deadlift 3x3-5, Squat leichter 2x6-8,
+  Leg Press 2x10-15, Leg Extension 2x12-20, sitzender Beinbeuger 2x10-15,
+  stehendes Wadenheben 3x10-20, Hanging Leg Raises 2x8-15.
 
-```
-gym-tracker/
-├── index.html    (Struktur)
-├── style.css     (Styling, Dark Mode)
-├── app.js        (Logik, Supabase Integration)
-└── README.md     (diese Datei)
-```
+RIR steht fuer noch moegliche saubere Wiederholungen. Die schweren Hauptuebungen
+und RDL verwenden RIR 2, die Freitags-Kniebeugen RIR 3, die meisten Ergaenzungen
+RIR 1-2. Aufwaermsaetze kommen hinzu. Die Gewichtsreferenz ersetzt keine
+Anpassung an Technik, Tagesform oder die leichtere Einheit.
 
-### 2. **Lokal testen (ohne Supabase)**
+## Woche 1 ohne Datenverlust
 
-```bash
-cd gym-tracker
+Der neue Plan verwendet eigene Supabase-Tageskennungen:
+`c2mo`, `c2di`, `c2do`, `c2fr`.
+
+Alte Einheiten unter `mo/di/do/fr` bleiben unangetastet und sind im
+Plan-Dropdown unter **Bisheriger 4er-Split - Archiv** schreibgeschuetzt abrufbar.
+Der Hybrid-Plan verwendet weiterhin seine eigenen `h*`-Kennungen.
+
+- Beim ersten Oeffnen dieser Planrevision wird der neue Plan ausgewaehlt.
+- Ohne neue Eintraege startet er bei Woche 1, Montag.
+- Anschliessend setzt die Navigation den neuen Plan anhand seiner eigenen
+  gespeicherten oder uebersprungenen Einheiten fort.
+- Neu laden setzt bereits begonnene neue Wochen nicht erneut zurueck.
+- Es werden weder alte Wochen umnummeriert noch Sessions oder Logs zum
+  Initialisieren angelegt. Eine Datenbankmigration ist nicht erforderlich.
+- Der weiterhin vorhandene Button zum vollstaendigen Loeschen der Historie
+  ist fuer den Planwechsel **nicht notwendig** und wuerde auch Archiv- und
+  Hybrid-Daten entfernen.
+
+## Uebernahme der Ausgangsgewichte
+
+Das Ausgangsgewicht stammt aus dem **neuesten passenden protokollierten
+Eintrag**, nicht aus einem aelteren Hoechstwert. Die Suche umfasst den alten
+Vier-Tage-Split und den Hybrid-Plan, unabhaengig vom bisherigen Trainingstag
+oder dessen Wochennummer.
+
+Sortierung: Trainingsdatum, anschliessend Zeitstempel des Satzeintrags und der
+Session. Bei mehreren Saetzen wird der zuletzt erfasste gueltige Gewichtswert
+verwendet. Ein Gewicht von **0 kg** mit protokollierten Wiederholungen ist
+gueltig, beispielsweise bei Koerpergewichtsuebungen. Ein leerer Null-Eintrag
+ohne Wiederholungen ist keine Gewichtsreferenz.
+
+Nur ausdruecklich hinterlegte Namensentsprechungen werden zusammengefuehrt:
+Bench Press / Barbell Bench Press, Pull-Up / Weighted Pull-Ups, RDL / Romanian
+Deadlift sowie Standing Calf Raise / Stehendes Wadenheben.
+Kurzhantel-, Kabel-, Maschinen- und sitzende/stehende Varianten werden nicht
+pauschal gleichgesetzt. Gewichtsangaben werden nicht umgerechnet: pro Hantel,
+pro Seite oder Gesamtgewicht muessen wie bisher gezaehlt werden.
+
+Jede Karte zeigt Herkunftsdatum und fruehere Wiederholungen als Referenz.
+Neue Wiederholungsfelder bleiben leer, bis tatsaechlich trainiert wurde.
+Es gibt keine automatische Gewichtserhoehung beim Import. Fehlt eine passende
+Historie, wird der bisherige Plan-Startwert mit einem ausdruecklichen Hinweis
+verwendet.
+
+Nach Beginn gilt: gespeicherte Werte dieses Tages haben Vorrang, danach die
+letzte passende fruehere Einheit **desselben neuen Tages**. So bleiben schwere
+und leichtere Bankdrueck-/Kniebeugeeinheiten unabhaengig. Uebersprungene Tage
+setzen die Gewichte nicht zurueck. Bei einem Ladefehler gibt es eine
+Wiederholen-Schaltflaeche statt eines stillen Rueckfalls auf Standardgewichte.
+
+## Speichern und Progression
+
+- Gewichte allein zaehlen im neuen Plan nicht als absolviertes Training.
+- Nur Saetze mit eingetragenen Wiederholungen werden gespeichert.
+- Teilweise ausgefuellte Einheiten behalten ihre urspruenglichen Satznummern.
+- Vorhandene Logs werden erst ersetzt, nachdem neue Logs erfolgreich
+  eingefuegt wurden. Fehlgeschlagene Inserts loeschen keine bisherigen Logs.
+- Ein Steigerungshinweis setzt alle vorgesehenen Saetze am oberen
+  Wiederholungsende bei gleichem Gewicht voraus.
+- Bei vollstaendig erreichtem Wiederholungsziel wird fuer die naechste
+  passende Einheit automatisch **+1,25 kg im Oberkoerper** beziehungsweise
+  **+2,5 kg im Unterkoerper** vorausgefuellt. Es gelten die hinterlegten
+  Ober-/Unterkoerper-Zuordnungen der Uebungen.
+- Die gerade gespeicherten Gewichte bleiben unveraendert. Auch beim erneuten
+  Oeffnen einer gespeicherten Einheit wird deren Gewicht nicht erhoeht.
+  Mehrfaches Laden einer neuen Einheit addiert den Schritt nicht mehrfach.
+- Importierte Startwerte werden nie automatisch erhoeht. Schwere und leichtere
+  Tage bleiben unabhaengig. In Deload-Wochen sowie nach einer absolvierten
+  Deload-Einheit wird nicht automatisch gesteigert.
+- Das vorausgefuellte Gewicht bleibt editierbar. Die App erfasst keine
+  tatsaechliche RIR oder Technikqualitaet; beides vor der Steigerung pruefen.
+- Wochen 4, 8, 12 und 16 halbieren wie bisher die Satzanzahl, aufgerundet.
+  Die Woche wird als Deload bezeichnet; ein Deload liefert keinen
+  automatischen Steigerungshinweis fuer die Folgewoche.
+
+## Dateien
+
+- `index.html`: Oberflaeche und Skriptreihenfolge.
+- `strength-plan.js`: neuer Plan, Gewichtsimport und testbare Auswahlregeln.
+- `app.js`: urspruenglicher Plan als Archiv, Navigation, Rendering, Supabase.
+- `hybrid-plan.js` und `cardio.js`: bestehender Kraft-/Laufplan.
+- `style.css`: bestehendes Design und Referenzhinweise.
+- `tests/plan.test.cjs`: Tests ohne Netzwerk und Datenbankzugriff.
+- `tests/browser.test.cjs`: Browser-Regression mit synthetischer Datenbank.
+
+## Lokal starten
+
+Im Ordner `gym-tracker`:
+
+```sh
 python3 -m http.server 8000
-# Öffne http://localhost:8000
 ```
 
-### 3. **Supabase Setup** (für Persistenz)
+Danach `http://localhost:8000` oeffnen. Supabase-URL und oeffentlicher
+Publishable-Key sind in `app.js` konfiguriert. Bestehende Tabellen:
+`sessions` mit `id, week_number, day_key, date, created_at` und
+`set_logs` mit `id, session_id, exercise_name, set_number, weight_kg, reps,
+created_at`. Die Relation verweist auf `sessions.id`; bei vorhandener
+Eindeutigkeitsbedingung gilt weiterhin `UNIQUE(week_number, day_key)`.
 
-#### 3a. Tabellen erstellen
+Fuer das bestehende Lauf-Logging werden in `set_logs` ausserdem
+`distance_km, duration_min, rpe, avg_hr` verwendet.
 
-Gehe zu https://supabase.com → Neues Projekt → SQL Editor
+Die Anwendung braucht fuer Cloud-Verlauf und Speicherung eine Verbindung.
+Nur Planwahl und Supplement-Checkboxen werden lokal gespeichert; es gibt
+keine Offline-Warteschlange fuer Trainingsdaten.
 
-Kopiere & führe aus:
+## Tests
 
-```sql
--- Sessions Tabelle
-CREATE TABLE sessions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  week_number INT NOT NULL,
-  day_key TEXT NOT NULL,
-  date DATE DEFAULT CURRENT_DATE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(week_number, day_key)
-);
-
--- Set Logs Tabelle
-CREATE TABLE set_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID REFERENCES sessions(id) ON DELETE CASCADE,
-  exercise_name TEXT NOT NULL,
-  set_number INT,
-  weight_kg FLOAT,
-  reps INT,
-  -- Hybrid-Modus (Lauf-Logging): bei reinen Kraft-Sätzen NULL
-  distance_km FLOAT,
-  duration_min FLOAT,
-  rpe FLOAT,
-  avg_hr INT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Row Level Security (optional aber empfohlen)
-ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE set_logs ENABLE ROW LEVEL SECURITY;
-
--- Öffentliche Read/Write Policies
-CREATE POLICY "allow_all_read_sessions" ON sessions FOR SELECT USING (true);
-CREATE POLICY "allow_all_insert_sessions" ON sessions FOR INSERT WITH CHECK (true);
-CREATE POLICY "allow_all_update_sessions" ON sessions FOR UPDATE USING (true);
-CREATE POLICY "allow_all_delete_sessions" ON sessions FOR DELETE USING (true);
-
-CREATE POLICY "allow_all_read_set_logs" ON set_logs FOR SELECT USING (true);
-CREATE POLICY "allow_all_insert_set_logs" ON set_logs FOR INSERT WITH CHECK (true);
-CREATE POLICY "allow_all_update_set_logs" ON set_logs FOR UPDATE USING (true);
-CREATE POLICY "allow_all_delete_set_logs" ON set_logs FOR DELETE USING (true);
+```sh
+node --test tests/plan.test.cjs
+node tests/browser.test.cjs
 ```
 
-#### 3b. Credentials eintragen
-
-In `app.js` Zeile 38–40:
-
-```javascript
-const SUPABASE_URL = "https://your-project.supabase.co";
-const SUPABASE_ANON_KEY = "your-anon-key-here";
-```
-
-Findest du unter **Project Settings → API → URL & keys**
-
-#### 3c. Hybrid-Modus: Migration bei bestehender Datenbank
-
-Wenn deine `set_logs`-Tabelle schon existiert (von vor dem Hybrid-Update), rüste die Lauf-Spalten nach:
-
-```sql
-ALTER TABLE set_logs ADD COLUMN IF NOT EXISTS distance_km  FLOAT;
-ALTER TABLE set_logs ADD COLUMN IF NOT EXISTS duration_min FLOAT;
-ALTER TABLE set_logs ADD COLUMN IF NOT EXISTS rpe          FLOAT;
-ALTER TABLE set_logs ADD COLUMN IF NOT EXISTS avg_hr       INT;
-```
-
-Ohne diese Spalten schlägt das Speichern von **Laufeinheiten** fehl – das Kraft-Tracking bleibt davon unberührt.
-
----
-
-## 🏃 Plan-Modi (Classic & Hybrid)
-
-Oben links per Dropdown umschaltbar (Auswahl wird im `localStorage` gemerkt):
-
-- **Classic** – der ursprüngliche 4er-Split (Mo/Di/Do/Fr). Unverändert.
-- **Hybrid** – pragmatisches 3+3-Modell (Mo–Sa, So frei): 3 Krafttage (Mo Upper Strength · Mi Lower Athletic · Fr Full Body/Pump) + 3 Easy Runs (Di · Do · Sa, Zone 2 + Strides). Mit Lauf-Logging, ACWR-Belastungsampel und sanftem 12-Wochen-Laufplan (keine frühen Intervalle).
-
-Beide Pläne nutzen disjunkte `day_key`-Werte und teilen sich gefahrlos dieselbe Datenbank – Daten des alten Plans bleiben erhalten.
-
-**ACWR (Acute-to-Chronic Workload Ratio):** akute km (7 Tage) ÷ chronischer Wochenschnitt (28 Tage). Ampel: <0,8 blau (unterfordert), 0,8–1,3 grün (Sweet Spot), 1,3–1,5 gelb (Vorsicht), >1,5 rot (Gefahr).
-
----
-
-## 📋 Funktionen
-
-### ✅ Trainings-Tracking
-
-- **4 Trainingstage pro Woche**: Mo (Upper), Di (Lower), Do (Push), Fr (Pull)
-- **8-Wochen Periodisierung**: Akkumulation → Deload → Intensivierung → Peak
-- **Pro Übung**:
-  - Gewichts-Input (kg)
-  - Set-Reps-Inputs (z.B. 3 Sätze = 3 Felder)
-  - Automatische Bilder oder Platzhalter-Box
-  - RIR & Rep-Range Anzeige
-  - **Double Progression Badge** nach dem Speichern
-
-### 🔄 Double Progression Logic
-
-Nach Klick auf "**Session abschließen & speichern**":
-
-- **Oberkörper-Übungen**: Wenn alle Sätze ≥ obere Rep-Grenze → "✅ Gewicht erhöhen: +1,25 kg"
-- **Unterkörper-Übungen**: Wenn alle Sätze ≥ obere Rep-Grenze → "✅ Gewicht erhöhen: +2,5 kg"
-- **AMRAP-Übungen** (Pull-Up, Hanging Leg Raises): Wenn Durchschnitt ≥ 8 Reps → Badge für Zusatzgewicht
-- **Kein Fortschritt?** → Kein Badge (neutral, nicht rot)
-
-### 💊 Supplements Tracker
-
-Akkordeon-Menü oben:
-
-- **Morgens**: Vitamin D3, K2, Omega-3
-- **Pre-Workout**: Koffein, Citrullin-Malat, Kreatin
-- **Abends**: Magnesium, Zink
-- **Optional**: Ashwagandha, Melatonin
-
-Status wird täglich im **localStorage** gespeichert (kein Supabase nötig).
-
-### ⚡ Recovery Check Modal
-
-Floating Button (⚡) oben rechts:
-
-- 8 Checkboxen (Schlaf, Kraft, Stimmung, etc.)
-- **0–1 Haken**: ✅ "Alles im grünen Bereich"
-- **2–3 Haken**: ⚠️ "Stufe 1 Deload: 50% Volumen, RIR 4+, 9h Schlaf"
-- **4+ Haken**: 🚨 "Stufe 2 Pause: 1 Woche frei, Maintenance essen"
-
-### 📊 Week Tracker
-
-Unter dem Trainingstag-Namen: Kleine Badges für bereits geloggte Tage (grün = erledigt).
-
----
-
-## 🎨 Design & UX
-
-### Dark Mode
-
-- **Primärfarbe**: Cyan (`#00f2ff`) mit Glow-Effekt
-- **Hintergrund**: Dunkelgrau (`#0f1113`)
-- **Text**: Helles Grau (`#e0e0e0`)
-
-### Fonts
-
-- **Titel/Buttons**: `Orbitron` (technisch, futuristisch)
-- **Body/Inputs**: `Rajdhani` (clean, sportlich)
-
-### Responsive
-
-- **Mobile**: Bilder oben, Infos unten (flex-column)
-- **Desktop** (≥768px): Bilder links, Infos rechts (flex-row)
-- **Large Desktop** (≥1024px): 2-Spalten Grid für Cards
-- **Sticky Header & Footer** für schnelle Navigation
-
----
-
-## 🗂️ Trainingsplan (TRAINING_PLAN)
-
-### Strukturverzeichnis
-
-```javascript
-TRAINING_PLAN = {
-  [dayKey]: {
-    title: "Name",
-    duration: "Min-Range",
-    sets: totalSets,
-    exercises: [
-      {
-        name: "Übungsname",
-        sets: 3,
-        repRange: [5, 8], // oder "amrap"
-        rir: "1–2", // Rate of Inertia (RIR)
-        startWeight: 20, // kg
-        bodyPart: "upper" | "lower",
-        isBW: false, // Body Weight?
-        imageUrl: "", // Leer = Platzhalter
-      },
-      // ...
-    ],
-  },
-};
-```
-
-### Übungen im Plan
-
-**Montag (Upper)**: Bench, Pull-Up (AMRAP), T-Bar Row, Lateral Raise, Cable Curl, Incline Shrugs, Face Pulls, Wrist Curls
-
-**Dienstag (Lower)**: Squat, RDL, Leg Curl, Leg Extension, Glute Drive, Calf Raises (Standing + Seated), Cable Crunch
-
-**Donnerstag (Push)**: Incline Bench, Weighted Dips (BW+), Lateral Raise, Pec Deck, Triceps Extension, Neck Curls, Face Pulls
-
-**Freitag (Pull)**: Trap Bar DL, Lat Pullover, Seated Cable Row, Reverse Pec Deck, Cable Lateral Raise, Preacher Curl, Hanging Leg Raises, Calf Raises
-
----
-
-## 🔧 Anpassungen
-
-### Übungen hinzufügen/bearbeiten
-
-Öffne `app.js` → `TRAINING_PLAN` Objekt, z.B.:
-
-```javascript
-{
-  name: "Neue Übung",
-  sets: 4,
-  repRange: [6, 8],
-  rir: "2",
-  startWeight: 25,
-  bodyPart: "upper",
-  isBW: false,
-  imageUrl: "https://example.com/image.jpg"  // Optional
-}
-```
-
-### Bilder-URLs
-
-- Optional: `imageUrl: ""` → grauer Platzhalter wird angezeigt
-- Mit Bild: `imageUrl: "https://..."` → wird geladen & angezeigt
-
-### Supplements anpassen
-
-`app.js` → `SUPPLEMENTS` Objekt:
-
-```javascript
-const SUPPLEMENTS = {
-  "Neue Kategorie": ["Supplement 1", "Supplement 2"],
-  // ...
-};
-```
-
-### Recovery Items anpassen
-
-`app.js` → `RECOVERY_ITEMS` Array
-
----
-
-## 💾 Datenspeicherung
-
-### Supabase (Cloud)
-
-- Sessions + Set Logs
-- Automatisch gespeichert bei "Session abschließen"
-- Lädt alte Einträge beim Öffnen eines bereits geloggten Tages
-
-### localStorage (Browser)
-
-- Supplements-Status (täglich)
-- Funktioniert offline
-
-### Fehlerbehandlung
-
-- Ist Supabase nicht konfiguriert → "⚠️ Supabase not configured" Alert
-- App lädt trotzdem & speichert lokal
-
----
-
-## 📱 Geräte-Unterstützung
-
-- ✅ Desktop (Chrome, Safari, Firefox)
-- ✅ Tablet (iPad, Android Tablets)
-- ✅ Smartphone (iOS Safari, Chrome Mobile)
-- ✅ Offline-Funktionalität (lokale Ergänzungen)
-
----
-
-## 🚨 Sicherheit & Privacy
-
-- **Keine Authentifizierung** (optional: RLS-Policies für Produktiv-Umgebung)
-- **Keine Cookies** (nur localStorage)
-- **HTTPS empfohlen** für Supabase-Nutzung
-
----
-
-## 🎯 Periodisierungs-Leitfaden (8 Wochen)
-
-| Woche | Phase           | Volumen | RIR    | Defizit      |
-| ----- | --------------- | ------- | ------ | ------------ |
-| 1–3   | Akkumulation    | 100%    | 2–3    | 500 kcal     |
-| **4** | **Deload**      | **60%** | **4+** | **300 kcal** |
-| 5–6   | Intensivierung  | 90–95%  | 1–2    | 500 kcal     |
-| 7     | Intensivierung  | 90%     | 1–2    | 500 kcal     |
-| **8** | **Peak/Review** | **50%** | **3+** | **400 kcal** |
-
----
-
-## 📖 Tipps zum Einsatz
-
-1. **Session vor dem Training öffnen** → Vorausfüllte Gewichte sehen
-2. **Nach Sätzen Reps direkt eintragen** (am Phone praktisch)
-3. **Session-Button am Ende drücken** → Double Progression Badges sehen
-4. **Recovery Check 1× täglich** → Übertraining früh erkennen
-5. **Supplements morgens abhaken** → Complience tracken
-
----
-
-## 🐛 Troubleshooting
-
-### "Supabase not configured"
-
-→ Siehe **Supabase Setup** oben
-
-### Daten werden nicht gespeichert
-
-→ Überprüfe Browser-Konsole (F12 → Console) auf Fehler
-→ Kontrolliere: Tabellen existieren? Policies ok?
-
-### Bilder laden nicht
-
-→ URL korrekt? Öffentlich zugänglich? CORS-Issue?
-→ Fallback: Leer lassen, Platzhalter nutzen
-
-### Supplements-Status weg
-
-→ localStorage geleert? (Cookie-Einstellungen prüfen)
-
----
-
-## 📄 Lizenz
-
-Frei nutzbar & modifizierbar. Kein Copyright.
-
----
-
-## 💪 Viel Erfolg beim Cut!
-
-_GymProgress Pro – Tracking deinen Weg zur Zieldefinition_
+Der Browser-Test benoetigt das lokal installierte `puppeteer` und Google
+Chrome. Ein anderer Chrome-Pfad kann ueber `CHROME_PATH` gesetzt werden.
+Alle externen Browser-Anfragen werden im Test abgefangen; Schreibtests
+nutzen ausschliesslich synthetische Daten, niemals die produktive Supabase.
+Screenshots werden unter `/tmp/gym-tracker-1280.png` und
+`/tmp/gym-tracker-390.png` abgelegt.
+
+## Datenschutz
+
+Die bestehende Anwendung hat keine Benutzeranmeldung. Ein Publishable-Key
+ist kein Geheimnis und ersetzt keine Zugriffskontrolle. Die Supabase-
+Berechtigungen/RLS bestimmen, wer Trainingsdaten lesen oder veraendern kann.
+Vor Mehrbenutzer- oder oeffentlichem Betrieb sind Anmeldung und
+benutzerbezogene RLS-Regeln erforderlich. Importierte persoenliche Gewichte
+werden nicht als Snapshot in den oeffentlichen Quellcode geschrieben.
+
+Supplement- und Recovery-Funktionen des bestehenden Trackers wurden durch
+diesen Planwechsel nicht medizinisch validiert.

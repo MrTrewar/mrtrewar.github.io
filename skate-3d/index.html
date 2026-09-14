@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#173e34">
+  <meta name="description" content="Jungle Ride: ein 3D-Skate-Run durch tropische Dschungelruinen. Flips, Specials, Rails und goldene Lines.">
+  <title>Jungle Ride / 3D Skate</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23173e34'/%3E%3Cpath d='M40 12v28q0 13-13 13T14 40h10q0 4 4 4t4-5V12Z' fill='%23e4ff75'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css?v=clear-guide-1">
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+</head>
+<body>
+  <canvas id="world" aria-label="3D-Skate-Strecke in Seitenansicht durch tropische Dschungelruinen"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="wordmark" href="../" aria-label="Zur Website"><span class="brand-icon">J/</span> JUNGLE RIDE <span class="edition">PIXEL / 3D</span></a>
+    <div class="toolbar">
+      <button id="sound" class="tool" aria-pressed="false" title="Sound umschalten">SOUND AUS</button>
+      <button id="pause" class="tool" disabled title="Pause (P oder Escape)">PAUSE <span>II</span></button>
+    </div>
+  </header>
+
+  <main>
+    <section id="intro" class="intro panel" aria-labelledby="title">
+      <p class="eyebrow"><span class="live-dot"></span> SIDE SCROLL / JUNGLE RIDE 04</p>
+      <h1 id="title">INTO THE<br><span>JUNGLE.</span></h1>
+      <p class="intro-copy">Dein Board. Dein Rhythmus. Dein Run.<br>Spring über Schluchten, lande auf Plattformen<br class="desktop-break"> und erreiche Neonstadt und Pharaonentempel.</p>
+      <div class="mode-picker" role="group" aria-label="Spielmodus">
+        <button type="button" data-mode="endless" aria-pressed="true">ENDLOS <small>FINDE DEINE LINE</small></button>
+        <button type="button" data-mode="daily" aria-pressed="false">TAGESLINE <small>DEIN REKORD-GHOST</small></button>
+      </div>
+      <p id="mode-info" class="mode-info"></p>
+      <div class="intro-actions">
+        <button id="start" class="primary" disabled><span id="start-label">STRECKE WIRD GELADEN</span><span aria-hidden="true">↗</span></button>
+        <span class="best-intro">DEIN REKORD<strong id="intro-best">0000</strong></span>
+      </div>
+      <div class="howto">
+        <div><span class="keycap">A</span><span class="keycap">D</span><p>Frei links / rechts</p></div>
+        <div><span class="keycap wide">SPACE</span><p>Alle Tricks + Specials</p></div>
+        <div><span class="rail-icon" aria-hidden="true">╱━╱</span><p>Auf Rails landen</p></div>
+      </div>
+      <p class="mobile-hint">Pfeile halten. TRICK: alle Tricks + Specials. LAND: optionaler Bonus.</p>
+      <div class="extras"><button id="help-toggle" class="text-button" aria-expanded="false" aria-controls="help-detail">STEUERUNG & BOARDS</button></div>
+      <p id="load-status" role="status" class="load-status">3D-Modell und Dschungel werden vorbereitet ...</p>
+    </section>
+
+    <section id="hud" class="hud" aria-label="Spielstand" hidden>
+      <div class="score-block"><span>GESICHERTER SCORE</span><strong id="score">0000</strong></div>
+      <div class="hud-small"><span>STRECKE</span><strong><b id="distance">0</b> m</strong></div>
+      <div class="hud-small"><span>TEMPO</span><strong><b id="speed">0</b> km/h</strong></div>
+      <div class="combo-block"><span id="combo-label">FINDE DEINEN FLOW</span><strong id="combo">×1</strong><b id="pending" class="pending">+0</b><div class="combo-track"><i id="combo-fill"></i></div></div>
+    </section>
+    <div id="run-strip" class="run-strip" hidden><span id="biome">BAUMWIPFEL</span><span id="run-challenge"></span><span id="ghost-label"></span><div id="level-progress" class="level-progress" data-phase="points"><span id="next-level"></span><div class="level-countdown-row"><strong id="level-countdown" aria-live="off">3.000</strong><span id="level-countdown-unit">PUNKTE FEHLEN</span></div><div id="level-track" class="level-track" role="progressbar" aria-label="Fortschritt zur nächsten Welt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="level-fill"></i></div></div></div>
+    <aside id="level-banner" class="level-banner" aria-live="polite" hidden><span id="level-kicker"></span><strong id="level-name"></strong><small>NEUE WELT. GLEICHE LINE.</small></aside>
+    <div id="quality" class="quality" role="status"></div>
+    <div id="trick" class="trick" aria-live="polite"></div>
+    <div id="coach" class="coach" hidden>Auf Plattformen fahren. Lücken überspringen. Rails grinden.</div>
+
+    <section id="pause-panel" class="modal-layer" hidden aria-label="Spiel pausiert">
+      <div class="dialog compact">
+        <p class="eyebrow">EINMAL DURCHATMEN</p><h2>PAUSE.</h2>
+        <p>Deine Line wartet auf dich.</p>
+        <button id="resume" class="primary">WEITERFAHREN <span aria-hidden="true">↗</span></button>
+        <button id="pause-restart" class="secondary">NEUEN RUN STARTEN</button>
+        <button id="pause-menu" class="secondary">MODUS & BOARDS</button>
+      </div>
+    </section>
+
+    <section id="end" class="modal-layer" hidden aria-labelledby="end-title">
+      <div class="dialog">
+        <p class="eyebrow">EIN RUN MEHR. EIN BISSCHEN WEITER.</p>
+        <h2 id="end-title">NICE RIDE.</h2>
+        <p id="end-reason">Die nächste Line gehört dir.</p>
+        <div class="results"><div><span>DEIN SCORE</span><strong id="final-score">0</strong></div><div><span>STRECKE</span><strong id="final-distance">0 m</strong></div><div><span>BESTE COMBO</span><strong id="final-combo">×1</strong></div></div>
+        <p id="run-report" class="run-report"></p>
+        <p id="unlock-report" class="unlock-report" role="status"></p>
+        <button id="open-entry" class="secondary accent">INS LEADERBOARD EINTRAGEN</button>
+        <form id="entry" class="entry" hidden>
+          <label for="name">Dein Name <span>Deine erreichte Punktzahl wird automatisch übernommen.</span></label>
+          <div class="entry-row"><input id="name" name="name" maxlength="16" autocomplete="nickname" placeholder="Dein Name" required><button class="primary" type="submit">EINTRAGEN</button></div>
+        </form>
+        <p id="save-status" class="save-status" role="status"></p>
+        <div class="leaderboard-head"><h3>LOCAL LEGENDS</h3><span id="board-scope">ENDLOS / DIESER BROWSER</span></div>
+        <ol id="leaderboard" class="leaderboard"></ol>
+        <button id="retry" class="primary">NOCH EINE LINE <span aria-hidden="true">↗</span></button>
+        <button id="back-menu" class="secondary">MODUS & BOARDS</button>
+      </div>
+    </section>
+
+    <section id="help-detail" class="modal-layer" hidden role="dialog" aria-modal="true" aria-labelledby="help-title">
+      <div class="dialog help-dialog">
+        <div class="help-heading">
+          <div><p class="eyebrow">KENNE DEINE LINE.</p><h2 id="help-title">STEUERUNG<br>& BOARDS.</h2></div>
+          <button id="help-close-top" class="help-dismiss" type="button" aria-label="Hilfe schließen">×</button>
+        </div>
+        <p>Automatisch vorwärts. Absprung, Flugweite und Landefläche bestimmst du.</p>
+        <h3>01 / DIE STEUERUNG</h3>
+        <dl class="control-list">
+          <dt>A / D<br>Links / Rechts</dt><dd>Taste oder Touch-Pfeil halten: Skater direkt bewegen, auch in der Luft und auf Rails. Loslassen stoppt den Versatz, nicht die automatische Fahrt. Kein Spurwechsel und keine Rückzentrierung.</dd>
+          <dt>SPACE / Pfeil hoch<br>Touch: TRICK</dt><dd>Springen mit einem zufälligen Trick: alle 19 Varianten, davon 10 Specials. Kein normaler Sprung, keine direkte Trick-Wiederholung. Specials brauchen keine zusätzliche Taste.</dd>
+          <dt>SHIFT + SPACE<br>Touch: PRO</dt><dd>Optional nur Specials wählen, auch mit SHIFT + Pfeil hoch. Zum Beispiel 900, McTwist, Superman oder Christ Air. Pro-Tricks brauchen 0,94 Sekunden Flugzeit; eine zu frühe Landung verliert die offene Combo.</dd>
+          <dt>E<br>Touch: LAND</dt><dd>Optionaler PERFECT-Bonus: einmal pro Sprung innerhalb der letzten 0,16 Sekunden vor dem Aufsetzen drücken und kontrolliert, nicht direkt an der Kante landen. +80 Grundpunkte. Normale Landungen brauchen keine Taste.</dd>
+          <dt>P / ESC<br>Button: PAUSE</dt><dd>Pausieren und weiterfahren. Auch Tabwechsel oder Fokusverlust pausiert. Neustart ausschließlich per Button im Pause- oder Endmenü. R startet niemals neu.</dd>
+          <dt>Button: SOUND</dt><dd>Sprünge, Grinds und Explosionen ein- oder ausschalten. Sound ist zunächst aus.</dd>
+        </dl>
+        <h3>02 / DIE STRECKE LESEN</h3>
+        <dl class="control-list">
+          <dt>Kurzes Ziel</dt><dd>Gelbe Streifen markieren kurze Plattformen. Früher abspringen oder mit A / Links die Flugweite verkürzen. Ein später Sprung kann über das Ziel hinausgehen.</dd>
+          <dt>Weiter Transfer</dt><dd>Später abspringen und bei Bedarf mit D / Rechts die Weite verlängern. Nicht jede Lücke lässt sich mit demselben Timing springen. Es gibt keinen unsichtbaren Boden.</dd>
+          <dt>Rails & Routen</dt><dd>Von oben auf einer Rail landen, dann grindest du automatisch mit Funken. Absprung und Flugweite entscheiden zwischen unterer Plattform und oberer Rail. Du balancierst automatisch, musst aber rechtzeitig wieder abspringen. Rote City-Lichter markieren Kanten, nicht die Lücken dazwischen.</dd>
+          <dt>Tempo & Sicht</dt><dd>Automatisch von rund 31 auf 130 km/h in etwa 18 Sekunden. Die Kamera zeigt mehr Strecke voraus und zoomt mit dem Tempo heraus. A / D bleibt direkt, die Kamera zieht dich nicht zur Mitte zurück.</dd>
+          <dt>Combo sichern</dt><dd>Flips und Grabs: 100 Grundpunkte, Specials: 220. Tricks und Grinds sammeln eine offene Combo bis ×8. Zum Sichern 0,65 Sekunden ruhig auf einer Plattform ausrollen. Ein Sturz verliert nur die offene Combo.</dd>
+          <dt>Drei Welten</dt><dd>Dschungel ab Start, Neonstadt ab 3.000 und Pyramiden ab 10.000 gesicherten Punkten. Die Anzeige zählt erst fehlende Punkte, dann die Sekunden bis zum Wechsel. Mindestens 3 Sekunden Countdown; die Neonstadt bleibt mindestens 8 Sekunden. Pause hält den Countdown an. Nach Ägypten geht der Run endlos weiter.</dd>
+        </dl>
+        <h3>03 / DEINE BOARDS</h3>
+        <p>ORIGINAL ist sofort verfügbar. Weitere Farben schaltest du mit diesen Challenges frei. Jede Anforderung gilt innerhalb eines einzigen Runs, nicht über mehrere Runs verteilt.</p>
+        <ul id="challenges" class="challenges"></ul>
+        <p>Die Freischaltung erfolgt am Run-Ende. Danach kannst du die Farbe hier auswählen. Alle Boards sind rein kosmetisch: gleiches Tempo, gleiche Sprungweite, gleiche Punkte.</p>
+        <div id="deck-options" class="deck-options" role="group" aria-label="Freigeschaltete Boardfarben"></div>
+        <p id="deck-status" class="deck-status" role="status"></p>
+        <h3>04 / REKORDE & TAGESLINE</h3>
+        <p>Endlos hat pro Run eine neue Strecke. Die Tagesline bleibt am selben UTC-Tag gleich; dein bester abgeschlossener Tages-Run erscheint beim nächsten Versuch als Ghost.</p>
+        <p>Am Run-Ende kannst du deinen Namen eintragen. Die tatsächlich erreichte Punktzahl wird unverändert übernommen. Beide Modi haben getrennte lokale Top 5. Rekorde, Ghost und Boards bleiben nur in diesem Browser gespeichert, sofern Browser-Speicher erlaubt ist. Kein globales Leaderboard.</p>
+        <button id="help-close" class="primary" type="button">ZURÜCK ZUM MENÜ</button>
+      </div>
+    </section>
+    <section id="error" class="modal-layer" hidden role="alert"><div class="dialog compact"><p class="eyebrow">START NICHT MÖGLICH</p><h2>KURZER STOPP.</h2><p id="error-message"></p><button class="primary" onclick="location.reload()">ERNEUT LADEN</button><a href="../" class="secondary">ZUM 2D-SPIEL</a></div></section>
+
+    <div id="touch-controls" class="touch-controls" hidden aria-label="Touch-Steuerung">
+      <div class="steer-controls"><button data-action="left" aria-label="Skater nach links bewegen">←</button><button data-action="right" aria-label="Skater nach rechts bewegen">→</button></div>
+      <div class="trick-controls"><button data-action="catch" class="touch-extra" aria-label="Landung timen">LAND</button><button data-action="pro" class="touch-extra" aria-label="Pro-Trick springen">PRO</button><button data-action="jump" class="touch-jump" aria-label="Zufälliger Trick inklusive Spezialtricks">TRICK <span>↑</span></button></div>
+    </div>
+  </main>
+
+  <footer class="footer"><span><i></i> WELCOME TO THE JUNGLE</span><span class="footer-right">SKATE. EXPLORE. REPEAT. <b>01 / ∞</b></span></footer>
+  <noscript><div class="noscript">Bitte JavaScript aktivieren, um Jungle Ride zu spielen.</div></noscript>
+  <script type="module" src="game.js"></script>
+</body>
+</html>

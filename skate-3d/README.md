@@ -6,6 +6,10 @@ Schluchten. Das 2D-Ursprungsspiel und seine Original-Sprites bleiben unveraender
 
 ## Spielen
 
+Die Hauptadresse [wiegero.com](https://wiegero.com/) oeffnet diese 3D-Version
+automatisch unter `/skate-3d/`. Das alte Spiel bleibt unter `/game.html`
+erhalten. Links im Startmenue fuehren zum 2D-Klassiker, Training und Shared Board.
+
 Im Repository-Ordner:
 
 ```sh
@@ -251,3 +255,14 @@ mehrere Tricks, Funken, Explosion vor Leaderboard, R in Namen, echten Score,
 Pause, Tages-Ghost und mobile Ansichten mit 390, 844 und 320 Pixeln Breite.
 Screenshots liegen unter `/tmp/jungle-side-*.jpg`. Mobile Emulation ist kein
 Leistungsnachweis auf einem physischen Smartphone.
+
+Die Startseiten-Weiterleitung und erreichbare Projektlinks werden separat auf
+Desktop und drei mobilen Formaten geprueft (lokaler Server muss laufen):
+
+```sh
+PUPPETEER_MODULE=/absoluter/pfad/zu/node_modules/puppeteer-core \
+  node skate-3d/tools/homepage-browser.test.cjs
+```
+
+`HOMEPAGE_URL` kann fuer denselben Einstiegstest auf die veroeffentlichte
+Website zeigen. Der Test sendet keine Scores und veraendert keine Cloud-Daten.

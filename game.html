@@ -2,15 +2,99 @@
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
     <title>Welcome to the Jungle</title>
-    <!-- Das Spiel ist jetzt die Startseite. Alte Links auf /game.html weiterleiten. -->
-    <meta http-equiv="refresh" content="0; url=/" />
-    <link rel="canonical" href="/" />
-    <script>
-      window.location.replace("/");
-    </script>
+
+    <!-- PWA: Als eigene App auf dem Home-Screen -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="WttJ" />
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png" />
+    <meta name="theme-color" content="#1a1a2e" />
+
+    <!-- Bibliotheken & Schriftarten -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
-    <p>Das Spiel ist umgezogen — <a href="/">hier geht es weiter</a>.</p>
+    <!-- UI oben -->
+    <div id="game-info">
+      <span id="score-display">Score: 0</span>
+      <span id="combo-display">Combo: x1</span>
+      <span id="current-trick">Trick: ---</span>
+    </div>
+    <div id="game-instructions">
+      A/D: Move | Space: Ollie (Jump) | P: Pause | Enter/Tap: Restart
+      <a href="skate-3d/" class="page-link">· 3D Skate</a>
+      <a href="board.html" class="page-link">· Shared Board</a>
+      <a href="gym-tracker/" class="page-link">· Training</a>
+    </div>
+
+    <!-- Spielfeld -->
+    <div id="game-area">
+      <div id="player" class="game-object">
+        <div id="player-body"></div>
+        <div id="player-board"></div>
+      </div>
+      <div id="game-over-message">
+        GAME OVER<br /><small>Press Enter / Tap to Restart</small>
+      </div>
+      <div id="pause-overlay">PAUSE</div>
+      <div id="level-overlay"></div>
+      <div id="screen-flash"></div>
+      <div id="mobile-controls">
+        <div id="joystick">
+          <div id="joystick-knob"></div>
+        </div>
+        <div id="jump-btn">▲</div>
+      </div>
+    </div>
+
+    <!-- Spiel-Logik -->
+    <script src="js/config.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/effects.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/world.js"></script>
+    <script src="js/game.js"></script>
+
+    <!-- Fullscreen auf Mobile beim ersten Touch -->
+    <script>
+      if (window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
+        document.getElementById("game-area").addEventListener(
+          "touchstart",
+          () => {
+            const ga = document.getElementById("game-area");
+            if (ga.requestFullscreen) ga.requestFullscreen();
+            else if (ga.webkitRequestFullscreen) ga.webkitRequestFullscreen();
+          },
+          { once: true },
+        );
+      }
+
+      window.addEventListener("orientationchange", () => {
+        window.location.reload();
+      });
+    </script>
+
+    <!-- Hochformat-Warnung -->
+    <div id="rotate-warning">
+      <p>Please rotate your device</p>
+    </div>
   </body>
 </html>

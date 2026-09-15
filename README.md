@@ -8,9 +8,20 @@ Personal project hub by Gero Wieger, hosted on GitHub Pages.
 
 ## Projects
 
-### Welcome to the Jungle
+### Jungle Ride / 3D Skate
 
-Arcade-style endless runner / skateboarding side-scroller.
+The homepage opens the new 3D pixel-art skate game automatically.
+
+- **Play:** [wiegero.com](https://wiegero.com/) or [direct 3D link](https://wiegero.com/skate-3d/)
+- **Stack:** Vanilla JS, local Three.js, Blender avatar and browser storage
+- **Controls:** A/D or arrows move, Space or Up picks any trick including specials, E optionally times a perfect landing, P/Escape pauses
+- **Mobile:** Touch arrows, TRICK, optional PRO and LAND buttons
+- **Features:** Jungle, neon city and pyramids, precision platforms, rail grinding, combos, daily ghost and local leaderboard
+- **Details and tests:** [skate-3d/README.md](skate-3d/README.md)
+
+### Welcome to the Jungle / 2D Classic
+
+The original side-scroller is preserved separately at `game.html`.
 
 - **Play:** [wiegero.com/game.html](https://wiegero.com/game.html)
 - **Stack:** Vanilla JS, CSS, anime.js, Supabase (online leaderboard)
@@ -39,8 +50,9 @@ Training tracker for periodized strength programs with double progression — pl
 
 ```
 MrTrewar.github.io/
-├── index.html              # Landing page with scroll-driven MRT animation
-├── game.html               # Welcome to the Jungle entry point
+├── index.html              # Redirects the homepage to the 3D game
+├── skate-3d/               # Jungle Ride 3D game, models and tests
+├── game.html               # Preserved 2D classic (not a redirect)
 ├── js/                     # Game scripts (config, game, player, world, ui, effects, audio)
 ├── css/                    # Styles (game + landing page)
 ├── assets/                 # Sprites, backgrounds, sounds

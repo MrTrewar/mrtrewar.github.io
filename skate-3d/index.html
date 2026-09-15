@@ -7,7 +7,7 @@
   <meta name="description" content="Jungle Ride: ein 3D-Skate-Run durch tropische Dschungelruinen. Flips, Specials, Rails und goldene Lines.">
   <title>Jungle Ride / 3D Skate</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23173e34'/%3E%3Cpath d='M40 12v28q0 13-13 13T14 40h10q0 4 4 4t4-5V12Z' fill='%23e4ff75'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css?v=clear-guide-1">
+  <link rel="stylesheet" href="style.css?v=home-3d-1">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 </head>
 <body>
@@ -41,7 +41,12 @@
         <div><span class="rail-icon" aria-hidden="true">╱━╱</span><p>Auf Rails landen</p></div>
       </div>
       <p class="mobile-hint">Pfeile halten. TRICK: alle Tricks + Specials. LAND: optionaler Bonus.</p>
-      <div class="extras"><button id="help-toggle" class="text-button" aria-expanded="false" aria-controls="help-detail">STEUERUNG & BOARDS</button></div>
+      <nav class="extras" aria-label="Spielhilfe und weitere Projekte">
+        <button id="help-toggle" class="text-button" aria-expanded="false" aria-controls="help-detail">STEUERUNG & BOARDS</button>
+        <a class="text-button" href="../game.html">2D-KLASSIKER</a>
+        <a class="text-button" href="../gym-tracker/">TRAINING</a>
+        <a class="text-button" href="../board.html">SHARED BOARD</a>
+      </nav>
       <p id="load-status" role="status" class="load-status">3D-Modell und Dschungel werden vorbereitet ...</p>
     </section>
 
@@ -125,7 +130,7 @@
         <button id="help-close" class="primary" type="button">ZURÜCK ZUM MENÜ</button>
       </div>
     </section>
-    <section id="error" class="modal-layer" hidden role="alert"><div class="dialog compact"><p class="eyebrow">START NICHT MÖGLICH</p><h2>KURZER STOPP.</h2><p id="error-message"></p><button class="primary" onclick="location.reload()">ERNEUT LADEN</button><a href="../" class="secondary">ZUM 2D-SPIEL</a></div></section>
+    <section id="error" class="modal-layer" hidden role="alert"><div class="dialog compact"><p class="eyebrow">START NICHT MÖGLICH</p><h2>KURZER STOPP.</h2><p id="error-message"></p><button class="primary" onclick="location.reload()">ERNEUT LADEN</button><a href="../game.html" class="secondary">ZUM 2D-SPIEL</a></div></section>
 
     <div id="touch-controls" class="touch-controls" hidden aria-label="Touch-Steuerung">
       <div class="steer-controls"><button data-action="left" aria-label="Skater nach links bewegen">←</button><button data-action="right" aria-label="Skater nach rechts bewegen">→</button></div>

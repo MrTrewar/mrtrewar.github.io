@@ -322,7 +322,7 @@ function wireInputs() {
     }
     if(event.repeat)return;
     if(event.code==='KeyP'||event.code==='Escape'){state==='playing'?pause():resume();return;}
-    if(event.target.closest?.('button')&&['Space','Enter'].includes(event.code))return;
+    if(event.target.closest?.('button,a[href]')&&['Space','Enter'].includes(event.code))return;
     if(['Space','ArrowLeft','ArrowRight','ArrowUp'].includes(event.code))event.preventDefault();
     if(state==='intro'&&event.code==='Enter'){start();return;}
     if(state!=='playing')return;
